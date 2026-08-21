@@ -5,6 +5,10 @@
 .DS_Store
 Thumbs.db
 
-# Temporary verification scripts
+# Deployment and temporary scripts with tokens
+deploy_schema.ps1
+migrate_data.ps1
 verify_supabase.ps1
 verify_views.ps1
+truncate_db.ps1
+*.ps1
