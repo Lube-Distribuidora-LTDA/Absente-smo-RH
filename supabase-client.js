@@ -23,22 +23,38 @@ let _realtimeSubscription = null;
  */
 function getSupabaseClient() {
     if (!_supabase) {
-        if (typeof supabase === 'undefined' && typeof window.supabase === 'undefined') {
-            console.error('Supabase JS SDK não encontrado na página.');
+        // The Supabase UMD bundle exposes window.supabase as a namespace object.
+        // createClient lives at window.supabase.createClient (v2 UMD)
+        let createClientFn = null;
+
+        if (window.supabase && typeof window.supabase.createClient === 'function') {
+            // Standard UMD bundle: window.supabase.createClient
+            createClientFn = window.supabase.createClient;
+        } else if (typeof createClient === 'function') {
+            // Sometimes available as a global directly
+            createClientFn = createClient;
+        } else {
+            console.error('[SupabaseClient] SDK não encontrado. Verifique se o script CDN foi carregado.');
             return null;
         }
-        const supabaseFactory = window.supabase?.createClient || supabase.createClient;
-        _supabase = supabaseFactory(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true
-            },
-            realtime: {
-                params: {
-                    eventsPerSecond: 10
+
+        try {
+            _supabase = createClientFn(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
+                auth: {
+                    persistSession: true,
+                    autoRefreshToken: true
+                },
+                realtime: {
+                    params: {
+                        eventsPerSecond: 10
+                    }
                 }
-            }
-        });
+            });
+            console.log('[SupabaseClient] Cliente inicializado com sucesso:', SUPABASE_CONFIG.projectRef);
+        } catch (initErr) {
+            console.error('[SupabaseClient] Falha ao criar o cliente:', initErr);
+            return null;
+        }
     }
     return _supabase;
 }
