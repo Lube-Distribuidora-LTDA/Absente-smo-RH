@@ -1,0 +1,10 @@
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary verification scripts
+verify_supabase.ps1
+verify_views.ps1

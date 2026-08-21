@@ -1,0 +1,2622 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BI de Absente&iacute;smo RH | Lube Distribuidora</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        lube: {
+                            navy: '#0b1b3d',
+                            navyLight: '#162e63',
+                            navyDark: '#060f24',
+                            red: '#e30613',
+                            redHover: '#c40410',
+                            redLight: '#ffebe9',
+                            blue: '#1d4ed8',
+                            blueLight: '#eff6ff',
+                            slate: '#64748b',
+                            bgLight: '#f8fafc',
+                            cardLight: '#ffffff',
+                            cardDark: '#0f172a',
+                            borderLight: '#e2e8f0',
+                            borderDark: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'lube': '0 4px 20px -2px rgba(11, 27, 61, 0.08)',
+                        'lube-hover': '0 10px 25px -3px rgba(11, 27, 61, 0.12)',
+                        'lube-dark': '0 4px 20px -2px rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Chart.js 4.4.x -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- SheetJS (XLSX) for Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+
+        /* Glassmorphism & Transitions */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Executive Card Lift & Glow */
+        .executive-card {
+            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .executive-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px -4px rgba(11, 27, 61, 0.12), 0 4px 12px -2px rgba(11, 27, 61, 0.06);
+        }
+        .dark .executive-card:hover {
+            box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.6), 0 0 15px 1px rgba(59, 130, 246, 0.12);
+        }
+
+        /* Radar Pulse Animation for Critical Alerts */
+        @keyframes radarPulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(227, 6, 19, 0.45); }
+            70% { box-shadow: 0 0 0 8px rgba(227, 6, 19, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(227, 6, 19, 0); }
+        }
+        .animate-radar-red {
+            animation: radarPulseRed 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+
+        /* Modal Spring Scale In */
+        @keyframes modalSpring {
+            0% {
+                opacity: 0;
+                transform: scale(0.93) translateY(12px);
+            }
+            60% {
+                opacity: 1;
+                transform: scale(1.015) translateY(-2px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .animate-modal-spring {
+            animation: modalSpring 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        /* Custom FadeIn */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Hide scrollbars for chips */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Print Style Sheet */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 11pt;
+            }
+            .print-break {
+                page-break-before: always;
+            }
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#f1f5f9] dark:bg-[#060f24] text-slate-800 dark:text-slate-100 min-h-screen font-sans transition-colors duration-200 antialiased selection:bg-lube-red selection:text-white">
+
+    <!-- Top Header Bar -->
+    <header class="sticky top-0 z-40 bg-white/90 dark:bg-lube-navyDark/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors duration-200 no-print">
+        <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                
+                <!-- Brand & Logo -->
+                <div class="flex items-center gap-4">
+                    <div class="relative bg-white dark:bg-slate-900 p-1.5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex items-center justify-center">
+                        <img src="lube-logo.png" alt="Lube Distribuidora" class="h-10 w-auto object-contain" onerror="this.onerror=null; this.src='assets/lube-logo.png';">
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-xl font-extrabold text-lube-navy dark:text-white tracking-tight">BI DE ABSENTE&Iacute;SMO RH</h1>
+                            <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-red-100 text-lube-red dark:bg-red-950/60 dark:text-red-400 border border-red-200 dark:border-red-900/50">PRO RH</span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Lube Distribuidora &bull; Gest&atilde;o Estrat&eacute;gica de Pessoas &amp; Frequ&ecirc;ncia</p>
+                    </div>
+                </div>
+
+                <!-- Right Action Bar -->
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    
+                    <!-- Supabase Connection Status Badge -->
+                    <button id="supabaseStatusBadge" onclick="openSupabaseModal()" title="Status da Conexão com Banco Supabase Cloud" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/80 text-xs font-semibold text-emerald-700 dark:text-emerald-300 shadow-sm transition cursor-pointer">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="supabasePulseDot"></span>
+                        <span id="supabaseStatusText">Supabase: Conectado</span>
+                    </button>
+
+                    <!-- Base Status Badge -->
+                    <div id="baseHeaderBadge" class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        <i data-lucide="database" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <span id="baseHeaderBadgeText">Base: <strong class="text-lube-navy dark:text-white">1.016</strong> Registros</span>
+                    </div>
+
+                    <!-- Novo Registro (Supabase Direct Insert) -->
+                    <button onclick="openNewRecordModal()" title="Cadastrar nova ocorrência diretamente no banco de dados" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-lube-red hover:bg-lube-redHover text-white shadow-sm transition cursor-pointer">
+                        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                        <span>Novo Registro</span>
+                    </button>
+
+                    <!-- Reset Filters Button -->
+                    <button id="btnResetFilters" onclick="resetAllFilters()" title="Redefinir todos os filtros" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition cursor-pointer">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>Limpar Filtros</span>
+                    </button>
+
+                    <!-- Export Excel -->
+                    <button onclick="exportToExcel()" title="Exportar dados filtrados para Excel (.xlsx)" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition cursor-pointer">
+                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                        <span>Exportar Excel</span>
+                    </button>
+
+                    <!-- Importar Planilha -->
+                    <button onclick="triggerImportExcel()" title="Importar ou atualizar planilha de absenteísmo (.xlsx)" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-lube-navy hover:bg-lube-navyLight dark:bg-slate-800 dark:hover:bg-slate-700 text-white border border-transparent dark:border-slate-700 shadow-sm transition cursor-pointer">
+                        <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
+                        <span>Importar Planilha</span>
+                    </button>
+                    <input type="file" id="fileImportExcel" accept=".xlsx, .xls, .xlsm, .csv" onchange="handleExcelImport(event)" class="hidden">
+
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition cursor-pointer" title="Alternar Modo Escuro / Claro">
+                        <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
+                        <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- FILTER CONTROL PANEL -->
+        <section class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800 no-print transition-all">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 rounded-lg bg-red-50 dark:bg-red-950/50 text-lube-red">
+                        <i data-lucide="filter" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Filtros Estrat&eacute;gicos e Segmenta&ccedil;&atilde;o</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Refine a an&aacute;lise por per&iacute;odos, setores, cargos, tipos de aus&ecirc;ncia ou colaborador</p>
+                    </div>
+                </div>
+                
+                <!-- Active Filters Status Counter -->
+                <div class="flex items-center gap-3">
+                    <span id="filteredStatsBadge" class="px-3 py-1 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        Carregando registros...
+                    </span>
+                </div>
+            </div>
+
+            <!-- Quick Presets Bar (Atalhos Executivos de 1-Clique) -->
+            <div class="flex items-center gap-2 pt-3 overflow-x-auto pb-1 text-xs no-scrollbar">
+                <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
+                    <i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> Atalhos:
+                </span>
+                <button type="button" onclick="applyPreset('all')" id="preset-all" class="preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-lube-navy text-white shadow-sm dark:bg-blue-600 cursor-pointer">
+                    <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Todos
+                </button>
+                <button type="button" onclick="applyPreset('injustificado')" id="preset-injustificado" class="preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 hover:text-lube-red dark:hover:bg-red-950/40 cursor-pointer">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span> Foco Faltas Injustificadas
+                </button>
+                <button type="button" onclick="applyPreset('segundas')" id="preset-segundas" class="preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 dark:hover:bg-purple-950/40 cursor-pointer">
+                    <i data-lucide="calendar-alert" class="w-3.5 h-3.5 text-purple-500"></i> Pico Segundas-Feiras
+                </button>
+                <button type="button" onclick="applyPreset('entrega')" id="preset-entrega" class="preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-950/40 cursor-pointer">
+                    <i data-lucide="truck" class="w-3.5 h-3.5 text-amber-500"></i> Setor Crítico (ENTREGA)
+                </button>
+                <button type="button" onclick="applyPreset('justificado')" id="preset-justificado" class="preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/40 cursor-pointer">
+                    <i data-lucide="stethoscope" class="w-3.5 h-3.5 text-blue-500"></i> Atestados & Abonos
+                </button>
+            </div>
+
+            <!-- Filter Inputs Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                
+                <!-- 1. Período / Mês -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> M&ecirc;s / Ano
+                    </label>
+                    <select id="filterMonth" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-lube-red focus:outline-none transition">
+                        <option value="ALL">Todos os Meses (Dez-Jun)</option>
+                    </select>
+                </div>
+
+                <!-- 2. Tipo de Absenteísmo -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <i data-lucide="layers" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> Tipo de Aus&ecirc;ncia
+                    </label>
+                    <select id="filterTipo" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-lube-red focus:outline-none transition">
+                        <option value="ALL">Todos os Tipos</option>
+                        <option value="Injustificado">Injustificado (Faltas/Suspens&otilde;es)</option>
+                        <option value="Justificado">Justificado (Atestados/Licen&ccedil;as/Abonos)</option>
+                        <option value="Compensacao/Folga">Compensa&ccedil;&atilde;o / Folga / BH</option>
+                        <option value="Desenvolvimento">Treinamento / Cursos</option>
+                        <option value="Outros">Outros / Ajustes</option>
+                    </select>
+                </div>
+
+                <!-- 3. Motivo Específico -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <i data-lucide="tag" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> Motivo
+                    </label>
+                    <select id="filterMotivo" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-lube-red focus:outline-none transition">
+                        <option value="ALL">Todos os Motivos</option>
+                    </select>
+                </div>
+
+                <!-- 4. Setor / Departamento -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <i data-lucide="building" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> Setor
+                    </label>
+                    <select id="filterSetor" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-lube-red focus:outline-none transition">
+                        <option value="ALL">Todos os Setores</option>
+                    </select>
+                </div>
+
+                <!-- 5. Cargo / Função -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <i data-lucide="briefcase" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> Fun&ccedil;&atilde;o / Cargo
+                    </label>
+                    <select id="filterFuncao" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-lube-red focus:outline-none transition">
+                        <option value="ALL">Todas as Fun&ccedil;&otilde;es</option>
+                    </select>
+                </div>
+
+                <!-- 6. Dia da Semana -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <i data-lucide="clock" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> Dia da Semana
+                    </label>
+                    <select id="filterDiaSemana" onchange="applyFilters()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-lube-red focus:outline-none transition">
+                        <option value="ALL">Todos os Dias</option>
+                        <option value="Segunda-feira">Segunda-feira</option>
+                        <option value="Terca-feira">Ter&ccedil;a-feira</option>
+                        <option value="Quarta-feira">Quarta-feira</option>
+                        <option value="Quinta-feira">Quinta-feira</option>
+                        <option value="Sexta-feira">Sexta-feira</option>
+                        <option value="Sabado">S&aacute;bado</option>
+                        <option value="Domingo">Domingo</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- Search by Employee Bar -->
+            <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-center gap-3">
+                <div class="relative w-full">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="filterSearch" oninput="applyFilters()" placeholder="Buscar colaborador por nome ou cargo..." class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-lube-red focus:outline-none transition">
+                </div>
+            </div>
+        </section>
+
+        <!-- EXECUTIVE KPI CARDS -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            
+            <!-- KPI 1: Total de Ocorrências -->
+            <div class="executive-card group bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Ocorr&ecirc;ncias</span>
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div id="kpiTotal" class="text-2xl font-extrabold text-lube-navy dark:text-white">0</div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1 font-medium">
+                        <span class="text-slate-400">100% da sele&ccedil;&atilde;o</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- KPI 2: Faltas Injustificadas -->
+            <div class="executive-card group bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-lube dark:shadow-lube-dark border-l-4 border-l-lube-red border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Faltas Injustificadas</span>
+                    <div class="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-950/60 text-lube-red flex items-center justify-center animate-radar-red group-hover:scale-110 transition-transform">
+                        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div id="kpiInjustificadas" class="text-2xl font-extrabold text-lube-red">0</div>
+                    <p id="kpiInjustificadasPerc" class="text-[11px] text-red-600 dark:text-red-400 mt-0.5 font-semibold">0% do total</p>
+                </div>
+            </div>
+
+            <!-- KPI 3: Atestados & Justificados -->
+            <div class="executive-card group bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Atestados &amp; Legal</span>
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i data-lucide="stethoscope" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div id="kpiJustificados" class="text-2xl font-extrabold text-slate-800 dark:text-white">0</div>
+                    <p id="kpiJustificadosPerc" class="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5 font-semibold">0% do total</p>
+                </div>
+            </div>
+
+            <!-- KPI 4: Folgas / Banco de Horas -->
+            <div class="executive-card group bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Folgas &amp; BH</span>
+                    <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i data-lucide="sun-medium" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div id="kpiFolgas" class="text-2xl font-extrabold text-slate-800 dark:text-white">0</div>
+                    <p id="kpiFolgasPerc" class="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5 font-semibold">0% do total</p>
+                </div>
+            </div>
+
+            <!-- KPI 5: Treinamentos -->
+            <div class="executive-card group bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Capacita&ccedil;&otilde;es</span>
+                    <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div id="kpiTreinamento" class="text-2xl font-extrabold text-slate-800 dark:text-white">0</div>
+                    <p id="kpiTreinamentoPerc" class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-semibold">0% do total</p>
+                </div>
+            </div>
+
+            <!-- KPI 6: Colaboradores Impactados -->
+            <div class="executive-card group bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Colaboradores</span>
+                    <div class="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div id="kpiColaboradores" class="text-2xl font-extrabold text-slate-800 dark:text-white">0</div>
+                    <p id="kpiMediaColaborador" class="text-[11px] text-purple-600 dark:text-purple-400 mt-0.5 font-semibold">Média: 0 / pessoa</p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- DYNAMIC EXECUTIVE INSIGHTS PANEL -->
+        <section class="bg-gradient-to-r from-lube-navy to-slate-900 text-white rounded-2xl p-5 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
+                <i data-lucide="trending-up" class="w-64 h-64"></i>
+            </div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="p-1.5 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    </span>
+                    <h3 class="text-sm font-bold tracking-wider uppercase text-slate-200">Diagn&oacute;stico Executivo Automatizado de RH</h3>
+                </div>
+                <div id="insightsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    <!-- Dynamic Insight Cards injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ANALYTICS VISUALIZATION SECTION -->
+        
+        <!-- Row 1: Evolução Temporal + Raio-X de Motivos -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Evolução Mensal (2 Cols) -->
+            <div class="executive-card lg:col-span-2 bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="trending-up" class="w-4 h-4 text-lube-red"></i>
+                            Evolu&ccedil;&atilde;o Temporal do Absente&iacute;smo
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Distribui&ccedil;&atilde;o mensal segmentada por tipo de aus&ecirc;ncia</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        Dez/2025 - Jun/2026
+                    </span>
+                </div>
+                <div class="relative h-[320px] w-full pt-4">
+                    <canvas id="chartEvolution"></canvas>
+                </div>
+            </div>
+
+            <!-- Raio-X de Motivos Donut (1 Col) -->
+            <div class="executive-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-blue-500"></i>
+                            Raio-X de Motivos
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Propor&ccedil;&atilde;o dos principais motivos de aus&ecirc;ncia</p>
+                    </div>
+                </div>
+                <div class="relative h-[280px] w-full flex items-center justify-center pt-2">
+                    <canvas id="chartMotivos"></canvas>
+                </div>
+                <div id="motivosSummaryLegend" class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] grid grid-cols-2 gap-1 text-slate-600 dark:text-slate-400">
+                    <!-- Filled dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Row 2: Absenteísmo por Setor + Padrão Dia da Semana -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Absenteísmo por Setor -->
+            <div class="executive-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="building-2" class="w-4 h-4 text-emerald-500"></i>
+                            Absente&iacute;smo por Setor / Departamento
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Volume total de ocorr&ecirc;ncias e propor&ccedil;&atilde;o de faltas por &aacute;rea</p>
+                    </div>
+                </div>
+                <div class="relative h-[320px] w-full pt-4">
+                    <canvas id="chartSetor"></canvas>
+                </div>
+            </div>
+
+            <!-- Padrão Dia da Semana -->
+            <div class="executive-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="calendar-days" class="w-4 h-4 text-purple-500"></i>
+                            Padr&atilde;o Semanal de Absente&iacute;smo
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Frequ&ecirc;ncia de aus&ecirc;ncias por dia da semana (efeito fim de semana)</p>
+                    </div>
+                    <span id="picoCriticoBadge" class="text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-full border border-red-200 dark:border-red-900">
+                        Segunda: Pico Cr&iacute;tico
+                    </span>
+                </div>
+                <div class="relative h-[320px] w-full pt-4">
+                    <canvas id="chartDiaSemana"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Row 3: Top Colaboradores Faltas Injustificadas + Top Geral -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Top Faltas Injustificadas -->
+            <div class="executive-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-red-600 dark:text-red-400 uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+                            Top 10 Colaboradores &bull; Faltas Injustificadas
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Casos priorit&aacute;rios para acompanhamento e feedback disciplinar do RH</p>
+                    </div>
+                </div>
+                <div class="relative h-[320px] w-full pt-4">
+                    <canvas id="chartTopInjustificadas"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Geral Ausências -->
+            <div class="executive-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="list-ordered" class="w-4 h-4 text-blue-500"></i>
+                            Top 10 Colaboradores &bull; Volume Geral
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Total geral de registros (Faltas, Atestados, Folgas e Treinamentos)</p>
+                    </div>
+                </div>
+                <div class="relative h-[320px] w-full pt-4">
+                    <canvas id="chartTopGeral"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Row 4: Matriz Térmica Setor x Motivo + Tempo de Casa -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Matriz Setor x Motivo (2 Cols) -->
+            <div class="executive-card lg:col-span-2 bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="grid" class="w-4 h-4 text-amber-500"></i>
+                            Matriz Cruzada &bull; Setor vs Causa Principal
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Distribui&ccedil;&atilde;o das principais ocorr&ecirc;ncias por &aacute;rea operacional e administrativa</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto mt-4">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
+                            <tr>
+                                <th class="p-2.5">Setor</th>
+                                <th class="p-2.5 text-center text-red-600 dark:text-red-400">Faltas</th>
+                                <th class="p-2.5 text-center text-blue-600 dark:text-blue-400">Atestados</th>
+                                <th class="p-2.5 text-center text-amber-600 dark:text-amber-400">Folgas/BH</th>
+                                <th class="p-2.5 text-center text-emerald-600 dark:text-emerald-400">Treinamentos</th>
+                                <th class="p-2.5 text-center font-extrabold">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="matrixTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tempo de Casa (1 Col) -->
+            <div class="executive-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="user-check" class="w-4 h-4 text-indigo-500"></i>
+                            Tempo de Empresa
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Absente&iacute;smo por faixa de antiguidade</p>
+                    </div>
+                </div>
+                <div class="relative h-[260px] w-full pt-4 flex items-center justify-center">
+                    <canvas id="chartTempoCasa"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- DETAILED DATA GRID (TABLE BI) -->
+        <section class="executive-card bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="table" class="w-4 h-4 text-lube-navy dark:text-slate-300"></i>
+                        Registro Gerencial Detalhado de Ocorr&ecirc;ncias
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Detalhamento linha a linha com suporte a ordena&ccedil;&atilde;o, pagina&ccedil;&atilde;o e visualiza&ccedil;&atilde;o 360&deg;</p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <span>Exibir:</span>
+                        <select id="tablePageSize" onchange="changePageSize()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none">
+                            <option value="10">10 linhas</option>
+                            <option value="25" selected>25 linhas</option>
+                            <option value="50">50 linhas</option>
+                            <option value="100">100 linhas</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto mt-4 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700 select-none">
+                        <tr>
+                            <th onclick="sortTable('data_iso')" class="p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">Data <i data-lucide="arrow-up-down" class="w-3 h-3 inline ml-1 opacity-50"></i></th>
+                            <th onclick="sortTable('dia_semana')" class="p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">Dia Semana <i data-lucide="arrow-up-down" class="w-3 h-3 inline ml-1 opacity-50"></i></th>
+                            <th onclick="sortTable('funcionario')" class="p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">Colaborador <i data-lucide="arrow-up-down" class="w-3 h-3 inline ml-1 opacity-50"></i></th>
+                            <th onclick="sortTable('setor')" class="p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">Setor <i data-lucide="arrow-up-down" class="w-3 h-3 inline ml-1 opacity-50"></i></th>
+                            <th onclick="sortTable('funcao')" class="p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">Fun&ccedil;&atilde;o <i data-lucide="arrow-up-down" class="w-3 h-3 inline ml-1 opacity-50"></i></th>
+                            <th onclick="sortTable('motivo')" class="p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">Motivo <i data-lucide="arrow-up-down" class="w-3 h-3 inline ml-1 opacity-50"></i></th>
+                            <th onclick="sortTable('tipo_absenteismo')" class="p-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition">Classifica&ccedil;&atilde;o <i data-lucide="arrow-up-down" class="w-3 h-3 inline ml-1 opacity-50"></i></th>
+                            <th class="p-3 text-center">A&ccedil;&otilde;es</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- Injected dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+                <div id="tablePaginationInfo">
+                    Mostrando 0 a 0 de 0 registros
+                </div>
+                <div class="flex items-center gap-1.5" id="tablePaginationButtons">
+                    <!-- Dynamic Page Buttons -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- EMPLOYEE 360° MODAL / DRAWER -->
+    <div id="employeeModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col animate-fade-in">
+            
+            <!-- Modal Header -->
+            <div class="p-6 bg-gradient-to-r from-lube-navy to-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center font-bold text-lg text-white border border-white/20" id="modalAvatar">
+                        JS
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-white tracking-tight" id="modalEmployeeName">Nome do Colaborador</h4>
+                        <p class="text-xs text-slate-300" id="modalEmployeeRole">Fun&ccedil;&atilde;o &bull; Setor</p>
+                    </div>
+                </div>
+                <button onclick="closeEmployeeModal()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body Scrollable -->
+            <div class="p-6 overflow-y-auto space-y-6">
+                
+                <!-- Employee Summary Info Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/60 text-center">
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block uppercase">Total Ocorr&ecirc;ncias</span>
+                        <span class="text-lg font-extrabold text-lube-navy dark:text-white" id="modalTotalOccurrences">0</span>
+                    </div>
+                    <div class="bg-red-50 dark:bg-red-950/40 p-3 rounded-xl border border-red-200/80 dark:border-red-900/40 text-center">
+                        <span class="text-[11px] font-bold text-red-600 dark:text-red-400 block uppercase">Faltas Injust.</span>
+                        <span class="text-lg font-extrabold text-lube-red" id="modalUnjustifiedCount">0</span>
+                    </div>
+                    <div class="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-xl border border-blue-200/80 dark:border-blue-900/40 text-center">
+                        <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 block uppercase">Atestados/Abonos</span>
+                        <span class="text-lg font-extrabold text-blue-600 dark:text-blue-400" id="modalJustifiedCount">0</span>
+                    </div>
+                    <div class="bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200/80 dark:border-amber-900/40 text-center">
+                        <span class="text-[11px] font-bold text-amber-600 dark:text-amber-400 block uppercase">Folgas / BH</span>
+                        <span class="text-lg font-extrabold text-amber-600 dark:text-amber-400" id="modalFolgasCount">0</span>
+                    </div>
+                </div>
+
+                <!-- Meta Details -->
+                <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                        <span class="text-slate-400 block font-medium">Empresa</span>
+                        <span class="font-bold text-slate-800 dark:text-white" id="modalCompany">LUBE DISTRIBUIDORA LTDA</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Data de Admiss&atilde;o</span>
+                        <span class="font-bold text-slate-800 dark:text-white" id="modalDtAdmissao">-</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Tempo de Empresa</span>
+                        <span class="font-bold text-slate-800 dark:text-white" id="modalTempoCasa">-</span>
+                    </div>
+                </div>
+
+                <!-- Incident History Table -->
+                <div>
+                    <h5 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i data-lucide="history" class="w-4 h-4 text-lube-red"></i>
+                        Hist&oacute;rico Cronol&oacute;gico de Aus&ecirc;ncias
+                    </h5>
+                    <div class="max-h-60 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold sticky top-0">
+                                <tr>
+                                    <th class="p-2.5">Data</th>
+                                    <th class="p-2.5">Dia Semana</th>
+                                    <th class="p-2.5">Motivo</th>
+                                    <th class="p-2.5">Classifica&ccedil;&atilde;o</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalTimelineBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <!-- Injected -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700/80 flex justify-end">
+                <button onclick="closeEmployeeModal()" class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE NOVO REGISTRO (DIRETO NO BANCO SUPABASE) -->
+    <div id="newRecordModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col animate-fade-in">
+            
+            <!-- Modal Header -->
+            <div class="p-6 bg-gradient-to-r from-lube-red to-rose-700 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-white">
+                        <i data-lucide="plus-circle" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-white tracking-tight">Novo Registro de Absenteísmo</h4>
+                        <p class="text-xs text-rose-100">Inserção direta no Banco de Dados Supabase (PostgreSQL Cloud)</p>
+                    </div>
+                </div>
+                <button onclick="closeNewRecordModal()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form Scrollable -->
+            <form id="formNewRecord" onsubmit="submitNewRecord(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Funcionário -->
+                    <div class="space-y-1 sm:col-span-2">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200">
+                            Colaborador / Funcionário <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="recFuncionario" required list="colaboradoresList" placeholder="Digite o nome completo do colaborador" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
+                        <datalist id="colaboradoresList"></datalist>
+                    </div>
+
+                    <!-- Data da Ocorrência -->
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200">
+                            Data da Ocorrência <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="date" id="recData" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
+                    </div>
+
+                    <!-- Motivo -->
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200">
+                            Motivo da Ausência <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="recMotivo" required list="motivosList" oninput="autoClassifyNewRecordMotivo()" placeholder="Ex: FALTA SEM JUSTIFICATIVA, ATESTADO..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
+                        <datalist id="motivosList"></datalist>
+                    </div>
+
+                    <!-- Tipo de Absenteísmo -->
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200">
+                            Tipo de Absenteísmo <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="recTipo" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
+                            <option value="Injustificado">Injustificado (Faltas / Suspensões)</option>
+                            <option value="Justificado">Justificado (Atestados / Licenças / Abonos)</option>
+                            <option value="Compensacao/Folga">Compensação / Folga / Banco de Horas</option>
+                            <option value="Desenvolvimento">Desenvolvimento / Treinamento</option>
+                            <option value="Outros">Outros / Ajustes</option>
+                        </select>
+                    </div>
+
+                    <!-- Categoria -->
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200">
+                            Categoria Estratégica
+                        </label>
+                        <input type="text" id="recCategoria" placeholder="Ex: Falta Injustificada, Atestado Médico..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
+                    </div>
+
+                    <!-- Setor -->
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200">
+                            Setor <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="recSetor" required list="setoresList" placeholder="Ex: ENTREGA, LOGISTICA..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
+                        <datalist id="setoresList"></datalist>
+                    </div>
+
+                    <!-- Função / Cargo -->
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200">
+                            Função / Cargo <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" id="recFuncao" required list="funcoesList" placeholder="Ex: MOTORISTA, AJUDANTE..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
+                        <datalist id="funcoesList"></datalist>
+                    </div>
+
+                    <!-- Data de Admissão -->
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200">
+                            Data de Admissão (Opcional)
+                        </label>
+                        <input type="date" id="recDtAdmissao" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
+                    </div>
+
+                    <!-- Empresa -->
+                    <div class="space-y-1">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200">
+                            Empresa
+                        </label>
+                        <input type="text" id="recEmpresa" value="LUBE DISTRIBUIDORA LTDA" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
+                    </div>
+
+                    <!-- Observação -->
+                    <div class="space-y-1 sm:col-span-2">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200">
+                            Observações / Detalhes Adicionais
+                        </label>
+                        <textarea id="recObservacao" rows="2" placeholder="Informações complementares sobre a ausência ou atestado..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- Modal Footer Inside Form -->
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeNewRecordModal()" class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition cursor-pointer">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btnSubmitNewRecord" class="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-lube-red hover:bg-lube-redHover text-white shadow-md transition cursor-pointer">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Salvar no Supabase</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE STATUS SUPABASE CLOUD -->
+    <div id="supabaseStatusModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col animate-fade-in">
+            
+            <div class="p-6 bg-gradient-to-r from-lube-navy to-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center font-bold text-emerald-400">
+                        <i data-lucide="database" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-white tracking-tight">Status do Banco Supabase</h4>
+                        <p class="text-xs text-slate-300">Infraestrutura PostgreSQL Cloud & Realtime</p>
+                    </div>
+                </div>
+                <button onclick="closeSupabaseModal()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+                        <span class="text-slate-400 block font-medium">Projeto</span>
+                        <span class="font-bold text-slate-900 dark:text-white text-sm" id="modalSupabaseProject">ABSENTEISMO RH</span>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+                        <span class="text-slate-400 block font-medium">Status da Conexão</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-1.5" id="modalSupabaseStatus">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online (PostgreSQL)
+                        </span>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+                        <span class="text-slate-400 block font-medium">Registros no Banco</span>
+                        <span class="font-bold text-lube-navy dark:text-white text-sm" id="modalSupabaseRecords">1.016</span>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
+                        <span class="text-slate-400 block font-medium">Latência de Rede</span>
+                        <span class="font-bold text-blue-600 dark:text-blue-400 text-sm" id="modalSupabaseLatency">~35 ms</span>
+                    </div>
+                </div>
+
+                <div class="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/40 text-blue-800 dark:text-blue-300">
+                    <p class="font-bold mb-1 flex items-center gap-1.5">
+                        <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i> Sincronização em Tempo Real (Supabase Realtime Ativo)
+                    </p>
+                    <p class="text-[11px] leading-relaxed text-blue-700 dark:text-blue-400">
+                        Qualquer alteração ou novo registro inserido neste painel ou em outras sessões é propagado instantaneamente para todos os usuários conectados via WebSockets PostgreSQL.
+                    </p>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700/80 flex items-center justify-between">
+                <button onclick="forceSyncSupabase()" id="btnForceSync" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-lube-navy hover:bg-lube-navyLight text-white transition cursor-pointer">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                    <span>Recarregar do Banco</span>
+                </button>
+                <button onclick="closeSupabaseModal()" class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition cursor-pointer">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 max-w-md w-full p-4 rounded-2xl shadow-2xl border flex items-start gap-3 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100">
+        <div id="toastIcon" class="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 mt-0.5">
+            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+        </div>
+        <div class="flex-1 text-xs">
+            <h5 id="toastTitle" class="font-bold text-slate-900 dark:text-white text-sm">Planilha Importada com Sucesso</h5>
+            <p id="toastMessage" class="text-slate-500 dark:text-slate-400 mt-0.5">Os dados foram carregados e o dashboard foi atualizado.</p>
+        </div>
+        <button onclick="hideToast()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+    </div>
+
+    <!-- SUPABASE JS SDK & CLIENT -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+
+    <!-- DATASET SOURCE INCLUSION (LOCAL FALLBACK) -->
+    <script src="data.js"></script>
+
+    <!-- DASHBOARD LOGIC SCRIPT -->
+    <script>
+        // State Management
+        let rawData = window.ABSENTEEISM_DATA || [];
+        let filteredData = [];
+        let currentPage = 1;
+        let pageSize = 25;
+        let sortColumn = 'data_iso';
+        let sortDirection = 'asc';
+
+        // Chart Instances
+        let chartEvolution = null;
+        let chartMotivos = null;
+        let chartSetor = null;
+        let chartDiaSemana = null;
+        let chartTopInjustificadas = null;
+        let chartTopGeral = null;
+        let chartTempoCasa = null;
+
+        // Supabase Status State
+        let isSupabaseOnline = false;
+        let supabaseLatency = 0;
+        let supabaseRecordCount = 0;
+
+        // Load custom imported data from localStorage if available (offline fallback)
+        function loadStoredData() {
+            try {
+                const stored = localStorage.getItem('lube_custom_absenteismo_data');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        rawData = parsed;
+                    }
+                }
+            } catch (e) {
+                console.warn('Erro ao carregar dados salvos:', e);
+            }
+        }
+
+        // Initialize App on DOM Load
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadStoredData();
+            lucide.createIcons();
+            initTheme();
+            updateHeaderBaseBadge();
+            populateFilterOptions();
+            applyFilters();
+
+            // Connect and Sync with Supabase Cloud
+            await initSupabaseIntegration();
+        });
+
+        // Supabase Live Synchronization
+        async function initSupabaseIntegration() {
+            if (!window.SupabaseService) {
+                console.warn('SupabaseService não disponível.');
+                updateSupabaseStatusUI(false, 0, 0, 'Serviço indisponível');
+                return;
+            }
+
+            try {
+                updateSupabaseStatusUI('loading');
+                const testRes = await window.SupabaseService.testConnection();
+
+                if (testRes.connected) {
+                    isSupabaseOnline = true;
+                    supabaseLatency = testRes.latencyMs;
+                    supabaseRecordCount = testRes.totalRegistros;
+                    
+                    // Fetch live occurrences from Supabase
+                    const dbData = await window.SupabaseService.fetchOcorrencias();
+                    if (dbData && dbData.length > 0) {
+                        rawData = dbData;
+                        try {
+                            localStorage.setItem('lube_custom_absenteismo_data', JSON.stringify(rawData));
+                        } catch (err) {}
+                        
+                        populateFilterOptions();
+                        populateRecordFormDatalists();
+                        applyFilters();
+                        updateHeaderBaseBadge();
+                    }
+
+                    updateSupabaseStatusUI(true, rawData.length, testRes.latencyMs);
+
+                    // Subscribe to Realtime WebSocket Events
+                    window.SupabaseService.subscribeRealtime(
+                        // onInsert
+                        (newRec) => {
+                            // Check if already in array
+                            const exists = rawData.some(r => r.id === newRec.id);
+                            if (!exists) {
+                                rawData.unshift(newRec);
+                                populateFilterOptions();
+                                populateRecordFormDatalists();
+                                applyFilters();
+                                updateHeaderBaseBadge();
+                                showToast('Novo Registro em Tempo Real', `${newRec.funcionario} - ${newRec.motivo} adicionado via Supabase.`);
+                            }
+                        },
+                        // onUpdate
+                        (updatedRec) => {
+                            const idx = rawData.findIndex(r => r.id === updatedRec.id);
+                            if (idx !== -1) {
+                                rawData[idx] = updatedRec;
+                                populateFilterOptions();
+                                applyFilters();
+                                showToast('Registro Atualizado', `Ocorrência #${updatedRec.id} sincronizada.`);
+                            }
+                        },
+                        // onDelete
+                        (deletedRec) => {
+                            rawData = rawData.filter(r => r.id !== deletedRec.id);
+                            populateFilterOptions();
+                            applyFilters();
+                            updateHeaderBaseBadge();
+                            showToast('Registro Removido', `Ocorrência removida do banco.`);
+                        }
+                    );
+
+                } else {
+                    isSupabaseOnline = false;
+                    updateSupabaseStatusUI(false, rawData.length, testRes.latencyMs, testRes.error);
+                }
+            } catch (err) {
+                console.error('Falha na sincronização inicial do Supabase:', err);
+                isSupabaseOnline = false;
+                updateSupabaseStatusUI(false, rawData.length, 0, err.message);
+            }
+        }
+
+        // Update Supabase UI indicators
+        function updateSupabaseStatusUI(status, count = 0, latencyMs = 0, errorMsg = '') {
+            const badge = document.getElementById('supabaseStatusBadge');
+            const dot = document.getElementById('supabasePulseDot');
+            const text = document.getElementById('supabaseStatusText');
+            const modalStatus = document.getElementById('modalSupabaseStatus');
+            const modalRecords = document.getElementById('modalSupabaseRecords');
+            const modalLatency = document.getElementById('modalSupabaseLatency');
+
+            if (status === 'loading') {
+                if (text) text.textContent = 'Supabase: Conectando...';
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
+                return;
+            }
+
+            if (status === true) {
+                if (text) text.textContent = `Supabase: Online (${count.toLocaleString('pt-BR')} regs \u2022 ${latencyMs}ms)`;
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+                if (badge) {
+                    badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/80 text-xs font-semibold text-emerald-700 dark:text-emerald-300 shadow-sm transition cursor-pointer';
+                }
+                if (modalStatus) {
+                    modalStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online (PostgreSQL 15 Cloud)';
+                    modalStatus.className = 'font-bold text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-1.5';
+                }
+                if (modalRecords) modalRecords.textContent = count.toLocaleString('pt-BR');
+                if (modalLatency) modalLatency.textContent = `${latencyMs} ms`;
+            } else {
+                if (text) text.textContent = 'Supabase: Local / Offline';
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-slate-400';
+                if (badge) {
+                    badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm transition cursor-pointer';
+                }
+                if (modalStatus) {
+                    modalStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> Offline (Usando Cache Local)';
+                    modalStatus.className = 'font-bold text-rose-600 dark:text-rose-400 text-sm flex items-center gap-1.5';
+                }
+                if (modalRecords) modalRecords.textContent = `${count.toLocaleString('pt-BR')} (local)`;
+                if (modalLatency) modalLatency.textContent = '-';
+            }
+        }
+
+        // Supabase Status Modal Open/Close/ForceSync
+        function openSupabaseModal() {
+            const modal = document.getElementById('supabaseStatusModal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeSupabaseModal() {
+            const modal = document.getElementById('supabaseStatusModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        async function forceSyncSupabase() {
+            const btn = document.getElementById('btnForceSync');
+            if (btn) btn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Sincronizando...</span>';
+            lucide.createIcons();
+
+            await initSupabaseIntegration();
+
+            if (btn) btn.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Recarregar do Banco</span>';
+            lucide.createIcons();
+            showToast('Banco Sincronizado', 'Os dados mais recentes foram carregados do Supabase Cloud.');
+        }
+
+        // Datalists for New Record Form
+        function populateRecordFormDatalists() {
+            // Colaboradores
+            const colabList = document.getElementById('colaboradoresList');
+            if (colabList) {
+                const names = [...new Set(rawData.map(d => d.funcionario).filter(Boolean))].sort();
+                colabList.innerHTML = names.map(n => `<option value="${n}">`).join('');
+            }
+            // Motivos
+            const motList = document.getElementById('motivosList');
+            if (motList) {
+                const mots = [...new Set(rawData.map(d => d.motivo).filter(Boolean))].sort();
+                motList.innerHTML = mots.map(m => `<option value="${m}">`).join('');
+            }
+            // Setores
+            const setList = document.getElementById('setoresList');
+            if (setList) {
+                const sets = [...new Set(rawData.map(d => d.setor).filter(Boolean))].sort();
+                setList.innerHTML = sets.map(s => `<option value="${s}">`).join('');
+            }
+            // Funções
+            const funcList = document.getElementById('funcoesList');
+            if (funcList) {
+                const funcs = [...new Set(rawData.map(d => d.funcao).filter(Boolean))].sort();
+                funcList.innerHTML = funcs.map(f => `<option value="${f}">`).join('');
+            }
+        }
+
+        // New Record Modal Open/Close/Submit
+        function openNewRecordModal() {
+            populateRecordFormDatalists();
+            const recData = document.getElementById('recData');
+            if (recData && !recData.value) {
+                recData.value = new Date().toISOString().split('T')[0];
+            }
+            const modal = document.getElementById('newRecordModal');
+            if (modal) modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeNewRecordModal() {
+            const modal = document.getElementById('newRecordModal');
+            if (modal) modal.classList.add('hidden');
+            const form = document.getElementById('formNewRecord');
+            if (form) form.reset();
+        }
+
+        function autoClassifyNewRecordMotivo() {
+            const motivoVal = document.getElementById('recMotivo')?.value || '';
+            if (motivoVal) {
+                const classification = classifyAbsence(motivoVal);
+                const tipoSelect = document.getElementById('recTipo');
+                const catInput = document.getElementById('recCategoria');
+                if (tipoSelect) tipoSelect.value = classification.tipo;
+                if (catInput) catInput.value = classification.categoria;
+            }
+        }
+
+        async function submitNewRecord(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitNewRecord');
+            if (btn) btn.disabled = true;
+
+            const funcionario = document.getElementById('recFuncionario').value.trim();
+            const dataIso = document.getElementById('recData').value;
+            const motivo = document.getElementById('recMotivo').value.trim();
+            const tipo = document.getElementById('recTipo').value;
+            const categoria = document.getElementById('recCategoria').value.trim() || classifyAbsence(motivo).categoria;
+            const setor = document.getElementById('recSetor').value.trim();
+            const funcao = document.getElementById('recFuncao').value.trim();
+            const dtAdm = document.getElementById('recDtAdmissao').value || null;
+            const empresa = document.getElementById('recEmpresa').value.trim() || 'LUBE DISTRIBUIDORA LTDA';
+            const obs = document.getElementById('recObservacao').value.trim();
+
+            const monthNamesPt = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const dayNamesPt = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
+            const [yStr, mStr, dStr] = dataIso.split('-');
+            const y = parseInt(yStr, 10);
+            const m = parseInt(mStr, 10);
+            const d = parseInt(dStr, 10);
+            const dtObj = new Date(y, m - 1, d);
+            const dowNum = dtObj.getDay();
+
+            const record = {
+                funcionario,
+                empresa,
+                data_iso: dataIso,
+                data_formatada: `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`,
+                ano: y,
+                mes: m,
+                mes_nome: monthNamesPt[m - 1] || '',
+                mes_ano: `${monthNamesPt[m - 1] || ''}/${y}`,
+                ano_mes_sort: `${y}-${String(m).padStart(2, '0')}`,
+                dia_semana: dayNamesPt[dowNum] || 'Segunda-feira',
+                dia_semana_num: dowNum,
+                dia: d,
+                motivo,
+                categoria,
+                tipo_absenteismo: tipo,
+                setor,
+                funcao,
+                dt_admissao_iso: dtAdm,
+                dt_admissao_formatada: dtAdm ? `${dtAdm.split('-')[2]}/${dtAdm.split('-')[1]}/${dtAdm.split('-')[0]}` : null,
+                tempo_casa_anos: dtAdm ? Math.max(0, Math.round(((dtObj - new Date(dtAdm)) / (1000 * 60 * 60 * 24 * 365.25)) * 10) / 10) : null,
+                observacao: obs || null
+            };
+
+            try {
+                if (window.SupabaseService && isSupabaseOnline) {
+                    const saved = await window.SupabaseService.insertOcorrencia(record);
+                    if (saved && saved.id) record.id = saved.id;
+                } else {
+                    record.id = Date.now();
+                }
+
+                // Add to local state if not added by realtime yet
+                if (!rawData.some(r => r.id === record.id)) {
+                    rawData.unshift(record);
+                }
+
+                try {
+                    localStorage.setItem('lube_custom_absenteismo_data', JSON.stringify(rawData));
+                } catch (err) {}
+
+                populateFilterOptions();
+                populateRecordFormDatalists();
+                applyFilters();
+                updateHeaderBaseBadge();
+                closeNewRecordModal();
+
+                showToast('Registro Salvo com Sucesso!', `Ocorrência de ${funcionario} inserida no Supabase Cloud.`);
+
+            } catch (err) {
+                console.error('Erro ao salvar registro:', err);
+                showToast('Erro ao Salvar', 'Não foi possível gravar no banco: ' + (err.message || err), true);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        // Theme Handling (Light / Dark)
+        function initTheme() {
+            const saved = localStorage.getItem('lube_theme') || 'light';
+            if (saved === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('lube_theme', isDark ? 'dark' : 'light');
+            renderAllCharts();
+        }
+
+        // Helper to format days in clean PT-BR
+        function formatDiaSemanaPt(dia) {
+            if (!dia) return '-';
+            if (dia.includes('Segunda')) return 'Segunda-feira';
+            if (dia.includes('Terca') || dia.includes('Ter\u00e7a')) return 'Ter\u00e7a-feira';
+            if (dia.includes('Quarta')) return 'Quarta-feira';
+            if (dia.includes('Quinta')) return 'Quinta-feira';
+            if (dia.includes('Sexta')) return 'Sexta-feira';
+            if (dia.includes('Sabado') || dia.includes('S\u00e1bado')) return 'S\u00e1bado';
+            if (dia.includes('Domingo')) return 'Domingo';
+            return dia;
+        }
+
+        // Update Base Badge in Header
+        function updateHeaderBaseBadge() {
+            const badgeText = document.getElementById('baseHeaderBadgeText');
+            if (!badgeText) return;
+            const total = rawData.length;
+            const months = [...new Set(rawData.map(d => d.ano_mes_sort).filter(Boolean))].sort();
+            let periodStr = '';
+            if (months.length > 0) {
+                const first = rawData.find(d => d.ano_mes_sort === months[0]);
+                const last = rawData.find(d => d.ano_mes_sort === months[months.length - 1]);
+                const m1 = first ? (first.mes_nome ? first.mes_nome.substring(0, 3) : '') + '/' + String(first.ano).slice(-2) : '';
+                const m2 = last ? (last.mes_nome ? last.mes_nome.substring(0, 3) : '') + '/' + String(last.ano).slice(-2) : '';
+                periodStr = (m1 && m2 && m1 !== m2) ? ` (${m1} - ${m2})` : (m1 ? ` (${m1})` : '');
+            }
+            badgeText.innerHTML = `Base: <strong class="text-lube-navy dark:text-white">${total.toLocaleString('pt-BR')}</strong> Registros${periodStr}`;
+        }
+
+        // Populate Dropdowns with Distinct Clean Values
+        function populateFilterOptions() {
+            // Months
+            const monthSelect = document.getElementById('filterMonth');
+            if (monthSelect) {
+                monthSelect.innerHTML = '<option value="ALL">Todos os Meses</option>';
+                const months = [...new Set(rawData.map(d => d.ano_mes_sort).filter(Boolean))].sort();
+                months.forEach(m => {
+                    const sample = rawData.find(d => d.ano_mes_sort === m);
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = sample ? sample.mes_ano : m;
+                    monthSelect.appendChild(opt);
+                });
+            }
+
+            // Motivos
+            const motivoSelect = document.getElementById('filterMotivo');
+            if (motivoSelect) {
+                motivoSelect.innerHTML = '<option value="ALL">Todos os Motivos</option>';
+                const motivos = [...new Set(rawData.map(d => d.motivo).filter(Boolean))].sort();
+                motivos.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    motivoSelect.appendChild(opt);
+                });
+            }
+
+            // Setores
+            const setorSelect = document.getElementById('filterSetor');
+            if (setorSelect) {
+                setorSelect.innerHTML = '<option value="ALL">Todos os Setores</option>';
+                const setores = [...new Set(rawData.map(d => d.setor).filter(Boolean))].sort();
+                setores.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = s;
+                    setorSelect.appendChild(opt);
+                });
+            }
+
+            // Funções
+            const funcaoSelect = document.getElementById('filterFuncao');
+            if (funcaoSelect) {
+                funcaoSelect.innerHTML = '<option value="ALL">Todas as Funções</option>';
+                const funcoes = [...new Set(rawData.map(d => d.funcao).filter(Boolean))].sort();
+                funcoes.forEach(f => {
+                    const opt = document.createElement('option');
+                    opt.value = f;
+                    opt.textContent = f;
+                    funcaoSelect.appendChild(opt);
+                });
+            }
+        }
+
+        // Apply All Cascading Filters
+        function applyFilters() {
+            const monthVal = document.getElementById('filterMonth').value;
+            const tipoVal = document.getElementById('filterTipo').value;
+            const motivoVal = document.getElementById('filterMotivo').value;
+            const setorVal = document.getElementById('filterSetor').value;
+            const funcaoVal = document.getElementById('filterFuncao').value;
+            const diaSemanaVal = document.getElementById('filterDiaSemana').value;
+            const searchVal = (document.getElementById('filterSearch').value || '').trim().toLowerCase();
+
+            filteredData = rawData.filter(item => {
+                if (monthVal !== 'ALL' && item.ano_mes_sort !== monthVal) return false;
+                if (tipoVal !== 'ALL' && item.tipo_absenteismo !== tipoVal) return false;
+                if (motivoVal !== 'ALL' && item.motivo !== motivoVal) return false;
+                if (setorVal !== 'ALL' && item.setor !== setorVal) return false;
+                if (funcaoVal !== 'ALL' && item.funcao !== funcaoVal) return false;
+                if (diaSemanaVal !== 'ALL' && item.dia_semana !== diaSemanaVal) return false;
+                if (searchVal) {
+                    const matchFunc = (item.funcionario || '').toLowerCase().includes(searchVal);
+                    const matchRole = (item.funcao || '').toLowerCase().includes(searchVal);
+                    const matchSetor = (item.setor || '').toLowerCase().includes(searchVal);
+                    const matchMotivo = (item.motivo || '').toLowerCase().includes(searchVal);
+                    if (!matchFunc && !matchRole && !matchSetor && !matchMotivo) return false;
+                }
+                return true;
+            });
+
+            currentPage = 1;
+            updateKPIs();
+            renderDynamicInsights();
+            renderAllCharts();
+            renderMatrixTable();
+            renderDataTable();
+            updateFilterBadge();
+            lucide.createIcons();
+        }
+
+        // Quick Presets Filter Engine
+        let currentActivePreset = 'all';
+
+        function applyPreset(presetType) {
+            currentActivePreset = presetType;
+            
+            // Reset active styles on preset buttons
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.className = 'preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer';
+            });
+
+            const activeBtn = document.getElementById(`preset-${presetType}`);
+            if (activeBtn) {
+                if (presetType === 'injustificado') {
+                    activeBtn.className = 'preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-lube-red text-white shadow-md shadow-red-500/20 cursor-pointer';
+                } else if (presetType === 'segundas') {
+                    activeBtn.className = 'preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-purple-600 text-white shadow-md shadow-purple-500/20 cursor-pointer';
+                } else if (presetType === 'entrega') {
+                    activeBtn.className = 'preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-amber-500 text-white shadow-md shadow-amber-500/20 cursor-pointer';
+                } else if (presetType === 'justificado') {
+                    activeBtn.className = 'preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-blue-600 text-white shadow-md shadow-blue-500/20 cursor-pointer';
+                } else {
+                    activeBtn.className = 'preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-lube-navy dark:bg-blue-600 text-white shadow-md cursor-pointer';
+                }
+            }
+
+            // Reset dropdowns
+            document.getElementById('filterMonth').value = 'ALL';
+            document.getElementById('filterTipo').value = 'ALL';
+            document.getElementById('filterMotivo').value = 'ALL';
+            document.getElementById('filterSetor').value = 'ALL';
+            document.getElementById('filterFuncao').value = 'ALL';
+            document.getElementById('filterDiaSemana').value = 'ALL';
+            document.getElementById('filterSearch').value = '';
+
+            if (presetType === 'injustificado') {
+                document.getElementById('filterTipo').value = 'Injustificado';
+            } else if (presetType === 'segundas') {
+                document.getElementById('filterDiaSemana').value = 'Segunda-feira';
+            } else if (presetType === 'entrega') {
+                const setorSelect = document.getElementById('filterSetor');
+                for (let opt of setorSelect.options) {
+                    if (opt.value.toUpperCase().includes('ENTREGA')) {
+                        setorSelect.value = opt.value;
+                        break;
+                    }
+                }
+            } else if (presetType === 'justificado') {
+                document.getElementById('filterTipo').value = 'Justificado';
+            }
+
+            applyFilters();
+        }
+
+        function resetAllFilters() {
+            currentActivePreset = 'all';
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.className = 'preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer';
+            });
+            const allBtn = document.getElementById('preset-all');
+            if (allBtn) {
+                allBtn.className = 'preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-lube-navy dark:bg-blue-600 text-white shadow-md cursor-pointer';
+            }
+
+            document.getElementById('filterMonth').value = 'ALL';
+            document.getElementById('filterTipo').value = 'ALL';
+            document.getElementById('filterMotivo').value = 'ALL';
+            document.getElementById('filterSetor').value = 'ALL';
+            document.getElementById('filterFuncao').value = 'ALL';
+            document.getElementById('filterDiaSemana').value = 'ALL';
+            document.getElementById('filterSearch').value = '';
+            applyFilters();
+        }
+
+        function updateFilterBadge() {
+            const total = rawData.length;
+            const current = filteredData.length;
+            const pct = total > 0 ? ((current / total) * 100).toFixed(1) : 0;
+            document.getElementById('filteredStatsBadge').innerHTML = `
+                Mostrando <strong class="text-blue-600 dark:text-blue-400 font-extrabold">${current}</strong> de ${total} registros (${pct}%)
+            `;
+        }
+
+        // Previous KPI Values for Smooth Continuous CountUp
+        const prevKpis = {
+            total: 0,
+            injustificadas: 0,
+            justificados: 0,
+            folgas: 0,
+            treinamento: 0,
+            colaboradores: 0
+        };
+
+        // Smooth CountUp Animation Engine
+        function animateCountUp(elementId, startVal, endVal, duration = 750, isDecimal = false, suffix = '') {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (startVal === endVal) {
+                el.textContent = (isDecimal ? endVal.toFixed(1) : endVal.toLocaleString('pt-BR')) + suffix;
+                return;
+            }
+            const startTime = performance.now();
+            function step(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // easeOutQuart
+                const ease = 1 - Math.pow(1 - progress, 4);
+                const current = startVal + (endVal - startVal) * ease;
+                el.textContent = (isDecimal ? current.toFixed(1) : Math.round(current).toLocaleString('pt-BR')) + suffix;
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    el.textContent = (isDecimal ? endVal.toFixed(1) : endVal.toLocaleString('pt-BR')) + suffix;
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        // Calculate and Render Executive KPIs with Fluid Animations
+        function updateKPIs() {
+            const total = filteredData.length;
+            const injustificadas = filteredData.filter(d => d.tipo_absenteismo === 'Injustificado' || d.motivo === 'Falta' || d.motivo.startsWith('Suspens')).length;
+            const justificados = filteredData.filter(d => d.tipo_absenteismo === 'Justificado').length;
+            const folgas = filteredData.filter(d => d.tipo_absenteismo === 'Compensacao/Folga').length;
+            const treinamentos = filteredData.filter(d => d.tipo_absenteismo === 'Desenvolvimento').length;
+            
+            const uniqueEmps = new Set(filteredData.map(d => d.funcionario)).size;
+            const mediaPorPessoa = uniqueEmps > 0 ? (total / uniqueEmps).toFixed(1) : 0;
+
+            animateCountUp('kpiTotal', prevKpis.total, total);
+            animateCountUp('kpiInjustificadas', prevKpis.injustificadas, injustificadas);
+            animateCountUp('kpiJustificados', prevKpis.justificados, justificados);
+            animateCountUp('kpiFolgas', prevKpis.folgas, folgas);
+            animateCountUp('kpiTreinamento', prevKpis.treinamento, treinamentos);
+            animateCountUp('kpiColaboradores', prevKpis.colaboradores, uniqueEmps);
+
+            prevKpis.total = total;
+            prevKpis.injustificadas = injustificadas;
+            prevKpis.justificados = justificados;
+            prevKpis.folgas = folgas;
+            prevKpis.treinamento = treinamentos;
+            prevKpis.colaboradores = uniqueEmps;
+
+            document.getElementById('kpiInjustificadasPerc').textContent = total > 0 ? `${((injustificadas / total) * 100).toFixed(1)}% do total` : '0%';
+            document.getElementById('kpiJustificadosPerc').textContent = total > 0 ? `${((justificados / total) * 100).toFixed(1)}% do total` : '0%';
+            document.getElementById('kpiFolgasPerc').textContent = total > 0 ? `${((folgas / total) * 100).toFixed(1)}% do total` : '0%';
+            document.getElementById('kpiTreinamentoPerc').textContent = total > 0 ? `${((treinamentos / total) * 100).toFixed(1)}% do total` : '0%';
+            document.getElementById('kpiMediaColaborador').textContent = `Média: ${mediaPorPessoa} / pessoa`;
+        }
+
+        // Render Dynamic Executive Insights
+        function renderDynamicInsights() {
+            const container = document.getElementById('insightsGrid');
+            if (filteredData.length === 0) {
+                container.innerHTML = `<div class="col-span-4 p-3 bg-white/5 rounded-xl text-center text-slate-300">Nenhum dado com os filtros aplicados.</div>`;
+                return;
+            }
+
+            const total = filteredData.length;
+            
+            // Setor com maior volume
+            const setorCounts = {};
+            filteredData.forEach(d => { setorCounts[d.setor] = (setorCounts[d.setor] || 0) + 1; });
+            const topSetor = Object.entries(setorCounts).sort((a, b) => b[1] - a[1])[0] || ['N/A', 0];
+            const topSetorPct = total > 0 ? ((topSetor[1] / total) * 100).toFixed(1) : 0;
+
+            // Segunda-feira impact
+            const segundas = filteredData.filter(d => d.dia_semana && d.dia_semana.includes('Segunda')).length;
+            const segundasPct = total > 0 ? ((segundas / total) * 100).toFixed(1) : 0;
+
+            // Faltas injustificadas
+            const faltas = filteredData.filter(d => d.tipo_absenteismo === 'Injustificado').length;
+            const faltasPct = total > 0 ? ((faltas / total) * 100).toFixed(1) : 0;
+
+            // Folgas/BH
+            const folgas = filteredData.filter(d => d.tipo_absenteismo === 'Compensacao/Folga').length;
+            const folgasPct = total > 0 ? ((folgas / total) * 100).toFixed(1) : 0;
+
+            container.innerHTML = `
+                <div class="bg-white/10 backdrop-blur-md p-3.5 rounded-xl border border-white/10 executive-card">
+                    <span class="text-blue-300 font-bold block mb-1 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5 inline"></i> Setor com Maior Impacto</span>
+                    <p class="text-slate-100">
+                        O setor <strong class="text-white">${topSetor[0]}</strong> concentra <strong>${topSetor[1]} ocorr&ecirc;ncias (${topSetorPct}%)</strong> no per&iacute;odo selecionado.
+                    </p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md p-3.5 rounded-xl border border-white/10 executive-card">
+                    <span class="text-red-300 font-bold block mb-1 flex items-center gap-1.5"><i data-lucide="calendar-alert" class="w-3.5 h-3.5 inline"></i> Efeito Segunda-Feira</span>
+                    <p class="text-slate-100">
+                        As segundas-feiras respondem por <strong>${segundas} registros (${segundasPct}%)</strong>, sendo o dia mais cr&iacute;tico de absente&iacute;smo.
+                    </p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md p-3.5 rounded-xl border border-white/10 executive-card">
+                    <span class="text-amber-300 font-bold block mb-1 flex items-center gap-1.5"><i data-lucide="shield-alert" class="w-3.5 h-3.5 inline"></i> Severidade Disciplinar</span>
+                    <p class="text-slate-100">
+                        <strong>${faltasPct}%</strong> das aus&ecirc;ncias s&atilde;o faltas/suspens&otilde;es injustificadas (<strong>${faltas} casos</strong>), exigindo plano de a&ccedil;&atilde;o do RH.
+                    </p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md p-3.5 rounded-xl border border-white/10 executive-card">
+                    <span class="text-emerald-300 font-bold block mb-1 flex items-center gap-1.5"><i data-lucide="calendar-check" class="w-3.5 h-3.5 inline"></i> Gest&atilde;o de Folgas &amp; BH</span>
+                    <p class="text-slate-100">
+                        Compensa&ccedil;&otilde;es e trocas de feriado totalizam <strong>${folgas} registros (${folgasPct}%)</strong>, com forte concentra&ccedil;&atilde;o em fevereiro.
+                    </p>
+                </div>
+            `;
+        }
+
+        // Render All Charts with Chart.js
+        function renderAllCharts() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#475569';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+
+            renderChartEvolution(textColor, gridColor);
+            renderChartMotivos(textColor);
+            renderChartSetor(textColor, gridColor);
+            renderChartDiaSemana(textColor, gridColor);
+            renderChartTopInjustificadas(textColor, gridColor);
+            renderChartTopGeral(textColor, gridColor);
+            renderChartTempoCasa(textColor);
+        }
+
+        // 1. Chart: Evolução Mensal Empilhada com Gradientes
+        function renderChartEvolution(textColor, gridColor) {
+            const canvas = document.getElementById('chartEvolution');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartEvolution) chartEvolution.destroy();
+
+            const months = [...new Set(rawData.map(d => d.ano_mes_sort).filter(Boolean))].sort();
+            const monthLabels = months.map(m => {
+                const sample = rawData.find(d => d.ano_mes_sort === m);
+                return sample ? sample.mes_ano : m;
+            });
+
+            const dataInj = months.map(m => filteredData.filter(d => d.ano_mes_sort === m && d.tipo_absenteismo === 'Injustificado').length);
+            const dataJust = months.map(m => filteredData.filter(d => d.ano_mes_sort === m && d.tipo_absenteismo === 'Justificado').length);
+            const dataFolga = months.map(m => filteredData.filter(d => d.ano_mes_sort === m && (d.tipo_absenteismo === 'Compensacao/Folga')).length);
+            const dataTreina = months.map(m => filteredData.filter(d => d.ano_mes_sort === m && d.tipo_absenteismo === 'Desenvolvimento').length);
+
+            chartEvolution = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        { label: 'Injustificado (Faltas)', data: dataInj, backgroundColor: '#e30613', hoverBackgroundColor: '#c40410', borderRadius: 6 },
+                        { label: 'Justificado (Atestados)', data: dataJust, backgroundColor: '#2563eb', hoverBackgroundColor: '#1d4ed8', borderRadius: 6 },
+                        { label: 'Folgas & Banco Horas', data: dataFolga, backgroundColor: '#f59e0b', hoverBackgroundColor: '#d97706', borderRadius: 6 },
+                        { label: 'Capacitações', data: dataTreina, backgroundColor: '#10b981', hoverBackgroundColor: '#059669', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false }, ticks: { color: textColor, font: { size: 11, weight: '600' } } },
+                        y: { stacked: true, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { color: textColor, font: { size: 11, weight: '600' }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+                        tooltip: { mode: 'index', intersect: false, padding: 10, cornerRadius: 8 }
+                    }
+                }
+            });
+        }
+
+        // 2. Chart: Raio-X Motivos Donut
+        function renderChartMotivos(textColor) {
+            const canvas = document.getElementById('chartMotivos');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartMotivos) chartMotivos.destroy();
+
+            const motivoCounts = {};
+            filteredData.forEach(d => { motivoCounts[d.motivo] = (motivoCounts[d.motivo] || 0) + 1; });
+            const sorted = Object.entries(motivoCounts).sort((a, b) => b[1] - a[1]);
+            
+            const top5 = sorted.slice(0, 5);
+            const othersCount = sorted.slice(5).reduce((acc, curr) => acc + curr[1], 0);
+            if (othersCount > 0) {
+                top5.push(['Outros Motivos', othersCount]);
+            }
+
+            const labels = top5.map(d => d[0]);
+            const data = top5.map(d => d[1]);
+            const colors = ['#e30613', '#2563eb', '#f59e0b', '#10b981', '#8b5cf6', '#64748b'];
+
+            chartMotivos = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        hoverOffset: 6,
+                        borderColor: document.documentElement.classList.contains('dark') ? '#0f172a' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: textColor, font: { size: 10, weight: '500' }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' } },
+                        tooltip: { padding: 10, cornerRadius: 8 }
+                    }
+                }
+            });
+
+            const legendDiv = document.getElementById('motivosSummaryLegend');
+            if (legendDiv) {
+                legendDiv.innerHTML = top5.slice(0, 4).map((d, i) => `
+                    <div class="flex items-center gap-1.5 truncate p-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background: ${colors[i]}"></span>
+                        <span class="truncate font-medium">${d[0]}: <strong>${d[1]}</strong></span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 3. Chart: Setor Barras Horizontais
+        function renderChartSetor(textColor, gridColor) {
+            const canvas = document.getElementById('chartSetor');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartSetor) chartSetor.destroy();
+
+            const setorCounts = {};
+            filteredData.forEach(d => { setorCounts[d.setor] = (setorCounts[d.setor] || 0) + 1; });
+            const sorted = Object.entries(setorCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+            const labels = sorted.map(d => d[0]);
+            const data = sorted.map(d => d[1]);
+
+            chartSetor = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ocorrências',
+                        data: data,
+                        backgroundColor: '#0b1b3d',
+                        hoverBackgroundColor: '#e30613',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } },
+                        y: { grid: { display: false }, ticks: { color: textColor, font: { size: 11, weight: '600' } } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { padding: 10, cornerRadius: 8 }
+                    }
+                }
+            });
+        }
+
+        // 4. Chart: Dia da Semana Colunas
+        function renderChartDiaSemana(textColor, gridColor) {
+            const canvas = document.getElementById('chartDiaSemana');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartDiaSemana) chartDiaSemana.destroy();
+
+            const daysOrder = ['Segunda-feira', 'Terca-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sabado', 'Domingo'];
+            const dayLabelsClean = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+            const data = daysOrder.map(day =>
+                filteredData.filter(d =>
+                    d.dia_semana === day ||
+                    (day === 'Terca-feira' && d.dia_semana && d.dia_semana.includes('Terc')) ||
+                    (day === 'Sabado' && d.dia_semana && d.dia_semana.includes('Sab'))
+                ).length
+            );
+
+            // Find peak day index
+            const peakIndex = data.indexOf(Math.max(...data));
+            const peakLabelFull = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
+            const peakShort = dayLabelsClean[peakIndex] || 'Segunda';
+            const peakFull = peakLabelFull[peakIndex] || 'Segunda-feira';
+            const badge = document.getElementById('picoCriticoBadge');
+            if (badge) {
+                badge.textContent = `${peakShort}: Pico Crítico`;
+                if (peakFull === 'Segunda-feira') {
+                    badge.className = 'text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-2.5 py-0.5 rounded-full border border-red-200 dark:border-red-900 animate-pulse';
+                } else {
+                    badge.className = 'text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-900';
+                }
+            }
+
+            const bgColors = data.map((_, i) => {
+                if (i === peakIndex) return '#e30613';
+                if (i === 4) return '#f59e0b';
+                return '#3b82f6';
+            });
+
+            chartDiaSemana = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dayLabelsClean,
+                    datasets: [{
+                        label: 'Total de Ausências',
+                        data: data,
+                        backgroundColor: bgColors,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: textColor, font: { size: 11, weight: '600' } } },
+                        y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { padding: 10, cornerRadius: 8 }
+                    }
+                }
+            });
+        }
+
+        // 5. Chart: Top 10 Faltas Injustificadas com Medalhas Visuais
+        function renderChartTopInjustificadas(textColor, gridColor) {
+            const canvas = document.getElementById('chartTopInjustificadas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartTopInjustificadas) chartTopInjustificadas.destroy();
+
+            const empCounts = {};
+            filteredData
+                .filter(d => d.tipo_absenteismo === 'Injustificado' || d.motivo === 'Falta')
+                .forEach(d => { empCounts[d.funcionario] = (empCounts[d.funcionario] || 0) + 1; });
+
+            const sorted = Object.entries(empCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            
+            // Format labels with ranking badges
+            const labels = sorted.map((d, index) => {
+                const rawName = d[0].length > 18 ? d[0].substring(0, 16) + '...' : d[0];
+                if (index === 0) return `🥇 ${rawName}`;
+                if (index === 1) return `🥈 ${rawName}`;
+                if (index === 2) return `🥉 ${rawName}`;
+                return `#${index + 1} ${rawName}`;
+            });
+            const data = sorted.map(d => d[1]);
+
+            chartTopInjustificadas = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faltas Injustificadas',
+                        data: data,
+                        backgroundColor: '#e30613',
+                        hoverBackgroundColor: '#c40410',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 } } },
+                        y: { grid: { display: false }, ticks: { color: textColor, font: { size: 10, weight: '600' } } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { padding: 10, cornerRadius: 8 }
+                    }
+                }
+            });
+        }
+
+        // 6. Chart: Top 10 Geral Ausências com Medalhas Visuais
+        function renderChartTopGeral(textColor, gridColor) {
+            const canvas = document.getElementById('chartTopGeral');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartTopGeral) chartTopGeral.destroy();
+
+            const empCounts = {};
+            filteredData.forEach(d => { empCounts[d.funcionario] = (empCounts[d.funcionario] || 0) + 1; });
+
+            const sorted = Object.entries(empCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const labels = sorted.map((d, index) => {
+                const rawName = d[0].length > 18 ? d[0].substring(0, 16) + '...' : d[0];
+                if (index === 0) return `🥇 ${rawName}`;
+                if (index === 1) return `🥈 ${rawName}`;
+                if (index === 2) return `🥉 ${rawName}`;
+                return `#${index + 1} ${rawName}`;
+            });
+            const data = sorted.map(d => d[1]);
+
+            chartTopGeral = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Ausências',
+                        data: data,
+                        backgroundColor: '#1d4ed8',
+                        hoverBackgroundColor: '#1e40af',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    scales: {
+                        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 } } },
+                        y: { grid: { display: false }, ticks: { color: textColor, font: { size: 10, weight: '600' } } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { padding: 10, cornerRadius: 8 }
+                    }
+                }
+            });
+        }
+
+        // 7. Chart: Distribuição por Tempo de Casa
+        function renderChartTempoCasa(textColor) {
+            const canvas = document.getElementById('chartTempoCasa');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (chartTempoCasa) chartTempoCasa.destroy();
+
+            let ate1Ano = 0;
+            let de1a2 = 0;
+            let de2a5 = 0;
+            let maisDe5 = 0;
+
+            filteredData.forEach(d => {
+                const tc = d.tempo_casa_anos;
+                if (tc === null || tc === undefined) return;
+                if (tc < 1) ate1Ano++;
+                else if (tc >= 1 && tc < 2) de1a2++;
+                else if (tc >= 2 && tc < 5) de2a5++;
+                else if (tc >= 5) maisDe5++;
+            });
+
+            chartTempoCasa = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['< 1 ano', '1 a 2 anos', '2 a 5 anos', '> 5 anos'],
+                    datasets: [{
+                        data: [ate1Ano, de1a2, de2a5, maisDe5],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'],
+                        borderWidth: 2,
+                        hoverOffset: 6,
+                        borderColor: document.documentElement.classList.contains('dark') ? '#0f172a' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: '500' }, usePointStyle: true, pointStyle: 'circle' } },
+                        tooltip: { padding: 10, cornerRadius: 8 }
+                    }
+                }
+            });
+        }
+
+        // Render Matrix Table (Setor x Motivo)
+        function renderMatrixTable() {
+            const tbody = document.getElementById('matrixTableBody');
+            const setores = [...new Set(filteredData.map(d => d.setor))].sort();
+
+            const rows = setores.map(s => {
+                const sData = filteredData.filter(d => d.setor === s);
+                const faltas = sData.filter(d => d.tipo_absenteismo === 'Injustificado').length;
+                const justificados = sData.filter(d => d.tipo_absenteismo === 'Justificado').length;
+                const folgas = sData.filter(d => d.tipo_absenteismo === 'Compensacao/Folga').length;
+                const treinamentos = sData.filter(d => d.tipo_absenteismo === 'Desenvolvimento').length;
+                const total = sData.length;
+                return { setor: s, faltas, justificados, folgas, treinamentos, total };
+            }).sort((a, b) => b.total - a.total);
+
+            tbody.innerHTML = rows.map(r => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <td class="p-2.5 font-bold text-slate-800 dark:text-slate-100">${r.setor}</td>
+                    <td class="p-2.5 text-center font-semibold text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-950/20">${r.faltas}</td>
+                    <td class="p-2.5 text-center font-semibold text-blue-600 dark:text-blue-400">${r.justificados}</td>
+                    <td class="p-2.5 text-center font-semibold text-amber-600 dark:text-amber-400">${r.folgas}</td>
+                    <td class="p-2.5 text-center font-semibold text-emerald-600 dark:text-emerald-400">${r.treinamentos}</td>
+                    <td class="p-2.5 text-center font-extrabold text-lube-navy dark:text-white bg-slate-50 dark:bg-slate-800/40">${r.total}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Render Data Table Grid
+        function renderDataTable() {
+            const tbody = document.getElementById('dataTableBody');
+
+            // Sorting
+            let sorted = [...filteredData].sort((a, b) => {
+                let valA = a[sortColumn] || '';
+                let valB = b[sortColumn] || '';
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            // Pagination
+            const total = sorted.length;
+            const totalPages = Math.ceil(total / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * pageSize;
+            const end = Math.min(start + pageSize, total);
+            const pageData = sorted.slice(start, end);
+
+            tbody.innerHTML = pageData.map(row => {
+                let badgeClass = 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+                if (row.tipo_absenteismo === 'Injustificado') badgeClass = 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-400 border border-red-200 dark:border-red-900/50';
+                else if (row.tipo_absenteismo === 'Justificado') badgeClass = 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50';
+                else if (row.tipo_absenteismo === 'Compensacao/Folga') badgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50';
+                else if (row.tipo_absenteismo === 'Desenvolvimento') badgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50';
+
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                        <td class="p-3 font-semibold text-slate-800 dark:text-slate-100">${row.data_formatada}</td>
+                        <td class="p-3 text-slate-600 dark:text-slate-400">${formatDiaSemanaPt(row.dia_semana)}</td>
+                        <td class="p-3 font-bold text-slate-900 dark:text-white">${row.funcionario}</td>
+                        <td class="p-3 text-slate-600 dark:text-slate-400">${row.setor}</td>
+                        <td class="p-3 text-slate-600 dark:text-slate-400">${row.funcao}</td>
+                        <td class="p-3 font-semibold text-slate-800 dark:text-slate-200">${row.motivo}</td>
+                        <td class="p-3">
+                            <span class="px-2.5 py-1 text-[11px] font-bold rounded-full ${badgeClass}">
+                                ${row.categoria}
+                            </span>
+                        </td>
+                        <td class="p-3 text-center">
+                            <button onclick="openEmployeeModal('${row.funcionario.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-lube-navy dark:bg-slate-800 text-white hover:bg-lube-red transition shadow-sm" title="Ver ficha completa do colaborador">
+                                <i data-lucide="user" class="w-3 h-3"></i> Ficha 360&deg;
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update Pagination Info
+            document.getElementById('tablePaginationInfo').textContent = `Mostrando ${total === 0 ? 0 : start + 1} a ${end} de ${total} registros`;
+
+            // Pagination Buttons
+            const btnContainer = document.getElementById('tablePaginationButtons');
+            let buttonsHtml = `
+                <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition">&laquo;</button>
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition">&lsaquo;</button>
+                <span class="px-3 py-1 font-bold text-slate-700 dark:text-slate-300">P&aacute;gina ${currentPage} de ${totalPages}</span>
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition">&rsaquo;</button>
+                <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800 transition">&raquo;</button>
+            `;
+            btnContainer.innerHTML = buttonsHtml;
+            lucide.createIcons();
+        }
+
+        function sortTable(col) {
+            if (sortColumn === col) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = col;
+                sortDirection = 'asc';
+            }
+            renderDataTable();
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderDataTable();
+            }
+        }
+
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('tablePageSize').value, 10);
+            currentPage = 1;
+            renderDataTable();
+        }
+
+        // Employee 360° Modal Logic
+        function openEmployeeModal(empName) {
+            const empRecords = rawData.filter(d => d.funcionario === empName);
+            if (empRecords.length === 0) return;
+
+            const first = empRecords[0];
+            const initials = empName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+
+            document.getElementById('modalAvatar').textContent = initials;
+            document.getElementById('modalEmployeeName').textContent = empName;
+            document.getElementById('modalEmployeeRole').textContent = `${first.funcao} \u2022 ${first.setor}`;
+            document.getElementById('modalCompany').textContent = first.empresa || 'LUBE DISTRIBUIDORA LTDA';
+            document.getElementById('modalDtAdmissao').textContent = first.dt_admissao_formatada || 'Nao informada';
+            document.getElementById('modalTempoCasa').textContent = first.tempo_casa_anos ? `${first.tempo_casa_anos} anos` : 'Nao informado';
+
+            // Counts
+            const total = empRecords.length;
+            const injust = empRecords.filter(d => d.tipo_absenteismo === 'Injustificado' || d.motivo === 'Falta').length;
+            const just = empRecords.filter(d => d.tipo_absenteismo === 'Justificado').length;
+            const folgas = empRecords.filter(d => d.tipo_absenteismo === 'Compensacao/Folga').length;
+
+            document.getElementById('modalTotalOccurrences').textContent = total;
+            document.getElementById('modalUnjustifiedCount').textContent = injust;
+            document.getElementById('modalJustifiedCount').textContent = just;
+            document.getElementById('modalFolgasCount').textContent = folgas;
+
+            // Timeline rows
+            const timelineTbody = document.getElementById('modalTimelineBody');
+            timelineTbody.innerHTML = empRecords.sort((a,b) => (a.data_iso || '').localeCompare(b.data_iso || '')).map(r => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                    <td class="p-2.5 font-bold text-slate-800 dark:text-slate-200">${r.data_formatada}</td>
+                    <td class="p-2.5 text-slate-500 dark:text-slate-400">${formatDiaSemanaPt(r.dia_semana)}</td>
+                    <td class="p-2.5 font-semibold text-slate-800 dark:text-slate-100">${r.motivo}</td>
+                    <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">${r.categoria}</span></td>
+                </tr>
+            `).join('');
+
+            const modalEl = document.getElementById('employeeModal');
+            modalEl.classList.remove('hidden');
+            const modalBox = modalEl.firstElementChild;
+            if (modalBox) {
+                modalBox.classList.remove('animate-modal-spring');
+                void modalBox.offsetWidth;
+                modalBox.classList.add('animate-modal-spring');
+            }
+            lucide.createIcons();
+        }
+
+        function closeEmployeeModal() {
+            document.getElementById('employeeModal').classList.add('hidden');
+        }
+
+        // Export to Excel (.xlsx) using SheetJS
+        function exportToExcel() {
+            if (filteredData.length === 0) {
+                alert('Nenhum dado selecionado para exportar.');
+                return;
+            }
+
+            const exportData = filteredData.map(d => ({
+                'Data': d.data_formatada,
+                'Dia da Semana': formatDiaSemanaPt(d.dia_semana),
+                'Funcionario': d.funcionario,
+                'Empresa': d.empresa,
+                'Setor': d.setor,
+                'Funcao': d.funcao,
+                'Motivo': d.motivo,
+                'Categoria': d.categoria,
+                'Tipo Absenteismo': d.tipo_absenteismo,
+                'Data de Admissao': d.dt_admissao_formatada,
+                'Tempo de Casa (Anos)': d.tempo_casa_anos
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Absenteismo_Lube");
+
+            const now = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(wb, `Absenteismo_Lube_Distribuidora_${now}.xlsx`);
+        }
+
+        // ==========================================
+        // EXCEL IMPORT & DATA REFRESH ENGINE (SheetJS)
+        // ==========================================
+
+        function triggerImportExcel() {
+            const input = document.getElementById('fileImportExcel');
+            if (input) {
+                input.value = '';
+                input.click();
+            }
+        }
+
+        function showToast(title, message, isError = false) {
+            const toast = document.getElementById('toastNotification');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            if (!toast) return;
+
+            toastTitle.textContent = title;
+            toastMsg.textContent = message;
+
+            if (isError) {
+                toastIcon.className = 'p-2 rounded-xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 mt-0.5';
+                toastIcon.innerHTML = '<i data-lucide="alert-triangle" class="w-5 h-5"></i>';
+            } else {
+                toastIcon.className = 'p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 mt-0.5';
+                toastIcon.innerHTML = '<i data-lucide="check-circle-2" class="w-5 h-5"></i>';
+            }
+            lucide.createIcons();
+
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-20');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            if (window._toastTimeout) clearTimeout(window._toastTimeout);
+            window._toastTimeout = setTimeout(() => {
+                hideToast();
+            }, 6500);
+        }
+
+        function hideToast() {
+            const toast = document.getElementById('toastNotification');
+            if (toast) {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-20');
+            }
+        }
+
+        function parseExcelDate(val) {
+            if (!val && val !== 0) return null;
+            if (val instanceof Date) {
+                if (isNaN(val.getTime())) return null;
+                const y = val.getUTCFullYear() > 1990 && val.getUTCFullYear() < 2100 ? val.getUTCFullYear() : val.getFullYear();
+                const m = val.getUTCFullYear() > 1990 && val.getUTCFullYear() < 2100 ? val.getUTCMonth() : val.getMonth();
+                const d = val.getUTCFullYear() > 1990 && val.getUTCFullYear() < 2100 ? val.getUTCDate() : val.getDate();
+                return new Date(y, m, d);
+            }
+            if (typeof val === 'number') {
+                const totalDays = Math.floor(val);
+                const ms = (totalDays - 25569) * 86400 * 1000;
+                const d = new Date(ms);
+                return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+            }
+            if (typeof val === 'string') {
+                const str = val.trim();
+                if (!str) return null;
+                if (/^\d{4,6}$/.test(str)) {
+                    return parseExcelDate(parseFloat(str));
+                }
+                const ddmmyyyy = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                if (ddmmyyyy) {
+                    const day = parseInt(ddmmyyyy[1], 10);
+                    const month = parseInt(ddmmyyyy[2], 10) - 1;
+                    const year = parseInt(ddmmyyyy[3], 10);
+                    return new Date(year, month, day);
+                }
+                const yyyymmdd = str.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+                if (yyyymmdd) {
+                    const year = parseInt(yyyymmdd[1], 10);
+                    const month = parseInt(yyyymmdd[2], 10) - 1;
+                    const day = parseInt(yyyymmdd[3], 10);
+                    return new Date(year, month, day);
+                }
+                const parsed = new Date(str);
+                if (!isNaN(parsed.getTime())) return parsed;
+            }
+            return null;
+        }
+
+        function classifyAbsence(motivo) {
+            const m = (motivo || '').trim();
+            const lower = m.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+            if (lower.includes('falta') && !lower.includes('abono') && !lower.includes('abonad')) {
+                return { categoria: 'Falta Injustificada', tipo: 'Injustificado' };
+            }
+            if (lower.includes('suspens')) {
+                return { categoria: 'Suspensão Disciplinar', tipo: 'Injustificado' };
+            }
+            if (lower.includes('atestado')) {
+                return { categoria: 'Atestado Médico', tipo: 'Justificado' };
+            }
+            if (lower.includes('abon')) {
+                return { categoria: 'Falta Abonada', tipo: 'Justificado' };
+            }
+            if (lower.includes('declara')) {
+                return { categoria: 'Declaração de Comparecimento', tipo: 'Justificado' };
+            }
+            if (lower.includes('licen')) {
+                return { categoria: 'Licença Legal (Gala/Nojo/Paternidade)', tipo: 'Justificado' };
+            }
+            if (lower.includes('folga')) {
+                return { categoria: 'Folga / Banco de Horas', tipo: 'Compensacao/Folga' };
+            }
+            if (lower.includes('troca') || lower.includes('feriado')) {
+                return { categoria: 'Troca de Feriado', tipo: 'Compensacao/Folga' };
+            }
+            if (lower.includes('igenesis') || lower.includes('senac') || lower.includes('treina') || lower.includes('curso') || lower.includes('capacita')) {
+                return { categoria: 'Treinamento / Capacitação', tipo: 'Desenvolvimento' };
+            }
+            if (m.length === 0 || lower.includes('nao informado')) {
+                return { categoria: 'Outros / Ajustes', tipo: 'Outros' };
+            }
+            return { categoria: m, tipo: 'Outros' };
+        }
+
+        function getRowValue(row, patterns) {
+            const keys = Object.keys(row);
+            for (const p of patterns) {
+                for (const k of keys) {
+                    const cleanK = k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+                    if (p.test(cleanK)) {
+                        const val = row[k];
+                        if (val !== undefined && val !== null && String(val).trim() !== '') {
+                            return val;
+                        }
+                    }
+                }
+            }
+            return '';
+        }
+
+        function handleExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+
+                    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                        showToast('Erro na Importação', 'Nenhuma aba encontrada no arquivo Excel.', true);
+                        return;
+                    }
+
+                    // Look for best sheet: POWERBI, BASE, DADOS, etc. or sheet with most data rows
+                    let targetSheetName = null;
+                    const preferredNames = ['POWERBI', 'BASE', 'DADOS', 'ABSENTEISMO', 'ABSENTEÍSMO', '2026', '2025'];
+                    for (const name of preferredNames) {
+                        const match = workbook.SheetNames.find(s => s.trim().toUpperCase() === name.toUpperCase());
+                        if (match) {
+                            targetSheetName = match;
+                            break;
+                        }
+                    }
+
+                    if (!targetSheetName) {
+                        let maxRows = -1;
+                        for (const sName of workbook.SheetNames) {
+                            const sheet = workbook.Sheets[sName];
+                            const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                            if (rows.length > maxRows && rows.length > 0) {
+                                maxRows = rows.length;
+                                targetSheetName = sName;
+                            }
+                        }
+                    }
+
+                    if (!targetSheetName) {
+                        showToast('Erro na Importação', 'Não foi possível encontrar dados nas abas da planilha.', true);
+                        return;
+                    }
+
+                    const sheet = workbook.Sheets[targetSheetName];
+                    const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+                    if (!rawRows || rawRows.length === 0) {
+                        showToast('Planilha Vazia', `A aba "${targetSheetName}" não contém registros.`, true);
+                        return;
+                    }
+
+                    const monthNamesPt = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                    const dayNamesPt = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
+                    const parsedItems = [];
+                    let autoId = 1;
+
+                    for (const row of rawRows) {
+                        const funcVal = String(getRowValue(row, [/^func/i, /^colab/i, /^nome/i, /^empreg/i])).trim();
+                        const motivoVal = String(getRowValue(row, [/^motivo/i, /^descr/i, /^ausen/i, /^ocorrencia/i, /^tipo.*ausen/i])).trim();
+                        const dataRaw = getRowValue(row, [/^data(?!\s*adm)/i, /^dt.*ocorr/i, /^dia(?!\s*sem)/i, /^data$/i]);
+
+                        // Ignore empty rows or total lines
+                        if (!funcVal && !motivoVal && !dataRaw) continue;
+                        if (funcVal.toUpperCase().includes('TOTAL') || funcVal.toUpperCase().includes('RELATÓRIO') || funcVal.toUpperCase().includes('RELATORIO')) continue;
+
+                        const dateObj = parseExcelDate(dataRaw) || new Date();
+                        const y = dateObj.getFullYear();
+                        const m = dateObj.getMonth() + 1;
+                        const d = dateObj.getDate();
+                        const dayOfWeekNum = dateObj.getDay();
+
+                        const dataIso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        const dataFormatada = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+                        const mesNome = monthNamesPt[m - 1] || 'Indefinido';
+                        const mesAno = `${mesNome}/${y}`;
+                        const anoMesSort = `${y}-${String(m).padStart(2, '0')}`;
+                        const diaSemana = dayNamesPt[dayOfWeekNum] || 'Segunda-feira';
+
+                        const setorVal = String(getRowValue(row, [/^setor/i, /^depart/i, /^area/i, /^cc/i, /^centro.*custo/i])).trim() || 'NÃO INFORMADO';
+                        const funcaoVal = String(getRowValue(row, [/^cargo/i, /^posic/i, /^funcao/i, /^função/i])).trim() || 'NÃO INFORMADO';
+                        const empresaVal = String(getRowValue(row, [/^empresa/i, /^filial/i, /^unidade/i])).trim() || 'LUBE DISTRIBUIDORA LTDA';
+
+                        const dtAdmRaw = getRowValue(row, [/^admiss/i, /^dt.*adm/i, /^data.*adm/i]);
+                        const dtAdmObj = parseExcelDate(dtAdmRaw);
+                        let dtAdmIso = null;
+                        let dtAdmFormatada = null;
+                        let tempoCasaAnos = null;
+
+                        if (dtAdmObj) {
+                            const admY = dtAdmObj.getFullYear();
+                            const admM = dtAdmObj.getMonth() + 1;
+                            const admD = dtAdmObj.getDate();
+                            dtAdmIso = `${admY}-${String(admM).padStart(2, '0')}-${String(admD).padStart(2, '0')}`;
+                            dtAdmFormatada = `${String(admD).padStart(2, '0')}/${String(admM).padStart(2, '0')}/${admY}`;
+                            const diffYears = (dateObj.getTime() - dtAdmObj.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+                            tempoCasaAnos = diffYears > 0 ? Math.round(diffYears * 10) / 10 : 0;
+                        }
+
+                        const classification = classifyAbsence(motivoVal);
+
+                        parsedItems.push({
+                            id: autoId++,
+                            funcionario: funcVal || 'COLABORADOR NÃO IDENTIFICADO',
+                            empresa: empresaVal,
+                            data_iso: dataIso,
+                            data_formatada: dataFormatada,
+                            ano: y,
+                            mes: m,
+                            mes_nome: mesNome,
+                            mes_ano: mesAno,
+                            ano_mes_sort: anoMesSort,
+                            dia_semana: diaSemana,
+                            dia_semana_num: dayOfWeekNum,
+                            dia: d,
+                            motivo: motivoVal || 'Não informado',
+                            categoria: classification.categoria,
+                            tipo_absenteismo: classification.tipo,
+                            setor: setorVal,
+                            funcao: funcaoVal,
+                            dt_admissao_iso: dtAdmIso,
+                            dt_admissao_formatada: dtAdmFormatada,
+                            tempo_casa_anos: tempoCasaAnos
+                        });
+                    }
+
+                    if (parsedItems.length === 0) {
+                        showToast('Importação Inválida', 'Não foi possível extrair nenhum registro válido da planilha.', true);
+                        return;
+                    }
+
+                    // Update state & save to localStorage for persistence
+                    rawData = parsedItems;
+                    try {
+                        localStorage.setItem('lube_custom_absenteismo_data', JSON.stringify(rawData));
+                    } catch (err) {
+                        console.warn('LocalStorage limit reached:', err);
+                    }
+
+                    // Refresh entire UI
+                    populateFilterOptions();
+                    populateRecordFormDatalists();
+                    resetAllFilters();
+                    updateHeaderBaseBadge();
+
+                    showToast(
+                        'Planilha Atualizada!',
+                        `${parsedItems.length.toLocaleString('pt-BR')} registros importados da aba "${targetSheetName}". Sincronizando com Supabase...`
+                    );
+
+                    // Sync to Supabase Cloud in batch if available
+                    if (window.SupabaseService && isSupabaseOnline) {
+                        try {
+                            const res = await window.SupabaseService.bulkInsertOcorrencias(parsedItems, file.name, targetSheetName);
+                            showToast(
+                                'Banco Supabase Sincronizado!',
+                                `${res.count.toLocaleString('pt-BR')} registros persistidos no PostgreSQL Cloud.`
+                            );
+                            updateSupabaseStatusUI(true, rawData.length, supabaseLatency);
+                        } catch (sErr) {
+                            console.warn('Falha ao enviar lote ao Supabase:', sErr);
+                            showToast('Aviso de Sincronização', 'Dados ativos localmente, mas falha ao gravar na nuvem: ' + (sErr.message || sErr), true);
+                        }
+                    }
+
+                } catch (err) {
+                    console.error('Erro ao processar planilha:', err);
+                    showToast('Falha na Leitura', 'Erro ao ler o arquivo Excel: ' + (err.message || err), true);
+                }
+            };
+            reader.onerror = function() {
+                showToast('Erro de Arquivo', 'Não foi possível ler o arquivo do disco.', true);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function restoreDefaultData() {
+            localStorage.removeItem('lube_custom_absenteismo_data');
+            rawData = window.ABSENTEEISM_DATA || [];
+            populateFilterOptions();
+            resetAllFilters();
+            updateHeaderBaseBadge();
+            showToast('Base Restaurada', 'Os dados originais do dashboard foram restaurados.');
+        }
+    </script>
+</body>
+</html>
