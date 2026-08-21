@@ -1068,16 +1068,19 @@
 
         // Initialize App on DOM Load
         document.addEventListener('DOMContentLoaded', async () => {
-            // Clear stale localStorage on startup so Supabase data takes priority
-            localStorage.removeItem('lube_custom_absenteismo_data');
-            rawData = [];
+            // Inicializa imediatamente com os dados locais para garantir velocidade e zero travamento
+            loadStoredData();
+            if (!rawData || rawData.length === 0) {
+                rawData = window.ABSENTEEISM_DATA || [];
+            }
             safeCreateIcons();
             initTheme();
             updateHeaderBaseBadge();
             populateFilterOptions();
+            populateRecordFormDatalists();
             applyFilters();
 
-            // Connect and Sync with Supabase Cloud
+            // Sincroniza em segundo plano com o Supabase Cloud
             await initSupabaseIntegration();
         });
 
@@ -2454,7 +2457,7 @@
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
