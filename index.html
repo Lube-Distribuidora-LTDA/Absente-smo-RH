@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" class="light">
 <head>
     <meta charset="UTF-8">
@@ -51,8 +51,8 @@
     <!-- Chart.js 4.4.x -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Lucide Icons (IIFE bundle - works as classic script) -->
-    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <!-- Lucide Icons (UMD/IIFE bundle, pinned version) -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
     
     <!-- SheetJS (XLSX) for Export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -190,7 +190,7 @@
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                     
                     <!-- Supabase Connection Status Badge -->
-                    <button id="supabaseStatusBadge" onclick="openSupabaseModal()" title="Status da ConexÃ£o com Banco Supabase Cloud" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/80 text-xs font-semibold text-emerald-700 dark:text-emerald-300 shadow-sm transition cursor-pointer">
+                    <button id="supabaseStatusBadge" onclick="openSupabaseModal()" title="Status da Conexão com Banco Supabase Cloud" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/80 text-xs font-semibold text-emerald-700 dark:text-emerald-300 shadow-sm transition cursor-pointer">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="supabasePulseDot"></span>
                         <span id="supabaseStatusText">Supabase: Conectado</span>
                     </button>
@@ -198,11 +198,11 @@
                     <!-- Base Status Badge -->
                     <div id="baseHeaderBadge" class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-xs font-semibold text-slate-600 dark:text-slate-300">
                         <i data-lucide="database" class="w-3.5 h-3.5 text-slate-400"></i>
-                        <span id="baseHeaderBadgeText">Base: <strong class="text-lube-navy dark:text-white">1.016</strong> Registros</span>
+                        <span id="baseHeaderBadgeText">Aguardando dados...</span>
                     </div>
 
                     <!-- Novo Registro (Supabase Direct Insert) -->
-                    <button onclick="openNewRecordModal()" title="Cadastrar nova ocorrÃªncia diretamente no banco de dados" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-lube-red hover:bg-lube-redHover text-white shadow-sm transition cursor-pointer">
+                    <button onclick="openNewRecordModal()" title="Cadastrar nova ocorrência diretamente no banco de dados" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-lube-red hover:bg-lube-redHover text-white shadow-sm transition cursor-pointer">
                         <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
                         <span>Novo Registro</span>
                     </button>
@@ -220,7 +220,7 @@
                     </button>
 
                     <!-- Importar Planilha -->
-                    <button onclick="triggerImportExcel()" title="Importar ou atualizar planilha de absenteÃ­smo (.xlsx)" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-lube-navy hover:bg-lube-navyLight dark:bg-slate-800 dark:hover:bg-slate-700 text-white border border-transparent dark:border-slate-700 shadow-sm transition cursor-pointer">
+                    <button onclick="triggerImportExcel()" title="Importar ou atualizar planilha de absenteísmo (.xlsx)" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-lube-navy hover:bg-lube-navyLight dark:bg-slate-800 dark:hover:bg-slate-700 text-white border border-transparent dark:border-slate-700 shadow-sm transition cursor-pointer">
                         <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
                         <span>Importar Planilha</span>
                     </button>
@@ -275,7 +275,7 @@
                     <i data-lucide="calendar-alert" class="w-3.5 h-3.5 text-purple-500"></i> Pico Segundas-Feiras
                 </button>
                 <button type="button" onclick="applyPreset('entrega')" id="preset-entrega" class="preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-950/40 cursor-pointer">
-                    <i data-lucide="truck" class="w-3.5 h-3.5 text-amber-500"></i> Setor CrÃ­tico (ENTREGA)
+                    <i data-lucide="truck" class="w-3.5 h-3.5 text-amber-500"></i> Setor Crítico (ENTREGA)
                 </button>
                 <button type="button" onclick="applyPreset('justificado')" id="preset-justificado" class="preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/40 cursor-pointer">
                     <i data-lucide="stethoscope" class="w-3.5 h-3.5 text-blue-500"></i> Atestados & Abonos
@@ -285,7 +285,7 @@
             <!-- Filter Inputs Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 
-                <!-- 1. PerÃ­odo / MÃªs -->
+                <!-- 1. Período / Mês -->
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                         <i data-lucide="calendar" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> M&ecirc;s / Ano
@@ -295,7 +295,7 @@
                     </select>
                 </div>
 
-                <!-- 2. Tipo de AbsenteÃ­smo -->
+                <!-- 2. Tipo de Absenteísmo -->
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                         <i data-lucide="layers" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> Tipo de Aus&ecirc;ncia
@@ -310,7 +310,7 @@
                     </select>
                 </div>
 
-                <!-- 3. Motivo EspecÃ­fico -->
+                <!-- 3. Motivo Específico -->
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                         <i data-lucide="tag" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> Motivo
@@ -330,7 +330,7 @@
                     </select>
                 </div>
 
-                <!-- 5. Cargo / FunÃ§Ã£o -->
+                <!-- 5. Cargo / Função -->
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                         <i data-lucide="briefcase" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> Fun&ccedil;&atilde;o / Cargo
@@ -371,7 +371,7 @@
         <!-- EXECUTIVE KPI CARDS -->
         <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             
-            <!-- KPI 1: Total de OcorrÃªncias -->
+            <!-- KPI 1: Total de Ocorrências -->
             <div class="executive-card group bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Ocorr&ecirc;ncias</span>
@@ -453,7 +453,7 @@
                 </div>
                 <div class="mt-3">
                     <div id="kpiColaboradores" class="text-2xl font-extrabold text-slate-800 dark:text-white">0</div>
-                    <p id="kpiMediaColaborador" class="text-[11px] text-purple-600 dark:text-purple-400 mt-0.5 font-semibold">MÃ©dia: 0 / pessoa</p>
+                    <p id="kpiMediaColaborador" class="text-[11px] text-purple-600 dark:text-purple-400 mt-0.5 font-semibold">Média: 0 / pessoa</p>
                 </div>
             </div>
 
@@ -479,10 +479,10 @@
 
         <!-- ANALYTICS VISUALIZATION SECTION -->
         
-        <!-- Row 1: EvoluÃ§Ã£o Temporal + Raio-X de Motivos -->
+        <!-- Row 1: Evolução Temporal + Raio-X de Motivos -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- EvoluÃ§Ã£o Mensal (2 Cols) -->
+            <!-- Evolução Mensal (2 Cols) -->
             <div class="executive-card lg:col-span-2 bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
                     <div>
@@ -522,10 +522,10 @@
 
         </div>
 
-        <!-- Row 2: AbsenteÃ­smo por Setor + PadrÃ£o Dia da Semana -->
+        <!-- Row 2: Absenteísmo por Setor + Padrão Dia da Semana -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
-            <!-- AbsenteÃ­smo por Setor -->
+            <!-- Absenteísmo por Setor -->
             <div class="executive-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800">
                 <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                     <div>
@@ -541,7 +541,7 @@
                 </div>
             </div>
 
-            <!-- PadrÃ£o Dia da Semana -->
+            <!-- Padrão Dia da Semana -->
             <div class="executive-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800">
                 <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                     <div>
@@ -581,7 +581,7 @@
                 </div>
             </div>
 
-            <!-- Top Geral AusÃªncias -->
+            <!-- Top Geral Ausências -->
             <div class="executive-card bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-lube dark:shadow-lube-dark border border-slate-200/80 dark:border-slate-800">
                 <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                     <div>
@@ -599,7 +599,7 @@
 
         </div>
 
-        <!-- Row 4: Matriz TÃ©rmica Setor x Motivo + Tempo de Casa -->
+        <!-- Row 4: Matriz Térmica Setor x Motivo + Tempo de Casa -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             <!-- Matriz Setor x Motivo (2 Cols) -->
@@ -708,7 +708,7 @@
 
     </main>
 
-    <!-- EMPLOYEE 360Â° MODAL / DRAWER -->
+    <!-- EMPLOYEE 360° MODAL / DRAWER -->
     <div id="employeeModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col animate-fade-in">
             
@@ -812,8 +812,8 @@
                         <i data-lucide="plus-circle" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <h4 class="text-base font-bold text-white tracking-tight">Novo Registro de AbsenteÃ­smo</h4>
-                        <p class="text-xs text-rose-100">InserÃ§Ã£o direta no Banco de Dados Supabase (PostgreSQL Cloud)</p>
+                        <h4 class="text-base font-bold text-white tracking-tight">Novo Registro de Absenteísmo</h4>
+                        <p class="text-xs text-rose-100">Inserção direta no Banco de Dados Supabase (PostgreSQL Cloud)</p>
                     </div>
                 </div>
                 <button onclick="closeNewRecordModal()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer">
@@ -825,19 +825,19 @@
             <form id="formNewRecord" onsubmit="submitNewRecord(event)" class="p-6 overflow-y-auto space-y-4 text-xs">
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- FuncionÃ¡rio -->
+                    <!-- Funcionário -->
                     <div class="space-y-1 sm:col-span-2">
                         <label class="block font-bold text-slate-700 dark:text-slate-200">
-                            Colaborador / FuncionÃ¡rio <span class="text-rose-500">*</span>
+                            Colaborador / Funcionário <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" id="recFuncionario" required list="colaboradoresList" placeholder="Digite o nome completo do colaborador" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
                         <datalist id="colaboradoresList"></datalist>
                     </div>
 
-                    <!-- Data da OcorrÃªncia -->
+                    <!-- Data da Ocorrência -->
                     <div class="space-y-1">
                         <label class="block font-bold text-slate-700 dark:text-slate-200">
-                            Data da OcorrÃªncia <span class="text-rose-500">*</span>
+                            Data da Ocorrência <span class="text-rose-500">*</span>
                         </label>
                         <input type="date" id="recData" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
                     </div>
@@ -845,21 +845,21 @@
                     <!-- Motivo -->
                     <div class="space-y-1">
                         <label class="block font-bold text-slate-700 dark:text-slate-200">
-                            Motivo da AusÃªncia <span class="text-rose-500">*</span>
+                            Motivo da Ausência <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" id="recMotivo" required list="motivosList" oninput="autoClassifyNewRecordMotivo()" placeholder="Ex: FALTA SEM JUSTIFICATIVA, ATESTADO..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
                         <datalist id="motivosList"></datalist>
                     </div>
 
-                    <!-- Tipo de AbsenteÃ­smo -->
+                    <!-- Tipo de Absenteísmo -->
                     <div class="space-y-1">
                         <label class="block font-bold text-slate-700 dark:text-slate-200">
-                            Tipo de AbsenteÃ­smo <span class="text-rose-500">*</span>
+                            Tipo de Absenteísmo <span class="text-rose-500">*</span>
                         </label>
                         <select id="recTipo" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
-                            <option value="Injustificado">Injustificado (Faltas / SuspensÃµes)</option>
-                            <option value="Justificado">Justificado (Atestados / LicenÃ§as / Abonos)</option>
-                            <option value="Compensacao/Folga">CompensaÃ§Ã£o / Folga / Banco de Horas</option>
+                            <option value="Injustificado">Injustificado (Faltas / Suspensões)</option>
+                            <option value="Justificado">Justificado (Atestados / Licenças / Abonos)</option>
+                            <option value="Compensacao/Folga">Compensação / Folga / Banco de Horas</option>
                             <option value="Desenvolvimento">Desenvolvimento / Treinamento</option>
                             <option value="Outros">Outros / Ajustes</option>
                         </select>
@@ -868,9 +868,9 @@
                     <!-- Categoria -->
                     <div class="space-y-1">
                         <label class="block font-bold text-slate-700 dark:text-slate-200">
-                            Categoria EstratÃ©gica
+                            Categoria Estratégica
                         </label>
-                        <input type="text" id="recCategoria" placeholder="Ex: Falta Injustificada, Atestado MÃ©dico..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
+                        <input type="text" id="recCategoria" placeholder="Ex: Falta Injustificada, Atestado Médico..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
                     </div>
 
                     <!-- Setor -->
@@ -882,19 +882,19 @@
                         <datalist id="setoresList"></datalist>
                     </div>
 
-                    <!-- FunÃ§Ã£o / Cargo -->
+                    <!-- Função / Cargo -->
                     <div class="space-y-1">
                         <label class="block font-bold text-slate-700 dark:text-slate-200">
-                            FunÃ§Ã£o / Cargo <span class="text-rose-500">*</span>
+                            Função / Cargo <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" id="recFuncao" required list="funcoesList" placeholder="Ex: MOTORISTA, AJUDANTE..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
                         <datalist id="funcoesList"></datalist>
                     </div>
 
-                    <!-- Data de AdmissÃ£o -->
+                    <!-- Data de Admissão -->
                     <div class="space-y-1">
                         <label class="block font-bold text-slate-700 dark:text-slate-200">
-                            Data de AdmissÃ£o (Opcional)
+                            Data de Admissão (Opcional)
                         </label>
                         <input type="date" id="recDtAdmissao" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
                     </div>
@@ -907,12 +907,12 @@
                         <input type="text" id="recEmpresa" value="LUBE DISTRIBUIDORA LTDA" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none">
                     </div>
 
-                    <!-- ObservaÃ§Ã£o -->
+                    <!-- Observação -->
                     <div class="space-y-1 sm:col-span-2">
                         <label class="block font-bold text-slate-700 dark:text-slate-200">
-                            ObservaÃ§Ãµes / Detalhes Adicionais
+                            Observações / Detalhes Adicionais
                         </label>
-                        <textarea id="recObservacao" rows="2" placeholder="InformaÃ§Ãµes complementares sobre a ausÃªncia ou atestado..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none"></textarea>
+                        <textarea id="recObservacao" rows="2" placeholder="Informações complementares sobre a ausência ou atestado..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-lube-red focus:outline-none"></textarea>
                     </div>
                 </div>
 
@@ -956,7 +956,7 @@
                         <span class="font-bold text-slate-900 dark:text-white text-sm" id="modalSupabaseProject">ABSENTEISMO RH</span>
                     </div>
                     <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
-                        <span class="text-slate-400 block font-medium">Status da ConexÃ£o</span>
+                        <span class="text-slate-400 block font-medium">Status da Conexão</span>
                         <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-1.5" id="modalSupabaseStatus">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online (PostgreSQL)
                         </span>
@@ -966,17 +966,17 @@
                         <span class="font-bold text-lube-navy dark:text-white text-sm" id="modalSupabaseRecords">1.016</span>
                     </div>
                     <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60">
-                        <span class="text-slate-400 block font-medium">LatÃªncia de Rede</span>
+                        <span class="text-slate-400 block font-medium">Latência de Rede</span>
                         <span class="font-bold text-blue-600 dark:text-blue-400 text-sm" id="modalSupabaseLatency">~35 ms</span>
                     </div>
                 </div>
 
                 <div class="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/40 text-blue-800 dark:text-blue-300">
                     <p class="font-bold mb-1 flex items-center gap-1.5">
-                        <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i> SincronizaÃ§Ã£o em Tempo Real (Supabase Realtime Ativo)
+                        <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i> Sincronização em Tempo Real (Supabase Realtime Ativo)
                     </p>
                     <p class="text-[11px] leading-relaxed text-blue-700 dark:text-blue-400">
-                        Qualquer alteraÃ§Ã£o ou novo registro inserido neste painel ou em outras sessÃµes Ã© propagado instantaneamente para todos os usuÃ¡rios conectados via WebSockets PostgreSQL.
+                        Qualquer alteração ou novo registro inserido neste painel ou em outras sessões é propagado instantaneamente para todos os usuários conectados via WebSockets PostgreSQL.
                     </p>
                 </div>
             </div>
@@ -1007,7 +1007,7 @@
         </button>
     </div>
 
-    <!-- SUPABASE JS SDK & CLIENT -->
+    <!-- SUPABASE JS SDK & CLIENT (UMD, pinned version) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js"></script>
     <script src="supabase-client.js"></script>
 
@@ -1053,25 +1053,24 @@
             }
         }
 
-        // Safe icon initialization helper
+        // Safe Lucide icon initialization (handles async CDN load)
         function safeCreateIcons() {
             try {
                 if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                    window.safeCreateIcons();
+                    window.lucide.createIcons();
                 } else if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
-                    safeCreateIcons();
+                    lucide.createIcons();
                 } else {
-                    console.warn('Lucide nÃ£o disponÃ­vel ainda, tentando novamente em 200ms...');
-                    setTimeout(safeCreateIcons, 200);
+                    setTimeout(safeCreateIcons, 250);
                 }
-            } catch (e) {
-                console.warn('Erro ao criar Ã­cones Lucide:', e);
-            }
+            } catch(e) { console.warn('[Lucide]', e); }
         }
 
         // Initialize App on DOM Load
         document.addEventListener('DOMContentLoaded', async () => {
-            loadStoredData();
+            // Clear stale localStorage on startup so Supabase data takes priority
+            localStorage.removeItem('lube_custom_absenteismo_data');
+            rawData = [];
             safeCreateIcons();
             initTheme();
             updateHeaderBaseBadge();
@@ -1085,8 +1084,8 @@
         // Supabase Live Synchronization
         async function initSupabaseIntegration() {
             if (!window.SupabaseService) {
-                console.warn('SupabaseService nÃ£o disponÃ­vel.');
-                updateSupabaseStatusUI(false, 0, 0, 'ServiÃ§o indisponÃ­vel');
+                console.warn('SupabaseService não disponível.');
+                updateSupabaseStatusUI(false, 0, 0, 'Serviço indisponível');
                 return;
             }
 
@@ -1137,7 +1136,7 @@
                                 rawData[idx] = updatedRec;
                                 populateFilterOptions();
                                 applyFilters();
-                                showToast('Registro Atualizado', `OcorrÃªncia #${updatedRec.id} sincronizada.`);
+                                showToast('Registro Atualizado', `Ocorrência #${updatedRec.id} sincronizada.`);
                             }
                         },
                         // onDelete
@@ -1146,7 +1145,7 @@
                             populateFilterOptions();
                             applyFilters();
                             updateHeaderBaseBadge();
-                            showToast('Registro Removido', `OcorrÃªncia removida do banco.`);
+                            showToast('Registro Removido', `Ocorrência removida do banco.`);
                         }
                     );
 
@@ -1155,7 +1154,7 @@
                     updateSupabaseStatusUI(false, rawData.length, testRes.latencyMs, testRes.error);
                 }
             } catch (err) {
-                console.error('Falha na sincronizaÃ§Ã£o inicial do Supabase:', err);
+                console.error('Falha na sincronização inicial do Supabase:', err);
                 isSupabaseOnline = false;
                 updateSupabaseStatusUI(false, rawData.length, 0, err.message);
             }
@@ -1248,7 +1247,7 @@
                 const sets = [...new Set(rawData.map(d => d.setor).filter(Boolean))].sort();
                 setList.innerHTML = sets.map(s => `<option value="${s}">`).join('');
             }
-            // FunÃ§Ãµes
+            // Funções
             const funcList = document.getElementById('funcoesList');
             if (funcList) {
                 const funcs = [...new Set(rawData.map(d => d.funcao).filter(Boolean))].sort();
@@ -1302,8 +1301,8 @@
             const empresa = document.getElementById('recEmpresa').value.trim() || 'LUBE DISTRIBUIDORA LTDA';
             const obs = document.getElementById('recObservacao').value.trim();
 
-            const monthNamesPt = ['Janeiro', 'Fevereiro', 'MarÃ§o', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-            const dayNamesPt = ['Domingo', 'Segunda-feira', 'TerÃ§a-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'SÃ¡bado'];
+            const monthNamesPt = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const dayNamesPt = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
             const [yStr, mStr, dStr] = dataIso.split('-');
             const y = parseInt(yStr, 10);
@@ -1359,11 +1358,11 @@
                 updateHeaderBaseBadge();
                 closeNewRecordModal();
 
-                showToast('Registro Salvo com Sucesso!', `OcorrÃªncia de ${funcionario} inserida no Supabase Cloud.`);
+                showToast('Registro Salvo com Sucesso!', `Ocorrência de ${funcionario} inserida no Supabase Cloud.`);
 
             } catch (err) {
                 console.error('Erro ao salvar registro:', err);
-                showToast('Erro ao Salvar', 'NÃ£o foi possÃ­vel gravar no banco: ' + (err.message || err), true);
+                showToast('Erro ao Salvar', 'Não foi possível gravar no banco: ' + (err.message || err), true);
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -1457,10 +1456,10 @@
                 });
             }
 
-            // FunÃ§Ãµes
+            // Funções
             const funcaoSelect = document.getElementById('filterFuncao');
             if (funcaoSelect) {
-                funcaoSelect.innerHTML = '<option value="ALL">Todas as FunÃ§Ãµes</option>';
+                funcaoSelect.innerHTML = '<option value="ALL">Todas as Funções</option>';
                 const funcoes = [...new Set(rawData.map(d => d.funcao).filter(Boolean))].sort();
                 funcoes.forEach(f => {
                     const opt = document.createElement('option');
@@ -1655,7 +1654,7 @@
             document.getElementById('kpiJustificadosPerc').textContent = total > 0 ? `${((justificados / total) * 100).toFixed(1)}% do total` : '0%';
             document.getElementById('kpiFolgasPerc').textContent = total > 0 ? `${((folgas / total) * 100).toFixed(1)}% do total` : '0%';
             document.getElementById('kpiTreinamentoPerc').textContent = total > 0 ? `${((treinamentos / total) * 100).toFixed(1)}% do total` : '0%';
-            document.getElementById('kpiMediaColaborador').textContent = `MÃ©dia: ${mediaPorPessoa} / pessoa`;
+            document.getElementById('kpiMediaColaborador').textContent = `Média: ${mediaPorPessoa} / pessoa`;
         }
 
         // Render Dynamic Executive Insights
@@ -1729,7 +1728,7 @@
             renderChartTempoCasa(textColor);
         }
 
-        // 1. Chart: EvoluÃ§Ã£o Mensal Empilhada com Gradientes
+        // 1. Chart: Evolução Mensal Empilhada com Gradientes
         function renderChartEvolution(textColor, gridColor) {
             const canvas = document.getElementById('chartEvolution');
             if (!canvas) return;
@@ -1755,7 +1754,7 @@
                         { label: 'Injustificado (Faltas)', data: dataInj, backgroundColor: '#e30613', hoverBackgroundColor: '#c40410', borderRadius: 6 },
                         { label: 'Justificado (Atestados)', data: dataJust, backgroundColor: '#2563eb', hoverBackgroundColor: '#1d4ed8', borderRadius: 6 },
                         { label: 'Folgas & Banco Horas', data: dataFolga, backgroundColor: '#f59e0b', hoverBackgroundColor: '#d97706', borderRadius: 6 },
-                        { label: 'CapacitaÃ§Ãµes', data: dataTreina, backgroundColor: '#10b981', hoverBackgroundColor: '#059669', borderRadius: 6 }
+                        { label: 'Capacitações', data: dataTreina, backgroundColor: '#10b981', hoverBackgroundColor: '#059669', borderRadius: 6 }
                     ]
                 },
                 options: {
@@ -1855,7 +1854,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'OcorrÃªncias',
+                        label: 'Ocorrências',
                         data: data,
                         backgroundColor: '#0b1b3d',
                         hoverBackgroundColor: '#e30613',
@@ -1890,7 +1889,7 @@
             if (chartDiaSemana) chartDiaSemana.destroy();
 
             const daysOrder = ['Segunda-feira', 'Terca-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sabado', 'Domingo'];
-            const dayLabelsClean = ['Segunda', 'TerÃ§a', 'Quarta', 'Quinta', 'Sexta', 'SÃ¡bado', 'Domingo'];
+            const dayLabelsClean = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
             const data = daysOrder.map(day =>
                 filteredData.filter(d =>
                     d.dia_semana === day ||
@@ -1901,12 +1900,12 @@
 
             // Find peak day index
             const peakIndex = data.indexOf(Math.max(...data));
-            const peakLabelFull = ['Segunda-feira', 'TerÃ§a-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'SÃ¡bado', 'Domingo'];
+            const peakLabelFull = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
             const peakShort = dayLabelsClean[peakIndex] || 'Segunda';
             const peakFull = peakLabelFull[peakIndex] || 'Segunda-feira';
             const badge = document.getElementById('picoCriticoBadge');
             if (badge) {
-                badge.textContent = `${peakShort}: Pico CrÃ­tico`;
+                badge.textContent = `${peakShort}: Pico Crítico`;
                 if (peakFull === 'Segunda-feira') {
                     badge.className = 'text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-2.5 py-0.5 rounded-full border border-red-200 dark:border-red-900 animate-pulse';
                 } else {
@@ -1925,7 +1924,7 @@
                 data: {
                     labels: dayLabelsClean,
                     datasets: [{
-                        label: 'Total de AusÃªncias',
+                        label: 'Total de Ausências',
                         data: data,
                         backgroundColor: bgColors,
                         borderRadius: 6
@@ -1967,9 +1966,9 @@
             // Format labels with ranking badges
             const labels = sorted.map((d, index) => {
                 const rawName = d[0].length > 18 ? d[0].substring(0, 16) + '...' : d[0];
-                if (index === 0) return `ðŸ¥‡ ${rawName}`;
-                if (index === 1) return `ðŸ¥ˆ ${rawName}`;
-                if (index === 2) return `ðŸ¥‰ ${rawName}`;
+                if (index === 0) return `🥇 ${rawName}`;
+                if (index === 1) return `🥈 ${rawName}`;
+                if (index === 2) return `🥉 ${rawName}`;
                 return `#${index + 1} ${rawName}`;
             });
             const data = sorted.map(d => d[1]);
@@ -2006,7 +2005,7 @@
             });
         }
 
-        // 6. Chart: Top 10 Geral AusÃªncias com Medalhas Visuais
+        // 6. Chart: Top 10 Geral Ausências com Medalhas Visuais
         function renderChartTopGeral(textColor, gridColor) {
             const canvas = document.getElementById('chartTopGeral');
             if (!canvas) return;
@@ -2019,9 +2018,9 @@
             const sorted = Object.entries(empCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
             const labels = sorted.map((d, index) => {
                 const rawName = d[0].length > 18 ? d[0].substring(0, 16) + '...' : d[0];
-                if (index === 0) return `ðŸ¥‡ ${rawName}`;
-                if (index === 1) return `ðŸ¥ˆ ${rawName}`;
-                if (index === 2) return `ðŸ¥‰ ${rawName}`;
+                if (index === 0) return `🥇 ${rawName}`;
+                if (index === 1) return `🥈 ${rawName}`;
+                if (index === 2) return `🥉 ${rawName}`;
                 return `#${index + 1} ${rawName}`;
             });
             const data = sorted.map(d => d[1]);
@@ -2031,7 +2030,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Total AusÃªncias',
+                        label: 'Total Ausências',
                         data: data,
                         backgroundColor: '#1d4ed8',
                         hoverBackgroundColor: '#1e40af',
@@ -2058,7 +2057,7 @@
             });
         }
 
-        // 7. Chart: DistribuiÃ§Ã£o por Tempo de Casa
+        // 7. Chart: Distribuição por Tempo de Casa
         function renderChartTempoCasa(textColor) {
             const canvas = document.getElementById('chartTempoCasa');
             if (!canvas) return;
@@ -2226,7 +2225,7 @@
             renderDataTable();
         }
 
-        // Employee 360Â° Modal Logic
+        // Employee 360° Modal Logic
         function openEmployeeModal(empName) {
             const empRecords = rawData.filter(d => d.funcionario === empName);
             if (empRecords.length === 0) return;
@@ -2271,6 +2270,7 @@
                 void modalBox.offsetWidth;
                 modalBox.classList.add('animate-modal-spring');
             }
+            lucide.createIcons = safeCreateIcons;
             safeCreateIcons();
         }
 
@@ -2404,19 +2404,19 @@
                 return { categoria: 'Falta Injustificada', tipo: 'Injustificado' };
             }
             if (lower.includes('suspens')) {
-                return { categoria: 'SuspensÃ£o Disciplinar', tipo: 'Injustificado' };
+                return { categoria: 'Suspensão Disciplinar', tipo: 'Injustificado' };
             }
             if (lower.includes('atestado')) {
-                return { categoria: 'Atestado MÃ©dico', tipo: 'Justificado' };
+                return { categoria: 'Atestado Médico', tipo: 'Justificado' };
             }
             if (lower.includes('abon')) {
                 return { categoria: 'Falta Abonada', tipo: 'Justificado' };
             }
             if (lower.includes('declara')) {
-                return { categoria: 'DeclaraÃ§Ã£o de Comparecimento', tipo: 'Justificado' };
+                return { categoria: 'Declaração de Comparecimento', tipo: 'Justificado' };
             }
             if (lower.includes('licen')) {
-                return { categoria: 'LicenÃ§a Legal (Gala/Nojo/Paternidade)', tipo: 'Justificado' };
+                return { categoria: 'Licença Legal (Gala/Nojo/Paternidade)', tipo: 'Justificado' };
             }
             if (lower.includes('folga')) {
                 return { categoria: 'Folga / Banco de Horas', tipo: 'Compensacao/Folga' };
@@ -2425,7 +2425,7 @@
                 return { categoria: 'Troca de Feriado', tipo: 'Compensacao/Folga' };
             }
             if (lower.includes('igenesis') || lower.includes('senac') || lower.includes('treina') || lower.includes('curso') || lower.includes('capacita')) {
-                return { categoria: 'Treinamento / CapacitaÃ§Ã£o', tipo: 'Desenvolvimento' };
+                return { categoria: 'Treinamento / Capacitação', tipo: 'Desenvolvimento' };
             }
             if (m.length === 0 || lower.includes('nao informado')) {
                 return { categoria: 'Outros / Ajustes', tipo: 'Outros' };
@@ -2460,13 +2460,13 @@
                     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
                     if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-                        showToast('Erro na ImportaÃ§Ã£o', 'Nenhuma aba encontrada no arquivo Excel.', true);
+                        showToast('Erro na Importação', 'Nenhuma aba encontrada no arquivo Excel.', true);
                         return;
                     }
 
                     // Look for best sheet: POWERBI, BASE, DADOS, etc. or sheet with most data rows
                     let targetSheetName = null;
-                    const preferredNames = ['POWERBI', 'BASE', 'DADOS', 'ABSENTEISMO', 'ABSENTEÃSMO', '2026', '2025'];
+                    const preferredNames = ['POWERBI', 'BASE', 'DADOS', 'ABSENTEISMO', 'ABSENTEÍSMO', '2026', '2025'];
                     for (const name of preferredNames) {
                         const match = workbook.SheetNames.find(s => s.trim().toUpperCase() === name.toUpperCase());
                         if (match) {
@@ -2488,7 +2488,7 @@
                     }
 
                     if (!targetSheetName) {
-                        showToast('Erro na ImportaÃ§Ã£o', 'NÃ£o foi possÃ­vel encontrar dados nas abas da planilha.', true);
+                        showToast('Erro na Importação', 'Não foi possível encontrar dados nas abas da planilha.', true);
                         return;
                     }
 
@@ -2496,12 +2496,12 @@
                     const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
                     if (!rawRows || rawRows.length === 0) {
-                        showToast('Planilha Vazia', `A aba "${targetSheetName}" nÃ£o contÃ©m registros.`, true);
+                        showToast('Planilha Vazia', `A aba "${targetSheetName}" não contém registros.`, true);
                         return;
                     }
 
-                    const monthNamesPt = ['Janeiro', 'Fevereiro', 'MarÃ§o', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-                    const dayNamesPt = ['Domingo', 'Segunda-feira', 'TerÃ§a-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'SÃ¡bado'];
+                    const monthNamesPt = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                    const dayNamesPt = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
                     const parsedItems = [];
                     let autoId = 1;
@@ -2513,7 +2513,7 @@
 
                         // Ignore empty rows or total lines
                         if (!funcVal && !motivoVal && !dataRaw) continue;
-                        if (funcVal.toUpperCase().includes('TOTAL') || funcVal.toUpperCase().includes('RELATÃ“RIO') || funcVal.toUpperCase().includes('RELATORIO')) continue;
+                        if (funcVal.toUpperCase().includes('TOTAL') || funcVal.toUpperCase().includes('RELATÓRIO') || funcVal.toUpperCase().includes('RELATORIO')) continue;
 
                         const dateObj = parseExcelDate(dataRaw) || new Date();
                         const y = dateObj.getFullYear();
@@ -2528,8 +2528,8 @@
                         const anoMesSort = `${y}-${String(m).padStart(2, '0')}`;
                         const diaSemana = dayNamesPt[dayOfWeekNum] || 'Segunda-feira';
 
-                        const setorVal = String(getRowValue(row, [/^setor/i, /^depart/i, /^area/i, /^cc/i, /^centro.*custo/i])).trim() || 'NÃƒO INFORMADO';
-                        const funcaoVal = String(getRowValue(row, [/^cargo/i, /^posic/i, /^funcao/i, /^funÃ§Ã£o/i])).trim() || 'NÃƒO INFORMADO';
+                        const setorVal = String(getRowValue(row, [/^setor/i, /^depart/i, /^area/i, /^cc/i, /^centro.*custo/i])).trim() || 'NÃO INFORMADO';
+                        const funcaoVal = String(getRowValue(row, [/^cargo/i, /^posic/i, /^funcao/i, /^função/i])).trim() || 'NÃO INFORMADO';
                         const empresaVal = String(getRowValue(row, [/^empresa/i, /^filial/i, /^unidade/i])).trim() || 'LUBE DISTRIBUIDORA LTDA';
 
                         const dtAdmRaw = getRowValue(row, [/^admiss/i, /^dt.*adm/i, /^data.*adm/i]);
@@ -2552,7 +2552,7 @@
 
                         parsedItems.push({
                             id: autoId++,
-                            funcionario: funcVal || 'COLABORADOR NÃƒO IDENTIFICADO',
+                            funcionario: funcVal || 'COLABORADOR NÃO IDENTIFICADO',
                             empresa: empresaVal,
                             data_iso: dataIso,
                             data_formatada: dataFormatada,
@@ -2564,7 +2564,7 @@
                             dia_semana: diaSemana,
                             dia_semana_num: dayOfWeekNum,
                             dia: d,
-                            motivo: motivoVal || 'NÃ£o informado',
+                            motivo: motivoVal || 'Não informado',
                             categoria: classification.categoria,
                             tipo_absenteismo: classification.tipo,
                             setor: setorVal,
@@ -2576,7 +2576,7 @@
                     }
 
                     if (parsedItems.length === 0) {
-                        showToast('ImportaÃ§Ã£o InvÃ¡lida', 'NÃ£o foi possÃ­vel extrair nenhum registro vÃ¡lido da planilha.', true);
+                        showToast('Importação Inválida', 'Não foi possível extrair nenhum registro válido da planilha.', true);
                         return;
                     }
 
@@ -2610,7 +2610,7 @@
                             updateSupabaseStatusUI(true, rawData.length, supabaseLatency);
                         } catch (sErr) {
                             console.warn('Falha ao enviar lote ao Supabase:', sErr);
-                            showToast('Aviso de SincronizaÃ§Ã£o', 'Dados ativos localmente, mas falha ao gravar na nuvem: ' + (sErr.message || sErr), true);
+                            showToast('Aviso de Sincronização', 'Dados ativos localmente, mas falha ao gravar na nuvem: ' + (sErr.message || sErr), true);
                         }
                     }
 
@@ -2620,7 +2620,7 @@
                 }
             };
             reader.onerror = function() {
-                showToast('Erro de Arquivo', 'NÃ£o foi possÃ­vel ler o arquivo do disco.', true);
+                showToast('Erro de Arquivo', 'Não foi possível ler o arquivo do disco.', true);
             };
             reader.readAsArrayBuffer(file);
         }
