@@ -8,10 +8,10 @@
  */
 
 const SUPABASE_CONFIG = {
-    url: 'https://issujcvninltzvxdfhqd.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlzc3VqY3ZuaW5sdHp2eGRmaHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczMDIyMzIsImV4cCI6MjEwMjg3ODIzMn0.hvZbM6WSlq3mi3KGC9n7PqA54dZpdWhFgcMYzcNnQ5g',
-    projectName: 'ABSENTEISMO RH',
-    projectRef: 'issujcvninltzvxdfhqd'
+    url: 'https://jhznrwmwszpfogvbjnjx.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impoem5yd213c3pwZm9ndmJqbmp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1ODE5NDIsImV4cCI6MjEwMzE1Nzk0Mn0.WdQUsj-Z8pAogQUnuvfYRSfWSSxsNZTsfJmvfTugwOA',
+    projectName: 'RH Absenteísmo',
+    projectRef: 'jhznrwmwszpfogvbjnjx'
 };
 
 // Global Supabase Client Instance

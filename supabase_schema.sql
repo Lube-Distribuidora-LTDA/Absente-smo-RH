@@ -1,6 +1,6 @@
 -- =========================================================================
 -- SCHEMA SUPABASE COMPLETO & OTIMIZADO: BI DE ABSENTEÍSMO RH (LUBE DISTRIBUIDORA)
--- PROJETO: issujcvninltzvxdfhqd (ABSENTEISMO RH)
+-- PROJETO: jhznrwmwszpfogvbjnjx (RH Absenteísmo)
 -- =========================================================================
 
 -- ==========================================================

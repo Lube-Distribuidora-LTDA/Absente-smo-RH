@@ -48,7 +48,7 @@ Sistema executivo de Business Intelligence e Gestão Estratégica de Absenteísm
 
 ## 📊 Banco de Dados (Supabase PostgreSQL)
 
-- **Projeto**: `ABSENTEISMO RH` (`issujcvninltzvxdfhqd`)
+- **Projeto**: `RH Absenteísmo` (`jhznrwmwszpfogvbjnjx`)
 - **Tabelas**:
   - `ocorrencias_absenteismo`
   - `colaboradores`
