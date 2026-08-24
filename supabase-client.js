@@ -7,11 +7,17 @@
  * auditoria e sincronização em tempo real (PostgreSQL Realtime).
  */
 
-const SUPABASE_CONFIG = {
-    url: 'https://jhznrwmwszpfogvbjnjx.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impoem5yd213c3pwZm9ndmJqbmp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1ODE5NDIsImV4cCI6MjEwMzE1Nzk0Mn0.WdQUsj-Z8pAogQUnuvfYRSfWSSxsNZTsfJmvfTugwOA',
+// Config carregada em runtime a partir de supabase-config.js (gerado no build por generate-config.js
+// a partir das variaveis de ambiente SUPABASE_URL / SUPABASE_ANON_KEY). Nunca commitar credenciais aqui.
+if (!window.__SUPABASE_CONFIG__) {
+    console.error('[SupabaseClient] supabase-config.js nao encontrado ou nao carregado antes deste script. Rode "npm run build" (local) ou configure as variaveis de ambiente no Vercel.');
+}
+
+const SUPABASE_CONFIG = window.__SUPABASE_CONFIG__ || {
+    url: '',
+    anonKey: '',
     projectName: 'RH Absenteísmo',
-    projectRef: 'jhznrwmwszpfogvbjnjx'
+    projectRef: ''
 };
 
 // Global Supabase Client Instance

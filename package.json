@@ -1,0 +1,9 @@
+{
+  "name": "rh-absenteismo-lube",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dashboard de Absenteísmo RH - LUBE Distribuidora",
+  "scripts": {
+    "build": "node generate-config.js"
+  }
+}

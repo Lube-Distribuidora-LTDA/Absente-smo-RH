@@ -12,3 +12,11 @@ verify_supabase.ps1
 verify_views.ps1
 truncate_db.ps1
 *.ps1
+
+# Config gerado em build a partir de variaveis de ambiente (contem a anon key real)
+supabase-config.js
+
+# Node
+node_modules/
+.env
+.env.local
