@@ -444,6 +444,27 @@ async function insertColaboradorDB(record) {
 }
 
 /**
+ * Busca a análise de necessidade de headcount por função (PAINEL HEAD)
+ */
+async function fetchHeadNecessidadeDB() {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { data, error } = await client
+        .from('head_necessidade_funcao')
+        .select('*')
+        .order('empresa', { ascending: true })
+        .order('departamento', { ascending: true })
+        .order('funcao', { ascending: true });
+
+    if (error) {
+        console.error('Erro ao buscar dados de HEAD:', error);
+        throw error;
+    }
+    return data || [];
+}
+
+/**
  * Exclui uma ocorrência pelo ID
  */
 async function deleteOcorrenciaDB(id) {
@@ -533,5 +554,6 @@ window.SupabaseService = {
     fetchTurnoverMensal: fetchTurnoverMensalDB,
     upsertTurnoverMensal: upsertTurnoverMensalDB,
     fetchColaboradores: fetchColaboradoresDB,
-    insertColaborador: insertColaboradorDB
+    insertColaborador: insertColaboradorDB,
+    fetchHeadNecessidade: fetchHeadNecessidadeDB
 };

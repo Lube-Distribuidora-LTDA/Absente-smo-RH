@@ -6,10 +6,10 @@
   "outputDirectory": ".",
   "functions": {
     "api/diagnostico.js": {
-      "maxDuration": 60
+      "maxDuration": 30
     },
     "api/assistente.js": {
-      "maxDuration": 60
+      "maxDuration": 30
     }
   },
   "routes": [

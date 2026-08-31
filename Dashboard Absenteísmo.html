@@ -6,7 +6,7 @@
     <title>BI de Absenteísmo RH | Lube Distribuidora</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="favicon-48.png">
+    <link rel="icon" type="image/png" href="imagens/favicon-48.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
     <!-- Google Fonts: Plus Jakarta Sans & Inter (Clean, Executive & Modern) -->
@@ -211,7 +211,7 @@
     <aside id="appSidebar" class="fixed inset-y-0 left-0 z-50 w-64 -translate-x-full lg:translate-x-0 transition-transform duration-300 bg-[#070d1e] border-r border-cyan-500/20 flex flex-col no-print">
         <div class="flex items-center gap-3 px-5 py-5 border-b border-cyan-500/20">
             <div class="bg-white/95 p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-cyan-500/30 flex items-center justify-center shrink-0">
-                <img src="lube-logo.png" alt="Lube Distribuidora" class="h-8 w-auto object-contain" onerror="this.onerror=null; this.src='assets/lube-logo.png';">
+                <img src="imagens/lube-logo.png" alt="Lube Distribuidora" class="h-8 w-auto object-contain" onerror="this.onerror=null; this.src='assets/imagens/lube-logo.png';">
             </div>
             <div class="min-w-0">
                 <p class="text-sm font-extrabold text-white tracking-tight font-orbitron truncate">LUBE BI RH</p>
@@ -235,6 +235,10 @@
                 <i data-lucide="users" class="w-4.5 h-4.5 shrink-0"></i>
                 <span>Listagem de Empregados</span>
             </button>
+            <button onclick="switchSection('head')" data-section-nav="head" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer">
+                <i data-lucide="target" class="w-4.5 h-4.5 shrink-0"></i>
+                <span>Painel HEAD</span>
+            </button>
         </nav>
 
         <div class="px-5 py-4 border-t border-cyan-500/20 text-[10px] text-slate-500">
@@ -248,9 +252,9 @@
     </button>
 
     <!-- ASSISTENTE VIRTUAL DO RH: Floating Button (bottom-right, visible on every section) -->
-    <button id="assistantFab" onclick="toggleAssistantPanel()" title="Assistente Virtual do RH" class="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 shadow-[0_0_25px_rgba(0,212,255,0.5)] border-2 border-white/20 flex items-center justify-center text-white transition hover:scale-110 cursor-pointer no-print">
-        <i data-lucide="bot-message-square" class="w-6 h-6"></i>
-        <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#070d1e] animate-pulse"></span>
+    <button id="assistantFab" onclick="toggleAssistantPanel()" title="Assistente Virtual do RH" class="fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full shadow-[0_0_25px_rgba(0,212,255,0.5)] border-2 border-cyan-400/50 overflow-hidden transition hover:scale-110 cursor-pointer no-print bg-white">
+        <img src="imagens/logo%20agente%20virtual.png" alt="Assistente Virtual do RH" class="w-full h-full object-cover" style="object-position: 44% 12%; transform: scale(2.3);">
+        <span class="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#070d1e] animate-pulse"></span>
     </button>
 
     <!-- ASSISTENTE VIRTUAL DO RH: Chat Panel -->
@@ -288,7 +292,7 @@
                 <!-- Brand & Logo -->
                 <div class="flex items-center gap-4">
                     <div class="relative bg-white/95 p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-cyan-500/30 flex items-center justify-center">
-                        <img src="lube-logo.png" alt="Lube Distribuidora" class="h-10 w-auto object-contain" onerror="this.onerror=null; this.src='assets/lube-logo.png';">
+                        <img src="imagens/lube-logo.png" alt="Lube Distribuidora" class="h-10 w-auto object-contain" onerror="this.onerror=null; this.src='assets/imagens/lube-logo.png';">
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
@@ -1090,6 +1094,163 @@
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t border-slate-800 text-xs text-slate-400">
                 <div id="empregadosPaginationInfo">Mostrando 0 a 0 de 0 colaboradores</div>
                 <div class="flex items-center gap-1.5" id="empregadosPaginationButtons"></div>
+            </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================================== -->
+    <!-- SECTION: PAINEL HEAD (Necessidade de Contratação/Redução por Função) -->
+    <!-- ==================================================================== -->
+    <section id="section-head" class="hidden">
+      <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Filter Panel -->
+        <div class="executive-card rounded-2xl p-5 border border-cyan-500/20 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+                        <i data-lucide="target" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider font-orbitron glow-text-cyan">Painel HEAD &bull; Necessidade de Quadro</h2>
+                        <p class="text-xs text-slate-400">Head Atual x Head Programado por função, com indicação de contratação ou redução</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <select id="headFilterEmpresa" onchange="applyHeadFilters()" class="bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todas as Empresas</option>
+                    </select>
+                    <select id="headFilterSituacao" onchange="applyHeadFilters()" class="bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todas as Situações</option>
+                        <option value="ABAIXO DO HEAD">Abaixo do Head (Contratar)</option>
+                        <option value="ACIMA DO HEAD">Acima do Head (Avaliar Redução)</option>
+                        <option value="HEAD ADEQUADO">Head Adequado</option>
+                    </select>
+                    <button onclick="exportHeadExcel()" title="Exportar análise de HEAD para Excel" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] border border-emerald-400/40 transition cursor-pointer">
+                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                        <span>Exportar Excel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i> Head Atual Total</span>
+                <div id="headKpiAtual" class="text-3xl font-extrabold text-cyan-300 tracking-tight mt-2">0</div>
+                <p id="headKpiAtualSub" class="text-[11px] text-slate-400 mt-0.5">Programado: 0</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Vagas a Contratar</span>
+                <div id="headKpiVagas" class="text-3xl font-extrabold text-emerald-300 tracking-tight mt-2">0</div>
+                <p id="headKpiVagasSub" class="text-[11px] text-slate-400 mt-0.5">0 funções abaixo do head</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-red-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="user-minus" class="w-3.5 h-3.5"></i> Reduções Recomendadas</span>
+                <div id="headKpiReducoes" class="text-3xl font-extrabold text-red-400 tracking-tight glow-text-red mt-2">0</div>
+                <p id="headKpiReducoesSub" class="text-[11px] text-slate-400 mt-0.5">0 funções acima do head</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-purple-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Funções Adequadas</span>
+                <div id="headKpiAdequadas" class="text-3xl font-extrabold text-purple-300 tracking-tight mt-2">0</div>
+                <p id="headKpiAdequadasSub" class="text-[11px] text-slate-400 mt-0.5">de 0 funções analisadas</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-amber-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="building-2" class="w-3.5 h-3.5"></i> Departamento Crítico</span>
+                <div id="headKpiDeptoCritico" class="text-xl font-extrabold text-amber-300 tracking-tight mt-2">-</div>
+                <p id="headKpiDeptoCriticoSub" class="text-[11px] text-slate-400 mt-0.5">Maior desvio de quadro</p>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="executive-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-amber-400"></i>
+                            Situação do Quadro
+                        </h3>
+                        <p class="text-xs text-slate-400">Distribuição das funções por situação</p>
+                    </div>
+                </div>
+                <div class="relative h-[280px] w-full flex items-center justify-center pt-2">
+                    <canvas id="chartHeadSituacao"></canvas>
+                </div>
+            </div>
+            <div class="executive-card lg:col-span-2 p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4 text-cyan-400"></i>
+                            Head Atual &times; Programado por Departamento
+                        </h3>
+                        <p class="text-xs text-slate-400">Comparativo de quadro por departamento</p>
+                    </div>
+                </div>
+                <div class="relative h-[320px] w-full pt-4">
+                    <canvas id="chartHeadDepartamento"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="executive-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="user-plus" class="w-4 h-4 text-emerald-400"></i>
+                            Funções com Vagas em Aberto
+                        </h3>
+                        <p class="text-xs text-slate-400">Ranking de funções abaixo do head (contratar)</p>
+                    </div>
+                </div>
+                <div class="relative h-[280px] w-full pt-2">
+                    <canvas id="chartHeadContratar"></canvas>
+                </div>
+            </div>
+            <div class="executive-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="user-minus" class="w-4 h-4 text-red-400"></i>
+                            Funções com Excesso de Quadro
+                        </h3>
+                        <p class="text-xs text-slate-400">Ranking de funções acima do head (avaliar redução)</p>
+                    </div>
+                </div>
+                <div class="relative h-[280px] w-full pt-2">
+                    <canvas id="chartHeadReduzir"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="executive-card rounded-2xl p-5">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                    <i data-lucide="table" class="w-4 h-4 text-amber-400"></i>
+                    Análise Detalhada por Função
+                </h3>
+                <span id="headTableCount" class="text-xs font-semibold px-3 py-1 rounded-xl bg-slate-900/90 text-cyan-300 border border-cyan-500/30">0 funções</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left">
+                    <thead>
+                        <tr class="text-slate-400 uppercase border-b border-slate-800">
+                            <th class="py-2 pr-4">Função</th>
+                            <th class="py-2 pr-4 text-right">Head Atual</th>
+                            <th class="py-2 pr-4 text-right">Head Programado</th>
+                            <th class="py-2 pr-4 text-right">Necessidade</th>
+                            <th class="py-2 pr-4">Situação</th>
+                            <th class="py-2 pr-4">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="headTableBody"></tbody>
+                </table>
             </div>
         </div>
       </div>
@@ -3756,12 +3917,13 @@
         const SECTION_META = {
             absenteismo: { title: 'BI DE ABSENTEÍSMO RH', subtitle: "KPI's - indicador de perfomace" },
             turnover: { title: 'TURNOVER RH', subtitle: 'Controle de entrada e saída de funcionários' },
-            empregados: { title: 'LISTAGEM DE EMPREGADOS', subtitle: 'Cadastro e busca dinâmica de colaboradores' }
+            empregados: { title: 'LISTAGEM DE EMPREGADOS', subtitle: 'Cadastro e busca dinâmica de colaboradores' },
+            head: { title: 'PAINEL HEAD', subtitle: 'Necessidade de contratação e redução por função' }
         };
 
         function switchSection(name) {
             currentActiveSection = name;
-            ['absenteismo', 'turnover', 'empregados'].forEach(s => {
+            ['absenteismo', 'turnover', 'empregados', 'head'].forEach(s => {
                 const el = document.getElementById(`section-${s}`);
                 if (el) el.classList.toggle('hidden', s !== name);
                 const navBtn = document.querySelector(`[data-section-nav="${s}"]`);
@@ -3779,6 +3941,7 @@
 
             if (name === 'turnover') loadTurnoverSection();
             if (name === 'empregados') loadEmpregadosSection();
+            if (name === 'head') loadHeadSection();
 
             closeSidebarMobile();
             safeCreateIcons();
@@ -4509,6 +4672,336 @@
         }
 
         // ================================================================
+        // PAINEL HEAD (Necessidade de Contratação/Redução por Função)
+        // ================================================================
+        let headRawData = [];
+        let headFilteredData = [];
+        let headDataLoaded = false;
+        let chartHeadSituacao = null, chartHeadDepartamento = null, chartHeadContratar = null, chartHeadReduzir = null;
+
+        async function loadHeadSection() {
+            if (headDataLoaded) { applyHeadFilters(); return; }
+            const tbody = document.getElementById('headTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Carregando análise de HEAD...</td></tr>';
+
+            try {
+                if (window.SupabaseService && isSupabaseOnline) {
+                    headRawData = await window.SupabaseService.fetchHeadNecessidade();
+                } else {
+                    headRawData = [];
+                }
+            } catch (err) {
+                console.error('Erro ao carregar HEAD:', err);
+                headRawData = [];
+                showToast('Erro ao Carregar Painel HEAD', err.message || String(err), true);
+            }
+
+            headDataLoaded = true;
+            populateHeadFilterOptions();
+            applyHeadFilters();
+        }
+
+        function populateHeadFilterOptions() {
+            const empresaSel = document.getElementById('headFilterEmpresa');
+            if (!empresaSel) return;
+            const empresas = [...new Set(headRawData.map(r => r.empresa))].sort();
+            const cur = empresaSel.value;
+            empresaSel.innerHTML = '<option value="ALL">Todas as Empresas</option>' + empresas.map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join('');
+            if (empresas.includes(cur)) empresaSel.value = cur;
+        }
+
+        function applyHeadFilters() {
+            const empresa = document.getElementById('headFilterEmpresa').value;
+            const situacao = document.getElementById('headFilterSituacao').value;
+
+            headFilteredData = headRawData.filter(r => {
+                if (empresa !== 'ALL' && r.empresa !== empresa) return false;
+                if (situacao !== 'ALL' && r.situacao !== situacao) return false;
+                return true;
+            });
+
+            renderHeadKPIs(headFilteredData);
+            renderHeadCharts(headFilteredData);
+            renderHeadTable(headFilteredData);
+            safeCreateIcons();
+        }
+
+        function renderHeadKPIs(rows) {
+            const totalAtual = rows.reduce((s, r) => s + r.head_atual, 0);
+            const totalProgramado = rows.reduce((s, r) => s + r.head_programado, 0);
+            const totalVagas = rows.reduce((s, r) => s + r.vagas_contratar, 0);
+            const totalReducoes = rows.reduce((s, r) => s + r.reducoes, 0);
+            const funcoesAbaixo = rows.filter(r => r.situacao === 'ABAIXO DO HEAD').length;
+            const funcoesAcima = rows.filter(r => r.situacao === 'ACIMA DO HEAD').length;
+            const funcoesAdequadas = rows.filter(r => r.situacao === 'HEAD ADEQUADO').length;
+
+            document.getElementById('headKpiAtual').textContent = totalAtual.toLocaleString('pt-BR');
+            document.getElementById('headKpiAtualSub').textContent = `Programado: ${totalProgramado.toLocaleString('pt-BR')}`;
+            document.getElementById('headKpiVagas').textContent = totalVagas.toLocaleString('pt-BR');
+            document.getElementById('headKpiVagasSub').textContent = `${funcoesAbaixo} ${funcoesAbaixo === 1 ? 'função' : 'funções'} abaixo do head`;
+            document.getElementById('headKpiReducoes').textContent = totalReducoes.toLocaleString('pt-BR');
+            document.getElementById('headKpiReducoesSub').textContent = `${funcoesAcima} ${funcoesAcima === 1 ? 'função' : 'funções'} acima do head`;
+            document.getElementById('headKpiAdequadas').textContent = funcoesAdequadas.toLocaleString('pt-BR');
+            document.getElementById('headKpiAdequadasSub').textContent = `de ${rows.length.toLocaleString('pt-BR')} funções analisadas`;
+
+            const porDepto = {};
+            rows.forEach(r => {
+                const key = `${r.empresa} • ${r.departamento}`;
+                porDepto[key] = (porDepto[key] || 0) + Math.abs(r.necessidade);
+            });
+            let deptoCritico = '-', deptoCriticoVal = 0;
+            Object.entries(porDepto).forEach(([k, v]) => {
+                if (v > deptoCriticoVal) { deptoCriticoVal = v; deptoCritico = k; }
+            });
+            document.getElementById('headKpiDeptoCritico').textContent = deptoCritico !== '-' ? deptoCritico.split(' • ')[1] : '-';
+            document.getElementById('headKpiDeptoCriticoSub').textContent = deptoCritico !== '-' ? `${deptoCriticoVal} posições de desvio` : 'Sem dados no período';
+        }
+
+        function renderHeadCharts(rows) {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#334155';
+            const gridColor = isDark ? 'rgba(0, 212, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+
+            // 1. Situação (donut)
+            const situacaoCounts = { 'ABAIXO DO HEAD': 0, 'ACIMA DO HEAD': 0, 'HEAD ADEQUADO': 0 };
+            rows.forEach(r => { if (situacaoCounts[r.situacao] !== undefined) situacaoCounts[r.situacao]++; });
+
+            const sitCanvas = document.getElementById('chartHeadSituacao');
+            if (sitCanvas) {
+                if (chartHeadSituacao) chartHeadSituacao.destroy();
+                chartHeadSituacao = new Chart(sitCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Abaixo do Head', 'Acima do Head', 'Head Adequado'],
+                        datasets: [{
+                            data: [situacaoCounts['ABAIXO DO HEAD'], situacaoCounts['ACIMA DO HEAD'], situacaoCounts['HEAD ADEQUADO']],
+                            backgroundColor: ['#10b981', '#e30613', '#00d4ff'],
+                            borderColor: '#0b152b', borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10 } } }
+                    }
+                });
+            }
+
+            // 2. Head Atual x Programado por Departamento
+            const porDepto = {};
+            rows.forEach(r => {
+                const key = r.departamento;
+                if (!porDepto[key]) porDepto[key] = { atual: 0, programado: 0 };
+                porDepto[key].atual += r.head_atual;
+                porDepto[key].programado += r.head_programado;
+            });
+            const deptos = Object.keys(porDepto).sort((a, b) => porDepto[b].atual - porDepto[a].atual);
+
+            const deptoCanvas = document.getElementById('chartHeadDepartamento');
+            if (deptoCanvas) {
+                if (chartHeadDepartamento) chartHeadDepartamento.destroy();
+                chartHeadDepartamento = new Chart(deptoCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: deptos,
+                        datasets: [
+                            { label: 'Head Atual', data: deptos.map(d => porDepto[d].atual), backgroundColor: 'rgba(0,212,255,0.75)', borderRadius: 4 },
+                            { label: 'Head Programado', data: deptos.map(d => porDepto[d].programado), backgroundColor: 'rgba(168,85,247,0.75)', borderRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: textColor, font: { size: 10 } } } },
+                        scales: {
+                            x: { ticks: { color: textColor, maxRotation: 45, minRotation: 45, font: { size: 9 } }, grid: { display: false } },
+                            y: { ticks: { color: textColor }, grid: { color: gridColor }, beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            // 3. Ranking de funções a contratar
+            const paraContratar = rows.filter(r => r.vagas_contratar > 0).sort((a, b) => b.vagas_contratar - a.vagas_contratar).slice(0, 10);
+            const contratarCanvas = document.getElementById('chartHeadContratar');
+            if (contratarCanvas) {
+                if (chartHeadContratar) chartHeadContratar.destroy();
+                chartHeadContratar = new Chart(contratarCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: paraContratar.map(r => r.funcao),
+                        datasets: [{ label: 'Vagas a Contratar', data: paraContratar.map(r => r.vagas_contratar), backgroundColor: 'rgba(16,185,129,0.8)', borderRadius: 4 }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor }, beginAtZero: true },
+                            y: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // 4. Ranking de funções a reduzir
+            const paraReduzir = rows.filter(r => r.reducoes > 0).sort((a, b) => b.reducoes - a.reducoes).slice(0, 10);
+            const reduzirCanvas = document.getElementById('chartHeadReduzir');
+            if (reduzirCanvas) {
+                if (chartHeadReduzir) chartHeadReduzir.destroy();
+                chartHeadReduzir = new Chart(reduzirCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: paraReduzir.map(r => r.funcao),
+                        datasets: [{ label: 'Reduções', data: paraReduzir.map(r => r.reducoes), backgroundColor: 'rgba(227,6,19,0.8)', borderRadius: 4 }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor }, beginAtZero: true },
+                            y: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderHeadTable(rows) {
+            const tbody = document.getElementById('headTableBody');
+            const countBadge = document.getElementById('headTableCount');
+            if (!tbody) return;
+
+            if (countBadge) countBadge.textContent = `${rows.length.toLocaleString('pt-BR')} funções`;
+
+            if (rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Nenhuma função para os filtros selecionados.</td></tr>';
+                return;
+            }
+
+            const grupos = {};
+            rows.forEach(r => {
+                const key = `${r.empresa}||${r.departamento}`;
+                (grupos[key] = grupos[key] || []).push(r);
+            });
+            const chavesOrdenadas = Object.keys(grupos).sort();
+
+            const situacaoBadge = (situacao) => {
+                if (situacao === 'ABAIXO DO HEAD') return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-500/40">ABAIXO DO HEAD</span>';
+                if (situacao === 'ACIMA DO HEAD') return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-red-950/60 text-red-400 border border-red-500/40">ACIMA DO HEAD</span>';
+                return '<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/40">HEAD ADEQUADO</span>';
+            };
+            const acaoBadge = (acao) => {
+                if (acao === 'CONTRATAR') return '<span class="text-emerald-400 font-bold flex items-center gap-1"><i data-lucide="user-plus" class="w-3 h-3"></i> Contratar</span>';
+                if (acao === 'AVALIAR REDUÇÃO') return '<span class="text-red-400 font-bold flex items-center gap-1"><i data-lucide="user-minus" class="w-3 h-3"></i> Avaliar Redução</span>';
+                return '<span class="text-slate-400 font-semibold">Manter</span>';
+            };
+
+            let html = '';
+            chavesOrdenadas.forEach(key => {
+                const [empresa, departamento] = key.split('||');
+                const grupoRows = [...grupos[key]].sort((a, b) => a.funcao.localeCompare(b.funcao));
+                const somaAtual = grupoRows.reduce((s, r) => s + r.head_atual, 0);
+                const somaProgramado = grupoRows.reduce((s, r) => s + r.head_programado, 0);
+
+                html += `
+                    <tr class="bg-amber-950/20 border-b border-amber-500/20">
+                        <td colspan="6" class="py-2 pr-4">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-extrabold text-white uppercase tracking-wide flex items-center gap-1.5">
+                                    <i data-lucide="building-2" class="w-3.5 h-3.5 text-amber-400"></i> ${escapeHtml(empresa)} &bull; ${escapeHtml(departamento)}
+                                </span>
+                                <span class="text-[11px] text-slate-400 font-normal normal-case">
+                                    Head Atual: <span class="text-cyan-300 font-bold">${somaAtual}</span> &bull;
+                                    Programado: <span class="text-purple-300 font-bold">${somaProgramado}</span>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                grupoRows.forEach(r => {
+                    html += `
+                        <tr class="border-b border-slate-800/60 hover:bg-white/5">
+                            <td class="py-2 pr-4 pl-6 text-slate-300">&#8627; ${escapeHtml(r.funcao)}</td>
+                            <td class="py-2 pr-4 text-right">${r.head_atual}</td>
+                            <td class="py-2 pr-4 text-right">${r.head_programado}</td>
+                            <td class="py-2 pr-4 text-right font-bold ${r.necessidade > 0 ? 'text-emerald-400' : r.necessidade < 0 ? 'text-red-400' : 'text-slate-400'}">${r.necessidade > 0 ? '+' : ''}${r.necessidade}</td>
+                            <td class="py-2 pr-4">${situacaoBadge(r.situacao)}</td>
+                            <td class="py-2 pr-4">${acaoBadge(r.acao)}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            tbody.innerHTML = html;
+            safeCreateIcons();
+        }
+
+        async function exportHeadExcel() {
+            if (headFilteredData.length === 0) {
+                showToast('Aviso de Exportação', 'Nenhum dado de HEAD para exportar.', true);
+                return;
+            }
+            try {
+                const workbook = new ExcelJS.Workbook();
+                workbook.creator = 'Lube Distribuidora - RH Corporativo';
+                workbook.created = new Date();
+                const worksheet = workbook.addWorksheet('Painel HEAD', { views: [{ showGridLines: true }] });
+
+                worksheet.mergeCells('A1:G1');
+                const titleCell = worksheet.getCell('A1');
+                titleCell.value = 'LUBE DISTRIBUIDORA LTDA • PAINEL HEAD (NECESSIDADE DE QUADRO)';
+                titleCell.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+                titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B1B3D' } };
+                titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                worksheet.getRow(1).height = 36;
+
+                worksheet.mergeCells('A2:G2');
+                const subTitleCell = worksheet.getCell('A2');
+                const nowStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                subTitleCell.value = `Relatório Gerado em: ${nowStr} • Funções: ${headFilteredData.length}`;
+                subTitleCell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FFFFFFFF' } };
+                subTitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE30613' } };
+                subTitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                worksheet.getRow(2).height = 20;
+                worksheet.getRow(3).height = 10;
+
+                const headers = ['EMPRESA', 'DEPARTAMENTO', 'FUNÇÃO', 'HEAD ATUAL', 'HEAD PROGRAMADO', 'NECESSIDADE', 'SITUAÇÃO'];
+                const headerRow = worksheet.getRow(4);
+                headerRow.values = headers;
+                headerRow.height = 26;
+                headerRow.eachCell((cell) => {
+                    cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B1B3D' } };
+                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    cell.border = { top: { style: 'medium', color: { argb: 'FFE30613' } }, bottom: { style: 'medium', color: { argb: 'FFE30613' } } };
+                });
+
+                headFilteredData.forEach((r, index) => {
+                    const row = worksheet.addRow([r.empresa, r.departamento, r.funcao, r.head_atual, r.head_programado, r.necessidade, r.situacao]);
+                    row.height = 20;
+                    const bgArgb = index % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC';
+                    row.eachCell((cell, colNumber) => {
+                        cell.font = { name: 'Arial', size: 9, color: { argb: 'FF1E293B' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+                        cell.alignment = { vertical: 'middle', horizontal: colNumber <= 3 ? 'left' : 'center' };
+                        cell.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+                    });
+                });
+
+                worksheet.columns = [{ width: 34 }, { width: 26 }, { width: 30 }, { width: 12 }, { width: 16 }, { width: 12 }, { width: 16 }];
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                saveAs(blob, `Lube_Painel_HEAD_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                showToast('Relatório Exportado!', 'A análise de HEAD foi baixada com sucesso.');
+            } catch (err) {
+                console.error('Erro na exportação de HEAD:', err);
+                showToast('Erro na Exportação', err.message || String(err), true);
+            }
+        }
+
+        // ================================================================
         // ASSISTENTE VIRTUAL DO RH (chat explicativo com IA, somente leitura)
         // ================================================================
         let assistantMessages = [];
@@ -4539,6 +5032,20 @@
             if (!container) return;
             container.innerHTML = assistantMessages.map(m => {
                 const isUser = m.role === 'user';
+
+                if (m.content === '__RETRY__') {
+                    return `
+                        <div class="flex justify-start">
+                            <div class="max-w-[85%] px-3.5 py-2.5 rounded-2xl bg-[#12203f] text-slate-100 border border-amber-500/30 rounded-bl-sm">
+                                <p class="mb-2">O serviço de IA está demorando mais que o normal agora (comum no plano gratuito). Pode tentar de novo?</p>
+                                <button onclick="retryLastAssistantQuestion()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/40 transition cursor-pointer">
+                                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Tentar novamente
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 return `
                     <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
                         <div class="max-w-[85%] px-3.5 py-2.5 rounded-2xl leading-relaxed ${isUser ? 'bg-gradient-to-r from-cyan-600 to-purple-600 text-white rounded-br-sm' : 'bg-[#12203f] text-slate-100 border border-cyan-500/20 rounded-bl-sm'}">
@@ -4548,6 +5055,7 @@
                 `;
             }).join('');
             container.scrollTop = container.scrollHeight;
+            safeCreateIcons();
         }
 
         // Monta o contexto de dados AO VIVO da seção ativa, para a IA responder com números reais
@@ -4578,6 +5086,21 @@
                     ctx.total_colaboradores = colaboradoresRawData.length;
                     ctx.total_filtrado_na_tela = colaboradoresFilteredData.length;
                     ctx.colaboradores_por_empresa = porEmpresa;
+                } else if (currentActiveSection === 'head') {
+                    ctx.empresa_selecionada = document.getElementById('headFilterEmpresa').value;
+                    ctx.situacao_selecionada = document.getElementById('headFilterSituacao').value;
+                    ctx.kpis = {
+                        head_atual_total: document.getElementById('headKpiAtual').textContent,
+                        vagas_a_contratar: document.getElementById('headKpiVagas').textContent,
+                        reducoes_recomendadas: document.getElementById('headKpiReducoes').textContent,
+                        funcoes_adequadas: document.getElementById('headKpiAdequadas').textContent,
+                        departamento_critico: document.getElementById('headKpiDeptoCritico').textContent
+                    };
+                    ctx.funcoes_detalhadas = headFilteredData.map(r => ({
+                        empresa: r.empresa, departamento: r.departamento, funcao: r.funcao,
+                        head_atual: r.head_atual, head_programado: r.head_programado,
+                        necessidade: r.necessidade, situacao: r.situacao, acao: r.acao
+                    }));
                 }
             } catch (e) {
                 console.warn('Falha ao montar contexto do assistente:', e);
@@ -4595,36 +5118,63 @@
             addAssistantMessage('user', question);
             input.value = '';
 
+            await askAssistant(question, historyForApi);
+        }
+
+        // Chama a API do assistente com retentativa automática; se ambas falharem,
+        // mostra uma mensagem amigável com um botão de "Tentar novamente" manual.
+        async function askAssistant(question, historyForApi) {
             const btn = document.getElementById('btnSendAssistant');
             btn.disabled = true;
 
-            addAssistantMessage('assistant', 'Digitando...');
+            addAssistantMessage('assistant', 'Pensando... (pode levar alguns segundos)');
             const thinkingIndex = assistantMessages.length - 1;
 
-            try {
-                const resp = await fetch('/api/assistente', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        messages: [...historyForApi, { role: 'user', content: question }],
-                        context: buildAssistantContext()
-                    })
-                });
+            const MAX_ATTEMPTS = 2;
+            let lastError = null;
 
-                const data = await resp.json().catch(() => null);
-                if (!resp.ok || !data || !data.reply) {
-                    throw new Error((data && data.error) || `Erro HTTP ${resp.status}`);
+            for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                try {
+                    const resp = await fetch('/api/assistente', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            messages: [...historyForApi, { role: 'user', content: question }],
+                            context: buildAssistantContext()
+                        })
+                    });
+
+                    const data = await resp.json().catch(() => null);
+                    if (!resp.ok || !data || !data.reply) {
+                        throw new Error((data && data.error) || `Erro HTTP ${resp.status}`);
+                    }
+
+                    assistantMessages[thinkingIndex] = { role: 'assistant', content: data.reply };
+                    renderAssistantMessages();
+                    btn.disabled = false;
+                    return;
+                } catch (err) {
+                    lastError = err;
+                    console.warn(`[Assistente RH] Tentativa ${attempt}/${MAX_ATTEMPTS} falhou:`, err.message);
+                    if (attempt < MAX_ATTEMPTS) {
+                        assistantMessages[thinkingIndex] = { role: 'assistant', content: `Pensando... (nova tentativa ${attempt + 1}/${MAX_ATTEMPTS})` };
+                        renderAssistantMessages();
+                    }
                 }
-
-                assistantMessages[thinkingIndex] = { role: 'assistant', content: data.reply };
-                renderAssistantMessages();
-            } catch (err) {
-                console.error('[Assistente RH] Erro:', err);
-                assistantMessages[thinkingIndex] = { role: 'assistant', content: 'Não consegui responder agora (o serviço de IA pode estar indisponível no momento). Tente novamente em instantes.' };
-                renderAssistantMessages();
-            } finally {
-                btn.disabled = false;
             }
+
+            console.error('[Assistente RH] Erro final após retentativas:', lastError);
+            assistantMessages[thinkingIndex] = { role: 'assistant', content: '__RETRY__' };
+            window.__lastFailedAssistant = { question, historyForApi };
+            renderAssistantMessages();
+            btn.disabled = false;
+        }
+
+        function retryLastAssistantQuestion() {
+            const last = window.__lastFailedAssistant;
+            if (!last) return;
+            assistantMessages.pop(); // remove o marcador de falha antes de tentar de novo
+            askAssistant(last.question, last.historyForApi);
         }
     </script>
 

@@ -1,15 +1,15 @@
 /**
  * Vercel Serverless Function: gera o "Diagnóstico Executivo Automatizado de RH"
- * usando um modelo de IA (NVIDIA NIM / DeepSeek), a partir de estatísticas
+ * usando um modelo de IA (Google Gemini), a partir de estatísticas
  * agregadas e anonimizadas de absenteísmo (sem nomes de colaboradores).
  *
- * A chave da API (NVIDIA_API_KEY) fica apenas nesta função, do lado do
+ * A chave da API (GEMINI_API_KEY) fica apenas nesta função, do lado do
  * servidor, lida em runtime via variável de ambiente da Vercel. Ela NUNCA
  * é enviada ao navegador do usuário.
  */
 
-const NVIDIA_ENDPOINT = 'https://integrate.api.nvidia.com/v1/chat/completions';
-const NVIDIA_MODEL = 'moonshotai/kimi-k3';
+const GEMINI_MODEL = 'gemini-flash-lite-latest';
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const ALLOWED_COLORS = ['blue', 'red', 'amber', 'emerald', 'purple', 'cyan'];
 
 function buildPrompt(statsJson) {
@@ -18,7 +18,7 @@ function buildPrompt(statsJson) {
 DADOS:
 ${statsJson}
 
-Responda ESTRITAMENTE com um array JSON (sem markdown, sem texto fora do array) de exatamente 4 objetos, cada um com os campos:
+Responda com um array JSON de exatamente 4 objetos, cada um com os campos:
 - "icon": um nome de ícone da biblioteca Lucide (ex: "map-pin", "calendar-alert", "shield-alert", "calendar-check", "trending-up", "users", "alert-triangle")
 - "color": uma destas cores: "blue", "red", "amber", "emerald", "purple", "cyan"
 - "title": título curto (máx 5 palavras)
@@ -29,7 +29,7 @@ Cada card deve abordar um ângulo diferente (ex: setor crítico, padrão tempora
 
 function extractJsonArray(raw) {
     let cleaned = raw.trim();
-    // Remove markdown code fences, caso o modelo os inclua mesmo sendo instruído a não fazer isso
+    // Remove eventuais cercas de markdown, por segurança
     cleaned = cleaned.replace(/^```(json)?/i, '').replace(/```$/, '').trim();
     const start = cleaned.indexOf('[');
     const end = cleaned.lastIndexOf(']');
@@ -55,9 +55,9 @@ module.exports = async (req, res) => {
         return;
     }
 
-    const apiKey = process.env.NVIDIA_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-        res.status(500).json({ error: 'NVIDIA_API_KEY não configurada no ambiente do servidor' });
+        res.status(500).json({ error: 'GEMINI_API_KEY não configurada no ambiente do servidor' });
         return;
     }
 
@@ -72,23 +72,16 @@ module.exports = async (req, res) => {
 
     try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 55000);
+        const timeout = setTimeout(() => controller.abort(), 25000);
 
         let upstream;
         try {
-            upstream = await fetch(NVIDIA_ENDPOINT, {
+            upstream = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: NVIDIA_MODEL,
-                    messages: [{ role: 'user', content: buildPrompt(statsJson) }],
-                    temperature: 0.4,
-                    top_p: 0.95,
-                    max_tokens: 1200,
-                    stream: false
+                    contents: [{ role: 'user', parts: [{ text: buildPrompt(statsJson) }] }],
+                    generationConfig: { temperature: 0.4, maxOutputTokens: 1200, responseMimeType: 'application/json' }
                 }),
                 signal: controller.signal
             });
@@ -98,13 +91,14 @@ module.exports = async (req, res) => {
 
         if (!upstream.ok) {
             const errText = await upstream.text().catch(() => '');
-            console.error('[diagnostico] Erro upstream NVIDIA:', upstream.status, errText.slice(0, 500));
+            console.error('[diagnostico] Erro upstream Gemini:', upstream.status, errText.slice(0, 500));
             res.status(502).json({ error: 'Falha ao consultar o modelo de IA' });
             return;
         }
 
         const payload = await upstream.json();
-        const raw = payload && payload.choices && payload.choices[0] && payload.choices[0].message && payload.choices[0].message.content;
+        const parts = payload && payload.candidates && payload.candidates[0] && payload.candidates[0].content && payload.candidates[0].content.parts;
+        const raw = Array.isArray(parts) ? parts.map(p => p.text).filter(Boolean).join('') : '';
         if (!raw) {
             res.status(502).json({ error: 'Resposta vazia do modelo de IA' });
             return;
