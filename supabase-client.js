@@ -465,6 +465,26 @@ async function fetchHeadNecessidadeDB() {
 }
 
 /**
+ * Insere ou atualiza (upsert) um ou mais registros de necessidade de HEAD por função
+ */
+async function upsertHeadNecessidadeDB(records) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+    if (!records || records.length === 0) return [];
+
+    const { data, error } = await client
+        .from('head_necessidade_funcao')
+        .upsert(records, { onConflict: 'empresa,departamento,funcao' })
+        .select();
+
+    if (error) {
+        console.error('Erro ao salvar necessidade de HEAD:', error);
+        throw error;
+    }
+    return data || [];
+}
+
+/**
  * Exclui uma ocorrência pelo ID
  */
 async function deleteOcorrenciaDB(id) {
@@ -555,5 +575,6 @@ window.SupabaseService = {
     upsertTurnoverMensal: upsertTurnoverMensalDB,
     fetchColaboradores: fetchColaboradoresDB,
     insertColaborador: insertColaboradorDB,
-    fetchHeadNecessidade: fetchHeadNecessidadeDB
+    fetchHeadNecessidade: fetchHeadNecessidadeDB,
+    upsertHeadNecessidade: upsertHeadNecessidadeDB
 };
