@@ -367,6 +367,83 @@ async function bulkInsertOcorrenciasDB(records, fileName = 'Importacao_Planilha.
 }
 
 /**
+ * Busca todos os registros mensais de turnover (entradas/saídas por setor)
+ */
+async function fetchTurnoverMensalDB() {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { data, error } = await client
+        .from('turnover_mensal')
+        .select('*')
+        .order('ano_mes_sort', { ascending: true })
+        .order('setor', { ascending: true });
+
+    if (error) {
+        console.error('Erro ao buscar dados de turnover:', error);
+        throw error;
+    }
+    return data || [];
+}
+
+/**
+ * Insere ou atualiza (upsert) um lançamento mensal de turnover para um setor
+ */
+async function upsertTurnoverMensalDB(record) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { data, error } = await client
+        .from('turnover_mensal')
+        .upsert([record], { onConflict: 'setor,ano_mes_sort' })
+        .select();
+
+    if (error) {
+        console.error('Erro ao salvar movimentação de turnover:', error);
+        throw error;
+    }
+    return data && data.length > 0 ? data[0] : null;
+}
+
+/**
+ * Busca todos os colaboradores cadastrados (Listagem de Empregados)
+ */
+async function fetchColaboradoresDB() {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { data, error } = await client
+        .from('colaboradores')
+        .select('*')
+        .order('nome', { ascending: true });
+
+    if (error) {
+        console.error('Erro ao buscar colaboradores:', error);
+        throw error;
+    }
+    return data || [];
+}
+
+/**
+ * Insere um novo colaborador diretamente no Supabase
+ */
+async function insertColaboradorDB(record) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { data, error } = await client
+        .from('colaboradores')
+        .insert([record])
+        .select();
+
+    if (error) {
+        console.error('Erro ao inserir colaborador:', error);
+        throw error;
+    }
+    return data && data.length > 0 ? data[0] : null;
+}
+
+/**
  * Exclui uma ocorrência pelo ID
  */
 async function deleteOcorrenciaDB(id) {
@@ -452,5 +529,9 @@ window.SupabaseService = {
     fetchHistorico: fetchHistoricoImportacoesDB,
     renameImportacao: renameImportacaoDB,
     fetchImportacaoById: fetchImportacaoByIdDB,
-    saveDiagnosticoIA: saveDiagnosticoIADB
+    saveDiagnosticoIA: saveDiagnosticoIADB,
+    fetchTurnoverMensal: fetchTurnoverMensalDB,
+    upsertTurnoverMensal: upsertTurnoverMensalDB,
+    fetchColaboradores: fetchColaboradoresDB,
+    insertColaborador: insertColaboradorDB
 };

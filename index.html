@@ -104,6 +104,21 @@
             border: 1px solid rgba(0, 212, 255, 0.12);
         }
 
+        /* Sidebar Navigation */
+        .sidebar-nav-btn {
+            color: #94a3b8;
+            background: transparent;
+        }
+        .sidebar-nav-btn:hover {
+            background: rgba(0, 212, 255, 0.08);
+            color: #e2e8f0;
+        }
+        .sidebar-nav-btn.active {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.18), rgba(0, 212, 255, 0.05));
+            color: #ffffff;
+            box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.35), 0 0 15px rgba(0, 212, 255, 0.15);
+        }
+
         /* Executive 3D Card */
         .executive-card {
             background: linear-gradient(135deg, rgba(16, 28, 56, 0.85) 0%, rgba(8, 15, 33, 0.95) 100%);
@@ -189,8 +204,53 @@
 </head>
 <body class="text-slate-200 min-h-screen font-sans transition-colors duration-200 antialiased selection:bg-lube-red selection:text-white">
 
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebarOverlay" onclick="closeSidebarMobile()" class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm hidden lg:hidden no-print"></div>
+
+    <!-- LEFT SIDEBAR NAVIGATION -->
+    <aside id="appSidebar" class="fixed inset-y-0 left-0 z-50 w-64 -translate-x-full lg:translate-x-0 transition-transform duration-300 bg-[#070d1e] border-r border-cyan-500/20 flex flex-col no-print">
+        <div class="flex items-center gap-3 px-5 py-5 border-b border-cyan-500/20">
+            <div class="bg-white/95 p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-cyan-500/30 flex items-center justify-center shrink-0">
+                <img src="lube-logo.png" alt="Lube Distribuidora" class="h-8 w-auto object-contain" onerror="this.onerror=null; this.src='assets/lube-logo.png';">
+            </div>
+            <div class="min-w-0">
+                <p class="text-sm font-extrabold text-white tracking-tight font-orbitron truncate">LUBE BI RH</p>
+                <p class="text-[10px] text-cyan-400 truncate">Suíte de Gestão de Pessoas</p>
+            </div>
+            <button onclick="closeSidebarMobile()" class="ml-auto p-1.5 rounded-lg bg-slate-800 text-slate-300 lg:hidden cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1.5">
+            <button onclick="switchSection('absenteismo')" data-section-nav="absenteismo" class="sidebar-nav-btn active w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer">
+                <i data-lucide="bar-chart-3" class="w-4.5 h-4.5 shrink-0"></i>
+                <span>Absenteísmo</span>
+            </button>
+            <button onclick="switchSection('turnover')" data-section-nav="turnover" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer">
+                <i data-lucide="repeat" class="w-4.5 h-4.5 shrink-0"></i>
+                <span>Turnover</span>
+            </button>
+            <button onclick="switchSection('empregados')" data-section-nav="empregados" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer">
+                <i data-lucide="users" class="w-4.5 h-4.5 shrink-0"></i>
+                <span>Listagem de Empregados</span>
+            </button>
+        </nav>
+
+        <div class="px-5 py-4 border-t border-cyan-500/20 text-[10px] text-slate-500">
+            Lube Distribuidora &bull; Gestão Estratégica de Pessoas
+        </div>
+    </aside>
+
+    <!-- Mobile Topbar Toggle -->
+    <button onclick="openSidebarMobile()" class="fixed top-3 left-3 z-30 lg:hidden p-2.5 rounded-xl bg-[#070d1e] border border-cyan-500/30 text-cyan-300 shadow-lg no-print">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+    </button>
+
+    <div id="appContent" class="lg:pl-64">
+
     <!-- Top Header Bar (Cyberpunk/Futuristic Theme) -->
-    <header class="sticky top-0 z-40 bg-[#070d1e]/85 backdrop-blur-xl border-b border-cyan-500/20 shadow-[0_4px_30px_rgba(0,0,0,0.8)] transition-all duration-300 no-print">
+    <header class="sticky top-0 z-30 bg-[#070d1e]/85 backdrop-blur-xl border-b border-cyan-500/20 shadow-[0_4px_30px_rgba(0,0,0,0.8)] transition-all duration-300 no-print">
         <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 
@@ -201,25 +261,28 @@
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h1 class="text-xl font-extrabold text-white tracking-tight font-orbitron glow-text-cyan flex items-center gap-2">
+                            <h1 id="sectionTitleMain" class="text-xl font-extrabold text-white tracking-tight font-orbitron glow-text-cyan flex items-center gap-2">
                                 BI DE ABSENTEÍSMO RH
                             </h1>
                             <span class="whitespace-nowrap px-2.5 py-0.5 text-[10px] font-extrabold tracking-wider rounded-full bg-red-950/80 text-red-400 border border-red-500/50 shadow-[0_0_10px_rgba(227,6,19,0.5)]">
                                 PRO RH
                             </span>
                         </div>
-                        <p class="text-xs text-slate-400 font-medium">KPI's - indicador de perfomace</p>
+                        <p id="sectionSubtitleMain" class="text-xs text-slate-400 font-medium">KPI's - indicador de perfomace</p>
                     </div>
                 </div>
 
                 <!-- Right Action Bar -->
                 <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-                    
+
                     <!-- Supabase Connection Status Badge -->
                     <button id="supabaseStatusBadge" onclick="openSupabaseModal()" title="Status da Conexão com Banco Supabase Cloud" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/40 text-xs font-semibold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.25)] transition cursor-pointer">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]" id="supabasePulseDot"></span>
                         <span id="supabaseStatusText">Supabase: Conectado</span>
                     </button>
+
+                    <!-- Absenteismo-specific header actions (hidden on other sections) -->
+                    <div id="absenteismoHeaderActions" class="flex flex-wrap items-center gap-2 sm:gap-3">
 
                     <!-- Base Status Badge -->
                     <div id="baseHeaderBadge" class="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-cyan-500/30 text-xs font-semibold text-slate-300 shadow-[inset_0_0_10px_rgba(0,212,255,0.08)]">
@@ -264,6 +327,8 @@
                         <span>Histórico</span>
                     </button>
 
+                    </div><!-- /#absenteismoHeaderActions -->
+
                     <!-- Theme Toggle -->
                     <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 border border-slate-700 hover:border-cyan-500/40 transition cursor-pointer" title="Alternar Modo Escuro / Claro">
                         <i data-lucide="moon" class="w-4 h-4 hidden dark:block text-cyan-400"></i>
@@ -275,7 +340,7 @@
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <main id="section-absenteismo" class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
         <!-- FILTER CONTROL PANEL (Cyber Glass) -->
         <section class="executive-card rounded-2xl p-5 border border-cyan-500/20 shadow-[0_8px_32px_rgba(0,0,0,0.6)] no-print transition-all">
@@ -291,10 +356,7 @@
                         <p class="text-xs text-slate-400">Refine a análise por períodos, setores, cargos, tipos de ausência ou colaborador</p>
                     </div>
                 </div>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Refine a an&aacute;lise por per&iacute;odos, setores, cargos, tipos de aus&ecirc;ncia ou colaborador</p>
-                    </div>
-                </div>
-                
+
                 <!-- Active Filters Status Counter -->
                 <div class="flex items-center gap-3">
                     <span id="filteredStatsBadge" class="px-3.5 py-1 text-xs font-bold rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,212,255,0.2)]">
@@ -746,10 +808,386 @@
                 </div>
                 <div class="flex items-center gap-1.5" id="tablePaginationButtons">
                     <!-- Dynamic Page Buttons -->
+                </div>
             </div>
         </section>
 
     </main>
+
+    <!-- ==================================================================== -->
+    <!-- SECTION: TURNOVER (Controle de Entrada e Saída de Funcionários)      -->
+    <!-- ==================================================================== -->
+    <section id="section-turnover" class="hidden">
+      <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Filter Panel -->
+        <div class="executive-card rounded-2xl p-5 border border-cyan-500/20 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-xl bg-purple-950/60 border border-purple-500/40 text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.3)]">
+                        <i data-lucide="repeat" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider font-orbitron glow-text-cyan">Turnover &bull; Entradas &amp; Saídas</h2>
+                        <p class="text-xs text-slate-400">Rotatividade de colaboradores por setor e período</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <select id="turnoverFilterAno" onchange="applyTurnoverFilters()" class="bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="2026">Ano: 2026</option>
+                        <option value="2025">Ano: 2025</option>
+                    </select>
+                    <select id="turnoverFilterSetor" onchange="applyTurnoverFilters()" class="bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todos os Setores</option>
+                    </select>
+                    <button onclick="openTurnoverEntryModal()" title="Lançar ou atualizar movimentação mensal de um setor" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] border border-purple-400/40 transition cursor-pointer">
+                        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                        <span>Lançar Movimentação</span>
+                    </button>
+                    <button onclick="exportTurnoverExcel()" title="Exportar dados de turnover para Excel" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] border border-emerald-400/40 transition cursor-pointer">
+                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                        <span>Exportar Excel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-purple-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="percent" class="w-3.5 h-3.5"></i> Turnover Médio</span>
+                <div id="tvKpiMedio" class="text-3xl font-extrabold text-purple-300 tracking-tight glow-text-cyan mt-2">0%</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Média mensal do período</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="arrow-down-circle" class="w-3.5 h-3.5"></i> Total Entradas</span>
+                <div id="tvKpiEntradas" class="text-3xl font-extrabold text-emerald-300 tracking-tight mt-2">0</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Admissões no período</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-red-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="arrow-up-circle" class="w-3.5 h-3.5"></i> Total Saídas</span>
+                <div id="tvKpiSaidas" class="text-3xl font-extrabold text-red-400 tracking-tight glow-text-red mt-2">0</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Desligamentos no período</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i> Headcount Atual</span>
+                <div id="tvKpiHeadcount" class="text-3xl font-extrabold text-cyan-300 tracking-tight mt-2">0</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Último mês com dados</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-amber-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Setor Crítico</span>
+                <div id="tvKpiSetorCritico" class="text-xl font-extrabold text-amber-300 tracking-tight mt-2">-</div>
+                <p id="tvKpiSetorCriticoPerc" class="text-[11px] text-slate-400 mt-0.5">Maior turnover médio</p>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="executive-card lg:col-span-2 p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="trending-up" class="w-4 h-4 text-purple-400"></i>
+                            Evolução Mensal do Turnover
+                        </h3>
+                        <p class="text-xs text-slate-400">Percentual de rotatividade por mês</p>
+                    </div>
+                </div>
+                <div class="relative h-[320px] w-full pt-4">
+                    <canvas id="chartTurnoverEvolucao"></canvas>
+                </div>
+            </div>
+            <div class="executive-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4 text-cyan-400"></i>
+                            Entradas &times; Saídas
+                        </h3>
+                        <p class="text-xs text-slate-400">Movimentações por mês</p>
+                    </div>
+                </div>
+                <div class="relative h-[280px] w-full pt-2">
+                    <canvas id="chartTurnoverMovimentacoes"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="executive-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="building-2" class="w-4 h-4 text-amber-400"></i>
+                            Ranking de Setores por Turnover
+                        </h3>
+                        <p class="text-xs text-slate-400">Turnover médio no período selecionado</p>
+                    </div>
+                </div>
+                <div class="relative h-[300px] w-full pt-2">
+                    <canvas id="chartTurnoverRanking"></canvas>
+                </div>
+            </div>
+            <div class="executive-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-400"></i>
+                            Headcount por Setor
+                        </h3>
+                        <p class="text-xs text-slate-400">Colaboradores no último mês do período</p>
+                    </div>
+                </div>
+                <div class="relative h-[300px] w-full flex items-center justify-center pt-2">
+                    <canvas id="chartTurnoverHeadcount"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="executive-card rounded-2xl p-5">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                    <i data-lucide="table" class="w-4 h-4 text-purple-400"></i>
+                    Movimentações Detalhadas
+                </h3>
+                <span id="turnoverTableCount" class="text-xs font-semibold px-3 py-1 rounded-xl bg-slate-900/90 text-cyan-300 border border-cyan-500/30">0 registros</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left">
+                    <thead>
+                        <tr class="text-slate-400 uppercase border-b border-slate-800">
+                            <th class="py-2 pr-4">Setor</th>
+                            <th class="py-2 pr-4">Mês</th>
+                            <th class="py-2 pr-4 text-right">Colaboradores</th>
+                            <th class="py-2 pr-4 text-right">Entradas</th>
+                            <th class="py-2 pr-4 text-right">Saídas</th>
+                            <th class="py-2 pr-4 text-right">Turnover %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="turnoverTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================================== -->
+    <!-- SECTION: LISTAGEM DE EMPREGADOS                                       -->
+    <!-- ==================================================================== -->
+    <section id="section-empregados" class="hidden">
+      <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <div class="executive-card rounded-2xl p-5 border border-cyan-500/20 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-xl bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 shadow-[0_0_12px_rgba(0,212,255,0.3)]">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider font-orbitron glow-text-cyan">Listagem de Empregados</h2>
+                        <p class="text-xs text-slate-400">Busque, filtre e gerencie o quadro de colaboradores</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="empregadosStatsBadge" class="px-3.5 py-1 text-xs font-bold rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,212,255,0.2)]">
+                        Carregando...
+                    </span>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4">
+                <div class="lg:col-span-2">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Buscar Colaborador</label>
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="empFilterSearch" oninput="applyEmpregadosFilters()" placeholder="Nome, função ou empresa..." class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Empresa</label>
+                    <select id="empFilterEmpresa" onchange="applyEmpregadosFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todas as Empresas</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Função</label>
+                    <select id="empFilterFuncao" onchange="applyEmpregadosFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todas as Funções</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2.5 pt-4">
+                <button onclick="openAddColaboradorModal()" title="Adicionar novo colaborador" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-red-600 to-lube-red hover:from-red-500 hover:to-red-600 text-white shadow-neon-red transition cursor-pointer border border-red-400/40">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                    <span>Adicionar Colaborador</span>
+                </button>
+                <button onclick="resetEmpregadosFilters()" title="Limpar filtros" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 border border-slate-700 hover:border-cyan-500/40 transition cursor-pointer">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    <span>Limpar Filtros</span>
+                </button>
+                <button onclick="exportColaboradoresExcel()" title="Exportar listagem para Excel estilizado (.xlsx)" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] border border-emerald-400/40 transition cursor-pointer">
+                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                    <span>Exportar Excel</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Employee Table -->
+        <div class="executive-card rounded-2xl p-5">
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left">
+                    <thead>
+                        <tr class="text-slate-400 uppercase border-b border-slate-800">
+                            <th class="py-2 pr-4">Nome</th>
+                            <th class="py-2 pr-4">Empresa</th>
+                            <th class="py-2 pr-4">Função</th>
+                            <th class="py-2 pr-4">Admissão</th>
+                            <th class="py-2 pr-4">Tempo de Casa</th>
+                            <th class="py-2 pr-4">Último Exame</th>
+                            <th class="py-2 pr-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="empregadosTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t border-slate-800 text-xs text-slate-400">
+                <div id="empregadosPaginationInfo">Mostrando 0 a 0 de 0 colaboradores</div>
+                <div class="flex items-center gap-1.5" id="empregadosPaginationButtons"></div>
+            </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODAL: LANÇAR MOVIMENTAÇÃO DE TURNOVER -->
+    <div id="turnoverEntryModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-[#0b152b] rounded-3xl max-w-lg w-full overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.25)] border border-purple-500/40 flex flex-col animate-fade-in">
+            <div class="p-6 bg-[#070d1e] border-b border-purple-500/30 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-400/40 flex items-center justify-center font-bold text-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.5)]">
+                        <i data-lucide="repeat" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-white tracking-tight font-orbitron glow-text-cyan">Lançar Movimentação</h4>
+                        <p class="text-xs text-purple-400">Atualize entradas e saídas de um setor no mês</p>
+                    </div>
+                </div>
+                <button onclick="closeTurnoverEntryModal()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-purple-300 border border-purple-500/20 transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="formTurnoverEntry" onsubmit="submitTurnoverEntry(event)" class="p-6 space-y-4 text-xs">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block font-bold text-cyan-300">Setor <span class="text-red-400">*</span></label>
+                        <select id="tvEntrySetor" required list="turnoverSetoresList" class="w-full bg-[#070d1e] border border-purple-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-purple-400 focus:outline-none shadow-inner"></select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block font-bold text-cyan-300">Mês (2026) <span class="text-red-400">*</span></label>
+                        <select id="tvEntryMes" required class="w-full bg-[#070d1e] border border-purple-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-purple-400 focus:outline-none shadow-inner">
+                            <option value="1">Janeiro</option>
+                            <option value="2">Fevereiro</option>
+                            <option value="3">Março</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Maio</option>
+                            <option value="6">Junho</option>
+                            <option value="7">Julho</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="space-y-1">
+                        <label class="block font-bold text-cyan-300">Total Colab. <span class="text-red-400">*</span></label>
+                        <input type="number" id="tvEntryTotal" min="0" required class="w-full bg-[#070d1e] border border-purple-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-purple-400 focus:outline-none shadow-inner">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block font-bold text-cyan-300">Entradas <span class="text-red-400">*</span></label>
+                        <input type="number" id="tvEntryEntradas" min="0" required class="w-full bg-[#070d1e] border border-purple-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-purple-400 focus:outline-none shadow-inner">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block font-bold text-cyan-300">Saídas <span class="text-red-400">*</span></label>
+                        <input type="number" id="tvEntrySaidas" min="0" required class="w-full bg-[#070d1e] border border-purple-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-purple-400 focus:outline-none shadow-inner">
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-400 bg-[#070d1e] p-3 rounded-xl border border-slate-800">
+                    Se já existir um lançamento para esse setor e mês, ele será atualizado. O painel inteiro (KPIs, gráficos e tabela) atualiza automaticamente.
+                </p>
+                <div class="pt-2 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeTurnoverEntryModal()" class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 transition cursor-pointer">Cancelar</button>
+                    <button type="submit" id="btnSubmitTurnoverEntry" class="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)] transition cursor-pointer font-orbitron">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Salvar Movimentação</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADICIONAR COLABORADOR -->
+    <div id="addColaboradorModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-[#0b152b] rounded-3xl max-w-lg w-full overflow-hidden shadow-[0_0_40px_rgba(227,6,19,0.3)] border border-red-500/40 flex flex-col animate-fade-in">
+            <div class="p-6 bg-[#070d1e] border-b border-red-500/30 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-950/80 flex items-center justify-center font-bold text-red-400 border border-red-500/40 shadow-[0_0_10px_rgba(227,6,19,0.5)]">
+                        <i data-lucide="user-plus" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-white tracking-tight font-orbitron glow-text-red">Adicionar Colaborador</h4>
+                        <p class="text-xs text-red-400">Inserção direta no Banco de Dados Supabase</p>
+                    </div>
+                </div>
+                <button onclick="closeAddColaboradorModal()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-red-300 border border-red-500/20 transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="formAddColaborador" onsubmit="submitAddColaborador(event)" class="p-6 space-y-4 text-xs">
+                <div class="space-y-1">
+                    <label class="block font-bold text-cyan-300">Nome Completo <span class="text-red-400">*</span></label>
+                    <input type="text" id="colabNome" required placeholder="Digite o nome completo do colaborador" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-cyan-400 focus:outline-none shadow-inner">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block font-bold text-cyan-300">Empresa <span class="text-red-400">*</span></label>
+                        <input type="text" id="colabEmpresa" required list="empresasList" placeholder="Ex: LUBE DISTRIBUIDORA LTDA" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-cyan-400 focus:outline-none shadow-inner">
+                        <datalist id="empresasList"></datalist>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block font-bold text-cyan-300">Função <span class="text-red-400">*</span></label>
+                        <input type="text" id="colabFuncao" required list="funcoesEmpregadosList" placeholder="Ex: MOTORISTA I" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-cyan-400 focus:outline-none shadow-inner">
+                        <datalist id="funcoesEmpregadosList"></datalist>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block font-bold text-cyan-300">Data de Admissão <span class="text-red-400">*</span></label>
+                        <input type="date" id="colabAdmissao" required class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-cyan-400 focus:outline-none shadow-inner">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block font-bold text-cyan-300">Último Exame (Opcional)</label>
+                        <input type="date" id="colabUltimoExame" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-cyan-400 focus:outline-none shadow-inner">
+                    </div>
+                </div>
+                <div class="pt-2 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeAddColaboradorModal()" class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 transition cursor-pointer">Cancelar</button>
+                    <button type="submit" id="btnSubmitAddColaborador" class="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(227,6,19,0.5)] transition cursor-pointer font-orbitron">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Salvar Colaborador</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- EMPLOYEE 360° MODAL / DRAWER (Cyber Dark Style) -->
     <div id="employeeModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
@@ -3270,6 +3708,741 @@
             updateHeaderBaseBadge();
             showToast('Base Restaurada', 'Os dados originais do dashboard foram restaurados.');
         }
+
+        // ================================================================
+        // SIDEBAR NAVIGATION (Absenteísmo / Turnover / Listagem de Empregados)
+        // ================================================================
+        let currentActiveSection = 'absenteismo';
+
+        function openSidebarMobile() {
+            document.getElementById('appSidebar').classList.remove('-translate-x-full');
+            document.getElementById('sidebarOverlay').classList.remove('hidden');
+        }
+        function closeSidebarMobile() {
+            document.getElementById('appSidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebarOverlay').classList.add('hidden');
+        }
+
+        const SECTION_META = {
+            absenteismo: { title: 'BI DE ABSENTEÍSMO RH', subtitle: "KPI's - indicador de perfomace" },
+            turnover: { title: 'TURNOVER RH', subtitle: 'Controle de entrada e saída de funcionários' },
+            empregados: { title: 'LISTAGEM DE EMPREGADOS', subtitle: 'Cadastro e busca dinâmica de colaboradores' }
+        };
+
+        function switchSection(name) {
+            currentActiveSection = name;
+            ['absenteismo', 'turnover', 'empregados'].forEach(s => {
+                const el = document.getElementById(`section-${s}`);
+                if (el) el.classList.toggle('hidden', s !== name);
+                const navBtn = document.querySelector(`[data-section-nav="${s}"]`);
+                if (navBtn) navBtn.classList.toggle('active', s === name);
+            });
+
+            const meta = SECTION_META[name];
+            if (meta) {
+                document.getElementById('sectionTitleMain').textContent = meta.title;
+                document.getElementById('sectionSubtitleMain').textContent = meta.subtitle;
+            }
+
+            const absActions = document.getElementById('absenteismoHeaderActions');
+            if (absActions) absActions.classList.toggle('hidden', name !== 'absenteismo');
+
+            if (name === 'turnover') loadTurnoverSection();
+            if (name === 'empregados') loadEmpregadosSection();
+
+            closeSidebarMobile();
+            safeCreateIcons();
+        }
+
+        // ================================================================
+        // TURNOVER MODULE (Controle de Entrada e Saída de Funcionários)
+        // ================================================================
+        let turnoverRawData = [];
+        let turnoverFilteredData = [];
+        let turnoverDataLoaded = false;
+        let chartTurnoverEvolucao = null, chartTurnoverMovimentacoes = null, chartTurnoverRanking = null, chartTurnoverHeadcount = null;
+
+        async function loadTurnoverSection() {
+            if (turnoverDataLoaded) { applyTurnoverFilters(); return; }
+            const tbody = document.getElementById('turnoverTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Carregando dados de turnover...</td></tr>';
+
+            try {
+                if (window.SupabaseService && isSupabaseOnline) {
+                    turnoverRawData = await window.SupabaseService.fetchTurnoverMensal();
+                } else {
+                    turnoverRawData = [];
+                }
+            } catch (err) {
+                console.error('Erro ao carregar turnover:', err);
+                turnoverRawData = [];
+                showToast('Erro ao Carregar Turnover', err.message || String(err), true);
+            }
+
+            turnoverDataLoaded = true;
+            applyTurnoverFilters();
+        }
+
+        function populateTurnoverSetorOptions() {
+            const anoSel = document.getElementById('turnoverFilterAno');
+            const setorSel = document.getElementById('turnoverFilterSetor');
+            if (!anoSel || !setorSel) return;
+            const ano = anoSel.value;
+            const setores = [...new Set(turnoverRawData.filter(r => String(r.ano) === ano).map(r => r.setor))].sort();
+            const current = setorSel.value;
+            setorSel.innerHTML = '<option value="ALL">Todos os Setores</option>' + setores.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+            if (setores.includes(current)) setorSel.value = current;
+
+            // O formulário de lançamento manual sempre trabalha com os setores vigentes de 2026
+            const setores2026 = [...new Set(turnoverRawData.filter(r => String(r.ano) === '2026').map(r => r.setor))].sort();
+            const entrySel = document.getElementById('tvEntrySetor');
+            if (entrySel) entrySel.innerHTML = setores2026.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+        }
+
+        // Calcula o turnover % de cada linha: ((Entradas+Saídas)/2) / Colaboradores do mês anterior,
+        // sempre dentro do MESMO setor e MESMO ano (nunca encadeia entre anos diferentes, já que os
+        // dados de 2025 por setor são conhecidamente duplicados/não confiáveis como base de cálculo).
+        // Se não houver mês anterior na série, o turnover fica "sem base" (null) em vez de dividir por
+        // zero ou exibir erro - corrige o #DIV/0! que existia na planilha original.
+        function computeTurnoverSeries(rows) {
+            const bySetor = {};
+            rows.forEach(r => { (bySetor[r.setor] = bySetor[r.setor] || []).push(r); });
+
+            const withPct = [];
+            Object.values(bySetor).forEach(setorRows => {
+                setorRows.sort((a, b) => a.ano_mes_sort.localeCompare(b.ano_mes_sort));
+                setorRows.forEach((r, i) => {
+                    const prev = i > 0 ? setorRows[i - 1] : null;
+                    const baseHeadcount = prev ? prev.total_colaboradores : null;
+                    const pct = (baseHeadcount && baseHeadcount > 0)
+                        ? ((r.entradas + r.saidas) / 2) / baseHeadcount * 100
+                        : null;
+                    withPct.push({ ...r, turnover_pct: pct });
+                });
+            });
+            return withPct.sort((a, b) => a.ano_mes_sort.localeCompare(b.ano_mes_sort) || a.setor.localeCompare(b.setor));
+        }
+
+        function applyTurnoverFilters() {
+            const ano = document.getElementById('turnoverFilterAno').value;
+            const setor = document.getElementById('turnoverFilterSetor').value;
+
+            populateTurnoverSetorOptions();
+
+            const yearRows = turnoverRawData.filter(r => String(r.ano) === ano);
+            const withPct = computeTurnoverSeries(yearRows);
+
+            turnoverFilteredData = setor === 'ALL' ? withPct : withPct.filter(r => r.setor === setor);
+
+            renderTurnoverKPIs(turnoverFilteredData);
+            renderTurnoverCharts(withPct, setor);
+            renderTurnoverTable(turnoverFilteredData);
+            safeCreateIcons();
+        }
+
+        function renderTurnoverKPIs(rows) {
+            if (rows.length === 0) {
+                document.getElementById('tvKpiMedio').textContent = '0%';
+                document.getElementById('tvKpiEntradas').textContent = '0';
+                document.getElementById('tvKpiSaidas').textContent = '0';
+                document.getElementById('tvKpiHeadcount').textContent = '0';
+                document.getElementById('tvKpiSetorCritico').textContent = '-';
+                document.getElementById('tvKpiSetorCriticoPerc').textContent = 'Sem dados no período';
+                return;
+            }
+
+            const comPct = rows.filter(r => r.turnover_pct !== null);
+            const mediaTurnover = comPct.length > 0 ? comPct.reduce((s, r) => s + r.turnover_pct, 0) / comPct.length : 0;
+            const totalEntradas = rows.reduce((s, r) => s + r.entradas, 0);
+            const totalSaidas = rows.reduce((s, r) => s + r.saidas, 0);
+
+            const ultimoPorSetor = {};
+            rows.forEach(r => {
+                if (!ultimoPorSetor[r.setor] || r.ano_mes_sort > ultimoPorSetor[r.setor].ano_mes_sort) ultimoPorSetor[r.setor] = r;
+            });
+            const headcountAtual = Object.values(ultimoPorSetor).reduce((s, r) => s + r.total_colaboradores, 0);
+
+            const setorMedias = {};
+            rows.forEach(r => {
+                if (r.turnover_pct === null) return;
+                if (!setorMedias[r.setor]) setorMedias[r.setor] = { soma: 0, count: 0 };
+                setorMedias[r.setor].soma += r.turnover_pct;
+                setorMedias[r.setor].count++;
+            });
+            let setorCritico = '-', setorCriticoPct = 0;
+            Object.entries(setorMedias).forEach(([s, v]) => {
+                const media = v.soma / v.count;
+                if (media > setorCriticoPct) { setorCriticoPct = media; setorCritico = s; }
+            });
+
+            document.getElementById('tvKpiMedio').textContent = `${mediaTurnover.toFixed(1)}%`;
+            document.getElementById('tvKpiEntradas').textContent = totalEntradas.toLocaleString('pt-BR');
+            document.getElementById('tvKpiSaidas').textContent = totalSaidas.toLocaleString('pt-BR');
+            document.getElementById('tvKpiHeadcount').textContent = headcountAtual.toLocaleString('pt-BR');
+            document.getElementById('tvKpiSetorCritico').textContent = setorCritico;
+            document.getElementById('tvKpiSetorCriticoPerc').textContent = setorCritico !== '-' ? `Turnover médio: ${setorCriticoPct.toFixed(1)}%` : 'Sem dados no período';
+        }
+
+        function renderTurnoverCharts(allYearRows, setorFiltro) {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#334155';
+            const gridColor = isDark ? 'rgba(0, 212, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+            const palette = ['#00d4ff', '#e30613', '#f59e0b', '#10b981', '#a855f7', '#ec4899'];
+
+            const months = [...new Set(allYearRows.map(r => r.ano_mes_sort))].sort();
+            const monthLabels = months.map(m => {
+                const sample = allYearRows.find(r => r.ano_mes_sort === m);
+                return sample ? sample.mes_nome.slice(0, 3) : m;
+            });
+            const setores = [...new Set(allYearRows.map(r => r.setor))].sort();
+
+            // 1. Evolução mensal do turnover (linha, por setor ou apenas o setor filtrado)
+            const seriesSetores = setorFiltro === 'ALL' ? setores : [setorFiltro];
+            const evoDatasets = seriesSetores.map((s, i) => ({
+                label: s,
+                data: months.map(m => {
+                    const row = allYearRows.find(r => r.setor === s && r.ano_mes_sort === m);
+                    return row && row.turnover_pct !== null ? +row.turnover_pct.toFixed(1) : null;
+                }),
+                borderColor: palette[i % palette.length],
+                backgroundColor: palette[i % palette.length] + '33',
+                tension: 0.35,
+                spanGaps: true,
+                fill: false,
+                pointRadius: 3
+            }));
+
+            const evoCanvas = document.getElementById('chartTurnoverEvolucao');
+            if (evoCanvas) {
+                if (chartTurnoverEvolucao) chartTurnoverEvolucao.destroy();
+                chartTurnoverEvolucao = new Chart(evoCanvas.getContext('2d'), {
+                    type: 'line',
+                    data: { labels: monthLabels, datasets: evoDatasets },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: textColor, font: { size: 10 } } },
+                            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y ?? '—'}%` } }
+                        },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                            y: { ticks: { color: textColor, callback: v => v + '%' }, grid: { color: gridColor } }
+                        }
+                    }
+                });
+            }
+
+            // 2. Entradas x Saídas por mês
+            const rowsForBar = setorFiltro === 'ALL' ? allYearRows : allYearRows.filter(r => r.setor === setorFiltro);
+            const entradasPorMes = months.map(m => rowsForBar.filter(r => r.ano_mes_sort === m).reduce((s, r) => s + r.entradas, 0));
+            const saidasPorMes = months.map(m => rowsForBar.filter(r => r.ano_mes_sort === m).reduce((s, r) => s + r.saidas, 0));
+
+            const movCanvas = document.getElementById('chartTurnoverMovimentacoes');
+            if (movCanvas) {
+                if (chartTurnoverMovimentacoes) chartTurnoverMovimentacoes.destroy();
+                chartTurnoverMovimentacoes = new Chart(movCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: monthLabels,
+                        datasets: [
+                            { label: 'Entradas', data: entradasPorMes, backgroundColor: 'rgba(16,185,129,0.75)', borderRadius: 4 },
+                            { label: 'Saídas', data: saidasPorMes, backgroundColor: 'rgba(227,6,19,0.75)', borderRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: textColor, font: { size: 10 } } } },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { display: false } },
+                            y: { ticks: { color: textColor }, grid: { color: gridColor }, beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            // 3. Ranking de setores por turnover médio
+            const setorMedias = setores.map(s => {
+                const rowsSetor = allYearRows.filter(r => r.setor === s && r.turnover_pct !== null);
+                const media = rowsSetor.length > 0 ? rowsSetor.reduce((sum, r) => sum + r.turnover_pct, 0) / rowsSetor.length : 0;
+                return { setor: s, media };
+            }).sort((a, b) => b.media - a.media);
+
+            const rankCanvas = document.getElementById('chartTurnoverRanking');
+            if (rankCanvas) {
+                if (chartTurnoverRanking) chartTurnoverRanking.destroy();
+                chartTurnoverRanking = new Chart(rankCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: setorMedias.map(s => s.setor),
+                        datasets: [{ label: 'Turnover Médio', data: setorMedias.map(s => +s.media.toFixed(1)), backgroundColor: 'rgba(245,158,11,0.8)', borderRadius: 4 }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.x}%` } } },
+                        scales: {
+                            x: { ticks: { color: textColor, callback: v => v + '%' }, grid: { color: gridColor } },
+                            y: { ticks: { color: textColor }, grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // 4. Headcount por setor (último mês disponível)
+            const headcountBySetor = setores.map(s => {
+                const rowsSetor = allYearRows.filter(r => r.setor === s).sort((a, b) => a.ano_mes_sort.localeCompare(b.ano_mes_sort));
+                const last = rowsSetor[rowsSetor.length - 1];
+                return { setor: s, total: last ? last.total_colaboradores : 0 };
+            });
+
+            const hcCanvas = document.getElementById('chartTurnoverHeadcount');
+            if (hcCanvas) {
+                if (chartTurnoverHeadcount) chartTurnoverHeadcount.destroy();
+                chartTurnoverHeadcount = new Chart(hcCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: headcountBySetor.map(s => s.setor),
+                        datasets: [{ data: headcountBySetor.map(s => s.total), backgroundColor: palette, borderColor: '#0b152b', borderWidth: 2 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10 } } }
+                    }
+                });
+            }
+        }
+
+        function renderTurnoverTable(rows) {
+            const tbody = document.getElementById('turnoverTableBody');
+            const countBadge = document.getElementById('turnoverTableCount');
+            if (!tbody) return;
+
+            if (countBadge) countBadge.textContent = `${rows.length.toLocaleString('pt-BR')} registros`;
+
+            if (rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Nenhum dado para os filtros selecionados.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = [...rows].reverse().map(r => `
+                <tr class="border-b border-slate-800/60 hover:bg-white/5">
+                    <td class="py-2 pr-4 font-semibold text-white">${escapeHtml(r.setor)}</td>
+                    <td class="py-2 pr-4">${escapeHtml(r.mes_nome)}/${r.ano}</td>
+                    <td class="py-2 pr-4 text-right">${r.total_colaboradores.toLocaleString('pt-BR')}</td>
+                    <td class="py-2 pr-4 text-right text-emerald-400">${r.entradas}</td>
+                    <td class="py-2 pr-4 text-right text-red-400">${r.saidas}</td>
+                    <td class="py-2 pr-4 text-right font-bold ${r.turnover_pct === null ? 'text-slate-500' : 'text-purple-300'}">${r.turnover_pct === null ? '—' : r.turnover_pct.toFixed(1) + '%'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function openTurnoverEntryModal() {
+            const modal = document.getElementById('turnoverEntryModal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            populateTurnoverSetorOptions();
+            safeCreateIcons();
+        }
+        function closeTurnoverEntryModal() {
+            const modal = document.getElementById('turnoverEntryModal');
+            if (modal) modal.classList.add('hidden');
+            document.getElementById('formTurnoverEntry').reset();
+        }
+
+        async function submitTurnoverEntry(event) {
+            event.preventDefault();
+            const setor = document.getElementById('tvEntrySetor').value;
+            const mes = parseInt(document.getElementById('tvEntryMes').value, 10);
+            const total = parseInt(document.getElementById('tvEntryTotal').value, 10);
+            const entradas = parseInt(document.getElementById('tvEntryEntradas').value, 10);
+            const saidas = parseInt(document.getElementById('tvEntrySaidas').value, 10);
+
+            if (!setor) { showToast('Campo Obrigatório', 'Selecione um setor.', true); return; }
+
+            const monthNamesPt = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const ano = 2026;
+            const record = {
+                setor, ano, mes,
+                mes_nome: monthNamesPt[mes - 1],
+                ano_mes_sort: `${ano}-${String(mes).padStart(2, '0')}`,
+                total_colaboradores: total,
+                entradas, saidas,
+                origem: 'MANUAL'
+            };
+
+            const btn = document.getElementById('btnSubmitTurnoverEntry');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Salvando...</span>';
+            safeCreateIcons();
+
+            try {
+                if (!window.SupabaseService || !isSupabaseOnline) throw new Error('Conecte-se ao Supabase para salvar movimentações.');
+                await window.SupabaseService.upsertTurnoverMensal(record);
+
+                const idx = turnoverRawData.findIndex(r => r.setor === setor && r.ano_mes_sort === record.ano_mes_sort);
+                if (idx !== -1) turnoverRawData[idx] = { ...turnoverRawData[idx], ...record };
+                else turnoverRawData.push(record);
+
+                closeTurnoverEntryModal();
+                document.getElementById('turnoverFilterAno').value = '2026';
+                applyTurnoverFilters();
+                showToast('Movimentação Salva!', `${setor} • ${record.mes_nome}/${ano} atualizado. O painel de Turnover foi recalculado.`);
+            } catch (err) {
+                console.error('Erro ao salvar movimentação de turnover:', err);
+                showToast('Erro ao Salvar', err.message || String(err), true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                safeCreateIcons();
+            }
+        }
+
+        async function exportTurnoverExcel() {
+            if (turnoverFilteredData.length === 0) {
+                showToast('Aviso de Exportação', 'Nenhum dado de turnover para exportar.', true);
+                return;
+            }
+            try {
+                const workbook = new ExcelJS.Workbook();
+                workbook.creator = 'Lube Distribuidora - RH Corporativo';
+                workbook.created = new Date();
+                const worksheet = workbook.addWorksheet('Turnover', { views: [{ showGridLines: true }] });
+
+                worksheet.mergeCells('A1:G1');
+                const titleCell = worksheet.getCell('A1');
+                titleCell.value = 'LUBE DISTRIBUIDORA LTDA • TURNOVER (ENTRADAS E SAÍDAS)';
+                titleCell.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+                titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B1B3D' } };
+                titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                worksheet.getRow(1).height = 36;
+
+                worksheet.mergeCells('A2:G2');
+                const subTitleCell = worksheet.getCell('A2');
+                const nowStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                subTitleCell.value = `Relatório Gerado em: ${nowStr} • Registros: ${turnoverFilteredData.length}`;
+                subTitleCell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FFFFFFFF' } };
+                subTitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE30613' } };
+                subTitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                worksheet.getRow(2).height = 20;
+                worksheet.getRow(3).height = 10;
+
+                const headers = ['SETOR', 'MÊS', 'ANO', 'TOTAL COLABORADORES', 'ENTRADAS', 'SAÍDAS', 'TURNOVER %'];
+                const headerRow = worksheet.getRow(4);
+                headerRow.values = headers;
+                headerRow.height = 26;
+                headerRow.eachCell((cell) => {
+                    cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B1B3D' } };
+                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    cell.border = { top: { style: 'medium', color: { argb: 'FFE30613' } }, bottom: { style: 'medium', color: { argb: 'FFE30613' } } };
+                });
+
+                turnoverFilteredData.forEach((r, index) => {
+                    const row = worksheet.addRow([r.setor, r.mes_nome, r.ano, r.total_colaboradores, r.entradas, r.saidas, r.turnover_pct === null ? '-' : `${r.turnover_pct.toFixed(1)}%`]);
+                    row.height = 20;
+                    const bgArgb = index % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC';
+                    row.eachCell((cell) => {
+                        cell.font = { name: 'Arial', size: 9, color: { argb: 'FF1E293B' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+                        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                        cell.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+                    });
+                });
+
+                worksheet.columns = [{ width: 16 }, { width: 14 }, { width: 10 }, { width: 20 }, { width: 12 }, { width: 12 }, { width: 14 }];
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                saveAs(blob, `Lube_Turnover_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                showToast('Relatório Exportado!', 'A planilha de Turnover foi baixada com sucesso.');
+            } catch (err) {
+                console.error('Erro na exportação de turnover:', err);
+                showToast('Erro na Exportação', err.message || String(err), true);
+            }
+        }
+
+        // ================================================================
+        // LISTAGEM DE EMPREGADOS MODULE
+        // ================================================================
+        let colaboradoresRawData = [];
+        let colaboradoresFilteredData = [];
+        let colaboradoresDataLoaded = false;
+        let empCurrentPage = 1;
+        const EMP_PAGE_SIZE = 25;
+
+        async function loadEmpregadosSection() {
+            if (colaboradoresDataLoaded) { applyEmpregadosFilters(); return; }
+            const tbody = document.getElementById('empregadosTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Carregando colaboradores...</td></tr>';
+
+            try {
+                if (window.SupabaseService && isSupabaseOnline) {
+                    colaboradoresRawData = await window.SupabaseService.fetchColaboradores();
+                } else {
+                    colaboradoresRawData = [];
+                }
+            } catch (err) {
+                console.error('Erro ao carregar colaboradores:', err);
+                colaboradoresRawData = [];
+                showToast('Erro ao Carregar Colaboradores', err.message || String(err), true);
+            }
+
+            colaboradoresDataLoaded = true;
+            populateEmpregadosFilterOptions();
+            populateColaboradorFormDatalists();
+            applyEmpregadosFilters();
+        }
+
+        function populateEmpregadosFilterOptions() {
+            const empresaSel = document.getElementById('empFilterEmpresa');
+            const funcaoSel = document.getElementById('empFilterFuncao');
+            if (!empresaSel || !funcaoSel) return;
+
+            const empresas = [...new Set(colaboradoresRawData.map(c => c.empresa).filter(Boolean))].sort();
+            const funcoes = [...new Set(colaboradoresRawData.map(c => c.funcao).filter(Boolean))].sort();
+
+            const curEmpresa = empresaSel.value, curFuncao = funcaoSel.value;
+            empresaSel.innerHTML = '<option value="ALL">Todas as Empresas</option>' + empresas.map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join('');
+            funcaoSel.innerHTML = '<option value="ALL">Todas as Funções</option>' + funcoes.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
+            if (empresas.includes(curEmpresa)) empresaSel.value = curEmpresa;
+            if (funcoes.includes(curFuncao)) funcaoSel.value = curFuncao;
+        }
+
+        function populateColaboradorFormDatalists() {
+            const empresas = [...new Set(colaboradoresRawData.map(c => c.empresa).filter(Boolean))].sort();
+            const funcoes = [...new Set(colaboradoresRawData.map(c => c.funcao).filter(Boolean))].sort();
+            const empresasList = document.getElementById('empresasList');
+            const funcoesList = document.getElementById('funcoesEmpregadosList');
+            if (empresasList) empresasList.innerHTML = empresas.map(e => `<option value="${escapeHtml(e)}">`).join('');
+            if (funcoesList) funcoesList.innerHTML = funcoes.map(f => `<option value="${escapeHtml(f)}">`).join('');
+        }
+
+        function applyEmpregadosFilters() {
+            const search = (document.getElementById('empFilterSearch').value || '').trim().toLowerCase();
+            const empresa = document.getElementById('empFilterEmpresa').value;
+            const funcao = document.getElementById('empFilterFuncao').value;
+
+            colaboradoresFilteredData = colaboradoresRawData.filter(c => {
+                if (empresa !== 'ALL' && c.empresa !== empresa) return false;
+                if (funcao !== 'ALL' && c.funcao !== funcao) return false;
+                if (search) {
+                    const matchNome = (c.nome || '').toLowerCase().includes(search);
+                    const matchFuncao = (c.funcao || '').toLowerCase().includes(search);
+                    const matchEmpresa = (c.empresa || '').toLowerCase().includes(search);
+                    if (!matchNome && !matchFuncao && !matchEmpresa) return false;
+                }
+                return true;
+            });
+
+            empCurrentPage = 1;
+            renderEmpregadosTable();
+
+            const badge = document.getElementById('empregadosStatsBadge');
+            if (badge) badge.innerHTML = `Mostrando <strong class="text-cyan-300 font-extrabold">${colaboradoresFilteredData.length}</strong> de ${colaboradoresRawData.length} colaboradores`;
+        }
+
+        function resetEmpregadosFilters() {
+            document.getElementById('empFilterSearch').value = '';
+            document.getElementById('empFilterEmpresa').value = 'ALL';
+            document.getElementById('empFilterFuncao').value = 'ALL';
+            applyEmpregadosFilters();
+        }
+
+        function calcTempoDeCasa(dtAdmissaoIso) {
+            if (!dtAdmissaoIso) return '-';
+            const admissao = new Date(dtAdmissaoIso);
+            if (isNaN(admissao.getTime())) return '-';
+            const now = new Date();
+            let years = now.getFullYear() - admissao.getFullYear();
+            const monthDiff = now.getMonth() - admissao.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < admissao.getDate())) years--;
+            if (years < 0) return '-';
+            if (years === 0) {
+                let totalMonths = (now.getFullYear() - admissao.getFullYear()) * 12 + (now.getMonth() - admissao.getMonth());
+                if (now.getDate() < admissao.getDate()) totalMonths--;
+                totalMonths = Math.max(totalMonths, 0);
+                return `${totalMonths} ${totalMonths === 1 ? 'mês' : 'meses'}`;
+            }
+            return `${years} ${years === 1 ? 'ano' : 'anos'}`;
+        }
+
+        function renderEmpregadosTable() {
+            const tbody = document.getElementById('empregadosTableBody');
+            if (!tbody) return;
+
+            if (colaboradoresFilteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Nenhum colaborador encontrado com os filtros aplicados.</td></tr>';
+                document.getElementById('empregadosPaginationInfo').textContent = 'Mostrando 0 a 0 de 0 colaboradores';
+                document.getElementById('empregadosPaginationButtons').innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(colaboradoresFilteredData.length / EMP_PAGE_SIZE);
+            if (empCurrentPage > totalPages) empCurrentPage = totalPages;
+            const start = (empCurrentPage - 1) * EMP_PAGE_SIZE;
+            const pageData = colaboradoresFilteredData.slice(start, start + EMP_PAGE_SIZE);
+
+            tbody.innerHTML = pageData.map(c => `
+                <tr class="border-b border-slate-800/60 hover:bg-white/5">
+                    <td class="py-2 pr-4 font-semibold text-white">${escapeHtml(c.nome)}</td>
+                    <td class="py-2 pr-4">${escapeHtml(c.empresa)}</td>
+                    <td class="py-2 pr-4">${escapeHtml(c.funcao)}</td>
+                    <td class="py-2 pr-4">${c.dt_admissao_formatada ? escapeHtml(c.dt_admissao_formatada) : '-'}</td>
+                    <td class="py-2 pr-4">${calcTempoDeCasa(c.dt_admissao)}</td>
+                    <td class="py-2 pr-4">${c.ultimo_exame_formatada ? escapeHtml(c.ultimo_exame_formatada) : '<span class="text-slate-500">Não registrado</span>'}</td>
+                    <td class="py-2 pr-4">
+                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full ${c.status === 'ATIVO' ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-400 border border-slate-700'}">${escapeHtml(c.status || 'ATIVO')}</span>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('empregadosPaginationInfo').textContent = `Mostrando ${start + 1} a ${Math.min(start + EMP_PAGE_SIZE, colaboradoresFilteredData.length)} de ${colaboradoresFilteredData.length} colaboradores`;
+
+            const btnContainer = document.getElementById('empregadosPaginationButtons');
+            let btnHtml = '';
+            btnHtml += `<button onclick="goToEmpPage(${empCurrentPage - 1})" ${empCurrentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>`;
+            btnHtml += `<span class="px-2">Página ${empCurrentPage} de ${totalPages}</span>`;
+            btnHtml += `<button onclick="goToEmpPage(${empCurrentPage + 1})" ${empCurrentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>`;
+            btnContainer.innerHTML = btnHtml;
+            safeCreateIcons();
+        }
+
+        function goToEmpPage(page) {
+            empCurrentPage = page;
+            renderEmpregadosTable();
+            safeCreateIcons();
+        }
+
+        function openAddColaboradorModal() {
+            const modal = document.getElementById('addColaboradorModal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            safeCreateIcons();
+        }
+        function closeAddColaboradorModal() {
+            const modal = document.getElementById('addColaboradorModal');
+            if (modal) modal.classList.add('hidden');
+            document.getElementById('formAddColaborador').reset();
+        }
+
+        async function submitAddColaborador(event) {
+            event.preventDefault();
+            const nome = document.getElementById('colabNome').value.trim().toUpperCase();
+            const empresa = document.getElementById('colabEmpresa').value.trim();
+            const funcao = document.getElementById('colabFuncao').value.trim();
+            const admissaoRaw = document.getElementById('colabAdmissao').value;
+            const exameRaw = document.getElementById('colabUltimoExame').value;
+
+            if (!nome || !empresa || !funcao || !admissaoRaw) {
+                showToast('Campos Obrigatórios', 'Preencha nome, empresa, função e data de admissão.', true);
+                return;
+            }
+
+            const admissaoFormatada = new Date(admissaoRaw + 'T00:00:00').toLocaleDateString('pt-BR');
+            const exameFormatada = exameRaw ? new Date(exameRaw + 'T00:00:00').toLocaleDateString('pt-BR') : null;
+
+            const record = {
+                nome, empresa, setor: empresa, funcao,
+                dt_admissao: admissaoRaw,
+                dt_admissao_formatada: admissaoFormatada,
+                ultimo_exame_data: exameRaw || null,
+                ultimo_exame_formatada: exameFormatada,
+                status: 'ATIVO'
+            };
+
+            const btn = document.getElementById('btnSubmitAddColaborador');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Salvando...</span>';
+            safeCreateIcons();
+
+            try {
+                if (!window.SupabaseService || !isSupabaseOnline) throw new Error('Conecte-se ao Supabase para adicionar colaboradores.');
+                const saved = await window.SupabaseService.insertColaborador(record);
+                colaboradoresRawData.unshift(saved || record);
+                populateEmpregadosFilterOptions();
+                populateColaboradorFormDatalists();
+                applyEmpregadosFilters();
+                closeAddColaboradorModal();
+                showToast('Colaborador Adicionado!', `${nome} foi cadastrado com sucesso.`);
+            } catch (err) {
+                console.error('Erro ao adicionar colaborador:', err);
+                showToast('Erro ao Salvar', err.message || String(err), true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                safeCreateIcons();
+            }
+        }
+
+        async function exportColaboradoresExcel() {
+            if (colaboradoresFilteredData.length === 0) {
+                showToast('Aviso de Exportação', 'Nenhum colaborador selecionado para exportar.', true);
+                return;
+            }
+            try {
+                const workbook = new ExcelJS.Workbook();
+                workbook.creator = 'Lube Distribuidora - RH Corporativo';
+                workbook.created = new Date();
+                const worksheet = workbook.addWorksheet('Listagem de Empregados', { views: [{ showGridLines: true }] });
+
+                worksheet.mergeCells('A1:F1');
+                const titleCell = worksheet.getCell('A1');
+                titleCell.value = 'LUBE DISTRIBUIDORA LTDA • LISTAGEM DE EMPREGADOS';
+                titleCell.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+                titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B1B3D' } };
+                titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                worksheet.getRow(1).height = 36;
+
+                worksheet.mergeCells('A2:F2');
+                const subTitleCell = worksheet.getCell('A2');
+                const nowStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                subTitleCell.value = `Relatório Gerado em: ${nowStr} • Colaboradores: ${colaboradoresFilteredData.length}`;
+                subTitleCell.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FFFFFFFF' } };
+                subTitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE30613' } };
+                subTitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                worksheet.getRow(2).height = 20;
+                worksheet.getRow(3).height = 10;
+
+                const headers = ['NOME DO FUNCIONÁRIO', 'EMPRESA', 'FUNÇÃO', 'ADMISSÃO', 'TEMPO DE CASA', 'ÚLTIMO EXAME'];
+                const headerRow = worksheet.getRow(4);
+                headerRow.values = headers;
+                headerRow.height = 26;
+                headerRow.eachCell((cell) => {
+                    cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B1B3D' } };
+                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    cell.border = { top: { style: 'medium', color: { argb: 'FFE30613' } }, bottom: { style: 'medium', color: { argb: 'FFE30613' } } };
+                });
+
+                colaboradoresFilteredData.forEach((c, index) => {
+                    const row = worksheet.addRow([
+                        c.nome, c.empresa, c.funcao, c.dt_admissao_formatada || '-', calcTempoDeCasa(c.dt_admissao), c.ultimo_exame_formatada || '-'
+                    ]);
+                    row.height = 20;
+                    const bgArgb = index % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC';
+                    row.eachCell((cell, colNumber) => {
+                        cell.font = { name: 'Arial', size: 9, color: { argb: 'FF1E293B' } };
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgArgb } };
+                        cell.alignment = { vertical: 'middle', horizontal: colNumber === 1 ? 'left' : 'center' };
+                        cell.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+                    });
+                });
+
+                worksheet.columns = [{ width: 34 }, { width: 30 }, { width: 26 }, { width: 14 }, { width: 16 }, { width: 16 }];
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                saveAs(blob, `Lube_Listagem_Empregados_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                showToast('Relatório Exportado!', 'A listagem de empregados foi baixada com sucesso.');
+            } catch (err) {
+                console.error('Erro na exportação de colaboradores:', err);
+                showToast('Erro na Exportação', err.message || String(err), true);
+            }
+        }
     </script>
+
+    </div><!-- /#appContent -->
 </body>
 </html>
