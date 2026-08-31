@@ -227,6 +227,12 @@
                         <span id="baseHeaderBadgeText">Aguardando dados...</span>
                     </div>
 
+                    <!-- Viewing Historical Import Banner -->
+                    <button id="btnVoltarAtual" onclick="returnToLatestImport()" title="Voltar para a importação mais recente" class="hidden items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-950/60 hover:bg-amber-900/60 border border-amber-500/50 text-xs font-bold text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)] transition cursor-pointer animate-pulse">
+                        <i data-lucide="archive-restore" class="w-3.5 h-3.5"></i>
+                        <span>Visualizando Histórico &bull; Voltar ao Atual</span>
+                    </button>
+
                     <!-- Novo Registro (Supabase Direct Insert) -->
                     <button onclick="openNewRecordModal()" title="Cadastrar nova ocorrência diretamente no banco de dados" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-red-600 to-lube-red hover:from-red-500 hover:to-red-600 text-white shadow-neon-red transition cursor-pointer border border-red-400/40">
                         <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
@@ -251,6 +257,12 @@
                         <span>Importar Planilha</span>
                     </button>
                     <input type="file" id="fileImportExcel" accept=".xlsx, .xls, .xlsm, .csv" onchange="handleExcelImport(event)" class="hidden">
+
+                    <!-- Histórico de Importações -->
+                    <button onclick="openHistoricoModal()" title="Ver histórico de planilhas importadas" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700 hover:border-cyan-500/40 transition cursor-pointer">
+                        <i data-lucide="history" class="w-3.5 h-3.5"></i>
+                        <span>Histórico</span>
+                    </button>
 
                     <!-- Theme Toggle -->
                     <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 border border-slate-700 hover:border-cyan-500/40 transition cursor-pointer" title="Alternar Modo Escuro / Claro">
@@ -957,6 +969,9 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
     <!-- MODAL DE STATUS SUPABASE CLOUD (Cyber Dark) -->
     <div id="supabaseStatusModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="bg-[#0b152b] rounded-3xl max-w-xl w-full overflow-hidden shadow-[0_0_40px_rgba(16,185,129,0.25)] border border-emerald-500/40 flex flex-col animate-fade-in">
@@ -1023,6 +1038,37 @@
         </div>
     </div>
 
+    <!-- MODAL DE HISTÓRICO DE IMPORTAÇÕES (Cyber Dark) -->
+    <div id="historicoModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-[#0b152b] rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-[0_0_40px_rgba(0,212,255,0.25)] border border-cyan-500/40 flex flex-col animate-fade-in">
+
+            <div class="p-6 bg-[#070d1e] border-b border-cyan-500/30 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center font-bold text-cyan-400 shadow-[0_0_10px_rgba(0,212,255,0.5)]">
+                        <i data-lucide="history" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-white tracking-tight font-orbitron glow-text-cyan">Histórico de Importações</h4>
+                        <p class="text-xs text-cyan-400">Acesse, renomeie ou visualize planilhas importadas anteriormente</p>
+                    </div>
+                </div>
+                <button onclick="closeHistoricoModal()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-cyan-300 border border-cyan-500/20 transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-2.5 overflow-y-auto" id="historicoListContainer">
+                <div class="text-center text-xs text-slate-400 py-6">Carregando histórico...</div>
+            </div>
+
+            <div class="p-4 bg-[#070d1e] border-t border-cyan-500/20 flex items-center justify-end">
+                <button onclick="closeHistoricoModal()" class="px-5 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 transition cursor-pointer">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 max-w-md w-full p-4 rounded-2xl shadow-2xl border flex items-start gap-3 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100">
         <div id="toastIcon" class="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 mt-0.5">
@@ -1068,6 +1114,10 @@
         let isSupabaseOnline = false;
         let supabaseLatency = 0;
         let supabaseRecordCount = 0;
+
+        // Import History State
+        let currentImportId = null;
+        let isViewingHistoricalImport = false;
 
         // Load custom imported data from localStorage if available (offline fallback)
         function loadStoredData() {
@@ -1131,9 +1181,12 @@
                     isSupabaseOnline = true;
                     supabaseLatency = testRes.latencyMs;
                     supabaseRecordCount = testRes.totalRegistros;
-                    
-                    // Fetch live occurrences from Supabase
-                    const dbData = await window.SupabaseService.fetchOcorrencias();
+                    isViewingHistoricalImport = false;
+                    updateHistoricalBanner();
+
+                    // Resolve a importação mais recente e busca apenas os registros dela
+                    currentImportId = await window.SupabaseService.fetchLatestImportId();
+                    const dbData = await window.SupabaseService.fetchOcorrencias(currentImportId);
                     if (dbData && dbData.length > 0) {
                         rawData = dbData;
                         try {
@@ -1152,6 +1205,9 @@
                     window.SupabaseService.subscribeRealtime(
                         // onInsert
                         (newRec) => {
+                            // Ignora inserts de outras importações ou enquanto visualiza um histórico arquivado
+                            if (isViewingHistoricalImport || newRec.import_id !== currentImportId) return;
+
                             // Check if already in array
                             const exists = rawData.some(r => r.id === newRec.id);
                             if (!exists) {
@@ -1259,6 +1315,138 @@
             if (btn) btn.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i><span>Recarregar do Banco</span>';
             safeCreateIcons();
             showToast('Banco Sincronizado', 'Os dados mais recentes foram carregados do Supabase Cloud.');
+        }
+
+        // Escape HTML to prevent injection when rendering data from the DB
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str == null ? '' : String(str);
+            return div.innerHTML;
+        }
+
+        // Shows/hides the amber "viewing historical import" banner
+        function updateHistoricalBanner() {
+            const btn = document.getElementById('btnVoltarAtual');
+            if (!btn) return;
+            btn.classList.toggle('hidden', !isViewingHistoricalImport);
+            btn.classList.toggle('flex', isViewingHistoricalImport);
+        }
+
+        // Import History Modal: Open/Close
+        async function openHistoricoModal() {
+            const modal = document.getElementById('historicoModal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            safeCreateIcons();
+            await refreshHistoricoList();
+        }
+
+        function closeHistoricoModal() {
+            const modal = document.getElementById('historicoModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        // Loads and renders the list of past imports
+        async function refreshHistoricoList() {
+            const container = document.getElementById('historicoListContainer');
+            if (!container) return;
+
+            if (!window.SupabaseService || !isSupabaseOnline) {
+                container.innerHTML = '<div class="text-center text-xs text-slate-400 py-6">Histórico indisponível offline. Conecte-se ao Supabase para acessar.</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="text-center text-xs text-slate-400 py-6">Carregando histórico...</div>';
+
+            try {
+                const historico = await window.SupabaseService.fetchHistorico();
+                if (!historico || historico.length === 0) {
+                    container.innerHTML = '<div class="text-center text-xs text-slate-400 py-6">Nenhuma importação registrada ainda.</div>';
+                    return;
+                }
+
+                container.innerHTML = historico.map(h => {
+                    const isAtual = h.id === currentImportId;
+                    const nome = h.nome_customizado || h.nome_arquivo;
+                    const dataFmt = new Date(h.data_importacao).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    const nomeSafe = escapeHtml(nome);
+                    const nomeAttr = nomeSafe.replace(/"/g, '&quot;');
+
+                    return `
+                    <div class="flex items-center justify-between gap-3 p-3.5 rounded-2xl border ${isAtual ? 'border-cyan-500/50 bg-cyan-950/20' : 'border-slate-800 bg-[#070d1e]'}">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-sm font-bold text-white truncate">${nomeSafe}</span>
+                                ${isAtual ? '<span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shrink-0">IMPORTAÇÃO ATUAL</span>' : ''}
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">${dataFmt} &bull; ${Number(h.total_registros || 0).toLocaleString('pt-BR')} registros &bull; aba "${escapeHtml(h.aba_origem || '-')}"</p>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button onclick="renameImportPrompt(${h.id}, &quot;${nomeAttr}&quot;)" title="Renomear importação" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="viewHistoricalImport(${h.id})" title="Visualizar dados desta importação" class="p-2 rounded-lg bg-blue-950/60 hover:bg-blue-900 text-blue-300 border border-blue-500/30 transition cursor-pointer" ${isAtual ? 'disabled' : ''}>
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
+                safeCreateIcons();
+            } catch (err) {
+                console.error('Erro ao carregar histórico de importações:', err);
+                container.innerHTML = '<div class="text-center text-xs text-rose-400 py-6">Erro ao carregar histórico.</div>';
+            }
+        }
+
+        // Renames an import entry (custom label)
+        async function renameImportPrompt(id, nomeAtual) {
+            const novoNome = prompt('Novo nome para esta importação:', nomeAtual);
+            if (novoNome === null) return;
+            const trimmed = novoNome.trim();
+            if (!trimmed || trimmed === nomeAtual) return;
+
+            try {
+                await window.SupabaseService.renameImportacao(id, trimmed);
+                showToast('Importação Renomeada', `Agora chamada de "${trimmed}".`);
+                await refreshHistoricoList();
+            } catch (err) {
+                console.error('Erro ao renomear importação:', err);
+                showToast('Erro ao Renomear', err.message || String(err), true);
+            }
+        }
+
+        // Loads a past import's data into the dashboard (read-only lookback)
+        async function viewHistoricalImport(importId) {
+            if (!window.SupabaseService || !isSupabaseOnline) {
+                showToast('Indisponível Offline', 'Conecte-se ao Supabase para visualizar importações antigas.', true);
+                return;
+            }
+            try {
+                const dbData = await window.SupabaseService.fetchOcorrencias(importId);
+                rawData = dbData || [];
+                currentImportId = importId;
+                isViewingHistoricalImport = true;
+
+                populateFilterOptions();
+                populateRecordFormDatalists();
+                resetAllFilters();
+                updateHeaderBaseBadge();
+                updateHistoricalBanner();
+                closeHistoricoModal();
+
+                showToast('Visualizando Importação Arquivada', `Exibindo ${rawData.length.toLocaleString('pt-BR')} registros. Use "Voltar ao Atual" para retornar à importação mais recente.`);
+            } catch (err) {
+                console.error('Erro ao carregar importação histórica:', err);
+                showToast('Erro ao Carregar Histórico', err.message || String(err), true);
+            }
+        }
+
+        // Returns the dashboard to the latest import
+        async function returnToLatestImport() {
+            isViewingHistoricalImport = false;
+            updateHistoricalBanner();
+            await initSupabaseIntegration();
+            showToast('Importação Atual Restaurada', 'Exibindo os dados mais recentes.');
         }
 
         // Datalists for New Record Form
@@ -1668,7 +1856,7 @@
         // Calculate and Render Executive KPIs with Fluid Animations
         function updateKPIs() {
             const total = filteredData.length;
-            const injustificadas = filteredData.filter(d => d.tipo_absenteismo === 'Injustificado' || d.motivo === 'Falta' || d.motivo.startsWith('Suspens')).length;
+            const injustificadas = filteredData.filter(d => d.tipo_absenteismo === 'Injustificado').length;
             const justificados = filteredData.filter(d => d.tipo_absenteismo === 'Justificado').length;
             const folgas = filteredData.filter(d => d.tipo_absenteismo === 'Compensacao/Folga').length;
             const treinamentos = filteredData.filter(d => d.tipo_absenteismo === 'Desenvolvimento').length;
@@ -2913,9 +3101,12 @@
                     if (window.SupabaseService && isSupabaseOnline) {
                         try {
                             const res = await window.SupabaseService.bulkInsertOcorrencias(parsedItems, file.name, targetSheetName);
+                            currentImportId = res.importId || currentImportId;
+                            isViewingHistoricalImport = false;
+                            updateHistoricalBanner();
                             showToast(
                                 'Banco Supabase Sincronizado!',
-                                `${res.count.toLocaleString('pt-BR')} registros persistidos no PostgreSQL Cloud.`
+                                `${res.count.toLocaleString('pt-BR')} registros persistidos no PostgreSQL Cloud como uma nova importação. Importações anteriores foram preservadas no Histórico.`
                             );
                             updateSupabaseStatusUI(true, rawData.length, supabaseLatency);
                         } catch (sErr) {

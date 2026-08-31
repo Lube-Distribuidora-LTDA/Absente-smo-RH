@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS public.ocorrencias_absenteismo (
     dt_admissao_formatada TEXT,
     tempo_casa_anos NUMERIC(5, 2),
     observacao TEXT,
+    import_id BIGINT, -- FK para historico_importacoes.id, adicionada após a criação da tabela (ver seção 1.6)
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -83,6 +84,7 @@ CREATE TABLE IF NOT EXISTS public.motivos_ausencia (
 CREATE TABLE IF NOT EXISTS public.historico_importacoes (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nome_arquivo TEXT NOT NULL,
+    nome_customizado TEXT,
     total_registros INTEGER NOT NULL DEFAULT 0,
     aba_origem TEXT,
     status TEXT DEFAULT 'CONCLUIDO',
@@ -90,6 +92,20 @@ CREATE TABLE IF NOT EXISTS public.historico_importacoes (
     detalhes JSONB,
     data_importacao TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 1.7 Vínculo de cada ocorrência com a importação que a originou
+-- (permite que o dashboard mostre por padrão só a importação mais recente,
+--  e que importações antigas fiquem disponíveis via histórico)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_ocorrencias_import_id'
+    ) THEN
+        ALTER TABLE public.ocorrencias_absenteismo
+            ADD CONSTRAINT fk_ocorrencias_import_id
+            FOREIGN KEY (import_id) REFERENCES public.historico_importacoes(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 -- ==========================================================
 -- 2. ÍNDICES DE ALTA PERFORMANCE (B-TREE & COMPÓSITOS)
@@ -103,6 +119,7 @@ CREATE INDEX IF NOT EXISTS idx_absenteismo_categoria ON public.ocorrencias_absen
 CREATE INDEX IF NOT EXISTS idx_absenteismo_ano_mes ON public.ocorrencias_absenteismo(ano_mes_sort);
 CREATE INDEX IF NOT EXISTS idx_absenteismo_dia_semana ON public.ocorrencias_absenteismo(dia_semana);
 CREATE INDEX IF NOT EXISTS idx_absenteismo_comp_filtro ON public.ocorrencias_absenteismo(setor, tipo_absenteismo, data_iso);
+CREATE INDEX IF NOT EXISTS idx_absenteismo_import_id ON public.ocorrencias_absenteismo(import_id);
 
 -- ==========================================================
 -- 3. FUNÇÕES E TRIGGERS AUTOMÁTICOS

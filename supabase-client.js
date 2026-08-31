@@ -101,11 +101,81 @@ async function testDatabaseConnection() {
 }
 
 /**
- * Busca todas as ocorrências de absenteísmo no Supabase
+ * Busca o ID da importação mais recente registrada no histórico
  */
-async function fetchAbsenteismoFromDB() {
+async function fetchLatestImportIdDB() {
     const client = getSupabaseClient();
     if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { data, error } = await client
+        .from('historico_importacoes')
+        .select('id')
+        .order('data_importacao', { ascending: false })
+        .limit(1);
+
+    if (error) {
+        console.error('Erro ao buscar importação mais recente:', error);
+        throw error;
+    }
+
+    return data && data.length > 0 ? data[0].id : null;
+}
+
+/**
+ * Busca o histórico completo de importações, mais recente primeiro
+ */
+async function fetchHistoricoImportacoesDB() {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { data, error } = await client
+        .from('historico_importacoes')
+        .select('*')
+        .order('data_importacao', { ascending: false });
+
+    if (error) {
+        console.error('Erro ao buscar histórico de importações:', error);
+        throw error;
+    }
+
+    return data || [];
+}
+
+/**
+ * Renomeia uma importação do histórico (rótulo customizado)
+ */
+async function renameImportacaoDB(id, novoNome) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { data, error } = await client
+        .from('historico_importacoes')
+        .update({ nome_customizado: novoNome })
+        .eq('id', id)
+        .select();
+
+    if (error) {
+        console.error('Erro ao renomear importação:', error);
+        throw error;
+    }
+
+    return data && data.length > 0 ? data[0] : null;
+}
+
+/**
+ * Busca ocorrências de absenteísmo no Supabase.
+ * Se importId for informado, retorna apenas os registros dessa importação.
+ * Se for omitido, resolve automaticamente a importação mais recente (visão "atual" do dashboard).
+ * Passe null explicitamente para buscar TODOS os registros sem filtro de importação.
+ */
+async function fetchAbsenteismoFromDB(importId) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    let targetImportId = importId;
+    if (targetImportId === undefined) {
+        targetImportId = await fetchLatestImportIdDB();
+    }
 
     // Supabase REST limita a 1000 por página por padrão; fazemos paginação em blocos se passar de 1000
     let allRecords = [];
@@ -114,12 +184,18 @@ async function fetchAbsenteismoFromDB() {
     let keepFetching = true;
 
     while (keepFetching) {
-        const { data, error } = await client
+        let query = client
             .from('ocorrencias_absenteismo')
             .select('*')
             .order('data_iso', { ascending: true })
             .order('id', { ascending: true })
             .range(from, from + step - 1);
+
+        if (targetImportId !== null && targetImportId !== undefined) {
+            query = query.eq('import_id', targetImportId);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             console.error('Erro ao buscar dados de absenteísmo:', error);
@@ -148,9 +224,14 @@ async function insertOcorrenciaDB(record) {
     const client = getSupabaseClient();
     if (!client) throw new Error('Cliente Supabase não inicializado');
 
+    const row = { ...record };
+    if (row.import_id === undefined || row.import_id === null) {
+        row.import_id = await fetchLatestImportIdDB();
+    }
+
     const { data, error } = await client
         .from('ocorrencias_absenteismo')
-        .insert([record])
+        .insert([row])
         .select();
 
     if (error) {
@@ -194,13 +275,35 @@ async function bulkInsertOcorrenciasDB(records, fileName = 'Importacao_Planilha.
 
     if (!records || records.length === 0) return { count: 0 };
 
+    // Registra a importação no histórico ANTES de inserir os registros, para obter o import_id
+    // que vai vincular cada ocorrência a esta importação específica.
+    const { data: histData, error: histError } = await client
+        .from('historico_importacoes')
+        .insert([{
+            nome_arquivo: fileName,
+            total_registros: records.length,
+            aba_origem: sheetName,
+            status: 'CONCLUIDO',
+            usuario: 'RH Lube',
+            detalhes: { data_hora: new Date().toISOString(), total_processado: records.length }
+        }])
+        .select();
+
+    if (histError) {
+        console.error('Erro ao registrar histórico de importação:', histError);
+        throw histError;
+    }
+
+    const importId = histData && histData.length > 0 ? histData[0].id : null;
+
     const batchSize = 250;
     let insertedCount = 0;
 
-    // Formata campos para garantir compatibilidade com colunas do banco
+    // Formata campos para garantir compatibilidade com colunas do banco e vincula à importação
     const sanitized = records.map(r => {
         const row = { ...r };
         delete row.id; // Deixa o PostgreSQL gerar o ID sequencial oficial
+        row.import_id = importId;
         return row;
     });
 
@@ -217,21 +320,7 @@ async function bulkInsertOcorrenciasDB(records, fileName = 'Importacao_Planilha.
         insertedCount += chunk.length;
     }
 
-    // Registra no histórico de importações
-    try {
-        await client.from('historico_importacoes').insert([{
-            nome_arquivo: fileName,
-            total_registros: insertedCount,
-            aba_origem: sheetName,
-            status: 'CONCLUIDO',
-            usuario: 'RH Lube',
-            detalhes: { data_hora: new Date().toISOString(), total_processado: insertedCount }
-        }]);
-    } catch (e) {
-        console.warn('Falha ao registrar histórico de importação:', e);
-    }
-
-    return { count: insertedCount };
+    return { count: insertedCount, importId };
 }
 
 /**
@@ -315,5 +404,8 @@ window.SupabaseService = {
     bulkInsertOcorrencias: bulkInsertOcorrenciasDB,
     deleteOcorrencia: deleteOcorrenciaDB,
     updateOcorrencia: updateOcorrenciaDB,
-    subscribeRealtime: subscribeToRealtime
+    subscribeRealtime: subscribeToRealtime,
+    fetchLatestImportId: fetchLatestImportIdDB,
+    fetchHistorico: fetchHistoricoImportacoesDB,
+    renameImportacao: renameImportacaoDB
 };
