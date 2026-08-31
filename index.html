@@ -247,6 +247,37 @@
         <i data-lucide="menu" class="w-5 h-5"></i>
     </button>
 
+    <!-- ASSISTENTE VIRTUAL DO RH: Floating Button (bottom-right, visible on every section) -->
+    <button id="assistantFab" onclick="toggleAssistantPanel()" title="Assistente Virtual do RH" class="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 shadow-[0_0_25px_rgba(0,212,255,0.5)] border-2 border-white/20 flex items-center justify-center text-white transition hover:scale-110 cursor-pointer no-print">
+        <i data-lucide="bot-message-square" class="w-6 h-6"></i>
+        <span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#070d1e] animate-pulse"></span>
+    </button>
+
+    <!-- ASSISTENTE VIRTUAL DO RH: Chat Panel -->
+    <div id="assistantPanel" class="hidden fixed bottom-24 right-6 z-40 w-[380px] max-w-[calc(100vw-2rem)] h-[560px] max-h-[calc(100vh-8rem)] bg-[#0b152b] rounded-3xl border border-cyan-500/40 shadow-[0_0_50px_rgba(0,212,255,0.3)] flex flex-col overflow-hidden no-print">
+        <div class="p-4 bg-[#070d1e] border-b border-cyan-500/30 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center shrink-0">
+                <i data-lucide="bot-message-square" class="w-5 h-5 text-white"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+                <p class="text-sm font-bold text-white font-orbitron truncate">Assistente Virtual do RH</p>
+                <p class="text-[10px] text-cyan-400">Tire dúvidas sobre os números e a lógica do sistema</p>
+            </div>
+            <button onclick="toggleAssistantPanel()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer shrink-0">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div id="assistantMessages" class="flex-1 overflow-y-auto p-4 space-y-3 text-xs"></div>
+        <div class="p-3 border-t border-cyan-500/20 bg-[#070d1e]">
+            <form id="formAssistantChat" onsubmit="submitAssistantMessage(event)" class="flex items-center gap-2">
+                <input type="text" id="assistantInput" placeholder="Pergunte algo, ex: por que a Lube RJ deu 450%?" autocomplete="off" class="flex-1 bg-[#0b152b] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition">
+                <button type="submit" id="btnSendAssistant" class="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white hover:from-cyan-400 hover:to-purple-500 transition cursor-pointer shrink-0">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <div id="appContent" class="lg:pl-64">
 
     <!-- Top Header Bar (Cyberpunk/Futuristic Theme) -->
@@ -835,7 +866,6 @@
                 <div class="flex flex-wrap items-center gap-2.5">
                     <select id="turnoverFilterAno" onchange="applyTurnoverFilters()" class="bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
                         <option value="2026">Ano: 2026</option>
-                        <option value="2025">Ano: 2025</option>
                     </select>
                     <select id="turnoverFilterSetor" onchange="applyTurnoverFilters()" class="bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
                         <option value="ALL">Todos os Setores</option>
@@ -4024,16 +4054,52 @@
                 return;
             }
 
-            tbody.innerHTML = [...rows].reverse().map(r => `
-                <tr class="border-b border-slate-800/60 hover:bg-white/5">
-                    <td class="py-2 pr-4 font-semibold text-white">${escapeHtml(r.setor)}</td>
-                    <td class="py-2 pr-4">${escapeHtml(r.mes_nome)}/${r.ano}</td>
-                    <td class="py-2 pr-4 text-right">${r.total_colaboradores.toLocaleString('pt-BR')}</td>
-                    <td class="py-2 pr-4 text-right text-emerald-400">${r.entradas}</td>
-                    <td class="py-2 pr-4 text-right text-red-400">${r.saidas}</td>
-                    <td class="py-2 pr-4 text-right font-bold ${r.turnover_pct === null ? 'text-slate-500' : 'text-purple-300'}">${r.turnover_pct === null ? '—' : r.turnover_pct.toFixed(1) + '%'}</td>
-                </tr>
-            `).join('');
+            // Agrupa por setor (localização); dentro de cada setor, meses do mais recente para o mais antigo
+            const bySetor = {};
+            rows.forEach(r => { (bySetor[r.setor] = bySetor[r.setor] || []).push(r); });
+            const setoresOrdenados = Object.keys(bySetor).sort();
+
+            let html = '';
+            setoresOrdenados.forEach(setor => {
+                const setorRows = [...bySetor[setor]].sort((a, b) => b.ano_mes_sort.localeCompare(a.ano_mes_sort));
+                const totalEntradas = setorRows.reduce((s, r) => s + r.entradas, 0);
+                const totalSaidas = setorRows.reduce((s, r) => s + r.saidas, 0);
+                const comPct = setorRows.filter(r => r.turnover_pct !== null);
+                const mediaPct = comPct.length > 0 ? comPct.reduce((s, r) => s + r.turnover_pct, 0) / comPct.length : null;
+
+                html += `
+                    <tr class="bg-purple-950/30 border-b border-purple-500/20">
+                        <td colspan="6" class="py-2 pr-4">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="font-extrabold text-white uppercase tracking-wide flex items-center gap-1.5">
+                                    <i data-lucide="building-2" class="w-3.5 h-3.5 text-purple-400"></i> ${escapeHtml(setor)}
+                                </span>
+                                <span class="text-[11px] text-slate-400 font-normal normal-case">
+                                    <span class="text-emerald-400 font-bold">${totalEntradas}</span> entradas &bull;
+                                    <span class="text-red-400 font-bold">${totalSaidas}</span> saídas &bull;
+                                    Turnover médio: <span class="text-purple-300 font-bold">${mediaPct !== null ? mediaPct.toFixed(1) + '%' : '—'}</span>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                setorRows.forEach(r => {
+                    html += `
+                        <tr class="border-b border-slate-800/60 hover:bg-white/5">
+                            <td class="py-2 pr-4 pl-6 text-slate-600">&#8627;</td>
+                            <td class="py-2 pr-4">${escapeHtml(r.mes_nome)}/${r.ano}</td>
+                            <td class="py-2 pr-4 text-right">${r.total_colaboradores.toLocaleString('pt-BR')}</td>
+                            <td class="py-2 pr-4 text-right text-emerald-400">${r.entradas}</td>
+                            <td class="py-2 pr-4 text-right text-red-400">${r.saidas}</td>
+                            <td class="py-2 pr-4 text-right font-bold ${r.turnover_pct === null ? 'text-slate-500' : 'text-purple-300'}">${r.turnover_pct === null ? '—' : r.turnover_pct.toFixed(1) + '%'}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            tbody.innerHTML = html;
+            safeCreateIcons();
         }
 
         function openTurnoverEntryModal() {
@@ -4439,6 +4505,125 @@
             } catch (err) {
                 console.error('Erro na exportação de colaboradores:', err);
                 showToast('Erro na Exportação', err.message || String(err), true);
+            }
+        }
+
+        // ================================================================
+        // ASSISTENTE VIRTUAL DO RH (chat explicativo com IA, somente leitura)
+        // ================================================================
+        let assistantMessages = [];
+        let assistantOpen = false;
+
+        function toggleAssistantPanel() {
+            const panel = document.getElementById('assistantPanel');
+            if (!panel) return;
+            assistantOpen = !assistantOpen;
+            panel.classList.toggle('hidden', !assistantOpen);
+            if (assistantOpen) {
+                if (assistantMessages.length === 0) {
+                    addAssistantMessage('assistant', 'Olá! Sou o Assistente Virtual do RH 🤖\n\nPosso explicar como os números e as fórmulas deste painel funcionam - Absenteísmo, Turnover ou Listagem de Empregados. Pergunte à vontade, por exemplo:\n\n"Por que a Lube RJ deu 450% de turnover em março?"');
+                }
+                const input = document.getElementById('assistantInput');
+                if (input) input.focus();
+                safeCreateIcons();
+            }
+        }
+
+        function addAssistantMessage(role, text) {
+            assistantMessages.push({ role, content: text });
+            renderAssistantMessages();
+        }
+
+        function renderAssistantMessages() {
+            const container = document.getElementById('assistantMessages');
+            if (!container) return;
+            container.innerHTML = assistantMessages.map(m => {
+                const isUser = m.role === 'user';
+                return `
+                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
+                        <div class="max-w-[85%] px-3.5 py-2.5 rounded-2xl leading-relaxed ${isUser ? 'bg-gradient-to-r from-cyan-600 to-purple-600 text-white rounded-br-sm' : 'bg-[#12203f] text-slate-100 border border-cyan-500/20 rounded-bl-sm'}">
+                            ${escapeHtml(m.content).replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Monta o contexto de dados AO VIVO da seção ativa, para a IA responder com números reais
+        function buildAssistantContext() {
+            const ctx = { secao_ativa: currentActiveSection };
+            try {
+                if (currentActiveSection === 'absenteismo') {
+                    ctx.dados = computeAggregatedStatsForAI(filteredData);
+                    ctx.filtro_ativo = filteredData.length !== rawData.length;
+                } else if (currentActiveSection === 'turnover') {
+                    ctx.ano_selecionado = document.getElementById('turnoverFilterAno').value;
+                    ctx.setor_selecionado = document.getElementById('turnoverFilterSetor').value;
+                    ctx.kpis = {
+                        turnover_medio: document.getElementById('tvKpiMedio').textContent,
+                        total_entradas: document.getElementById('tvKpiEntradas').textContent,
+                        total_saidas: document.getElementById('tvKpiSaidas').textContent,
+                        headcount_atual: document.getElementById('tvKpiHeadcount').textContent,
+                        setor_critico: document.getElementById('tvKpiSetorCritico').textContent
+                    };
+                    ctx.registros_detalhados = turnoverFilteredData.map(r => ({
+                        setor: r.setor, mes: r.mes_nome, ano: r.ano,
+                        colaboradores: r.total_colaboradores, entradas: r.entradas, saidas: r.saidas,
+                        turnover_pct: r.turnover_pct !== null ? +r.turnover_pct.toFixed(1) : null
+                    }));
+                } else if (currentActiveSection === 'empregados') {
+                    const porEmpresa = {};
+                    colaboradoresRawData.forEach(c => { porEmpresa[c.empresa] = (porEmpresa[c.empresa] || 0) + 1; });
+                    ctx.total_colaboradores = colaboradoresRawData.length;
+                    ctx.total_filtrado_na_tela = colaboradoresFilteredData.length;
+                    ctx.colaboradores_por_empresa = porEmpresa;
+                }
+            } catch (e) {
+                console.warn('Falha ao montar contexto do assistente:', e);
+            }
+            return ctx;
+        }
+
+        async function submitAssistantMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('assistantInput');
+            const question = input.value.trim();
+            if (!question) return;
+
+            const historyForApi = assistantMessages.slice();
+            addAssistantMessage('user', question);
+            input.value = '';
+
+            const btn = document.getElementById('btnSendAssistant');
+            btn.disabled = true;
+
+            addAssistantMessage('assistant', 'Digitando...');
+            const thinkingIndex = assistantMessages.length - 1;
+
+            try {
+                const resp = await fetch('/api/assistente', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [...historyForApi, { role: 'user', content: question }],
+                        context: buildAssistantContext()
+                    })
+                });
+
+                const data = await resp.json().catch(() => null);
+                if (!resp.ok || !data || !data.reply) {
+                    throw new Error((data && data.error) || `Erro HTTP ${resp.status}`);
+                }
+
+                assistantMessages[thinkingIndex] = { role: 'assistant', content: data.reply };
+                renderAssistantMessages();
+            } catch (err) {
+                console.error('[Assistente RH] Erro:', err);
+                assistantMessages[thinkingIndex] = { role: 'assistant', content: 'Não consegui responder agora (o serviço de IA pode estar indisponível no momento). Tente novamente em instantes.' };
+                renderAssistantMessages();
+            } finally {
+                btn.disabled = false;
             }
         }
     </script>

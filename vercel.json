@@ -7,6 +7,9 @@
   "functions": {
     "api/diagnostico.js": {
       "maxDuration": 60
+    },
+    "api/assistente.js": {
+      "maxDuration": 60
     }
   },
   "routes": [
