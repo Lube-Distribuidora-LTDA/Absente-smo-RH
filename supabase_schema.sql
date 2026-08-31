@@ -90,6 +90,8 @@ CREATE TABLE IF NOT EXISTS public.historico_importacoes (
     status TEXT DEFAULT 'CONCLUIDO',
     usuario TEXT DEFAULT 'RH Lube',
     detalhes JSONB,
+    diagnostico_ia JSONB,
+    diagnostico_ia_gerado_em TIMESTAMPTZ,
     data_importacao TIMESTAMPTZ DEFAULT NOW()
 );
 

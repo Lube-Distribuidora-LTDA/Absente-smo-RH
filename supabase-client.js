@@ -142,6 +142,49 @@ async function fetchHistoricoImportacoesDB() {
 }
 
 /**
+ * Busca uma importação específica do histórico pelo ID (inclui diagnostico_ia, se já gerado)
+ */
+async function fetchImportacaoByIdDB(id) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+    if (id === null || id === undefined) return null;
+
+    const { data, error } = await client
+        .from('historico_importacoes')
+        .select('*')
+        .eq('id', id)
+        .limit(1);
+
+    if (error) {
+        console.error('Erro ao buscar importação por ID:', error);
+        throw error;
+    }
+
+    return data && data.length > 0 ? data[0] : null;
+}
+
+/**
+ * Salva o diagnóstico executivo gerado por IA para uma importação específica
+ */
+async function saveDiagnosticoIADB(importId, cards) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { data, error } = await client
+        .from('historico_importacoes')
+        .update({ diagnostico_ia: cards, diagnostico_ia_gerado_em: new Date().toISOString() })
+        .eq('id', importId)
+        .select();
+
+    if (error) {
+        console.error('Erro ao salvar diagnóstico IA:', error);
+        throw error;
+    }
+
+    return data && data.length > 0 ? data[0] : null;
+}
+
+/**
  * Renomeia uma importação do histórico (rótulo customizado)
  */
 async function renameImportacaoDB(id, novoNome) {
@@ -407,5 +450,7 @@ window.SupabaseService = {
     subscribeRealtime: subscribeToRealtime,
     fetchLatestImportId: fetchLatestImportIdDB,
     fetchHistorico: fetchHistoricoImportacoesDB,
-    renameImportacao: renameImportacaoDB
+    renameImportacao: renameImportacaoDB,
+    fetchImportacaoById: fetchImportacaoByIdDB,
+    saveDiagnosticoIA: saveDiagnosticoIADB
 };
