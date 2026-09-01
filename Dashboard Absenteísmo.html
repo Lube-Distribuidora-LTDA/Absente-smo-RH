@@ -352,6 +352,69 @@
         html:not(.dark) .bg-red-950\/20,
         html:not(.dark) .bg-red-950\/30 { background-color: rgba(239, 68, 68, 0.08) !important; }
 
+        /* Badges/chips (ícones de KPI, "Editar", "HEAD ADEQUADO" etc.): fundo -950
+           semi-opaco + texto claro, pensados como um "chip escuro" independente do
+           tema. Reforçamos a opacidade do fundo para virar um chip sólido e mantemos
+           o texto claro original (em vez de escurecê-lo como no texto solto acima),
+           já que texto escuro sobre chip escuro perde contraste. */
+        html:not(.dark) .bg-red-950\/60,
+        html:not(.dark) .bg-red-950\/80,
+        html:not(.dark) .bg-red-950 { background-color: #7f1d1d !important; }
+        html:not(.dark) .bg-amber-950\/60,
+        html:not(.dark) .bg-amber-950\/80,
+        html:not(.dark) .bg-amber-950 { background-color: #78350f !important; }
+        html:not(.dark) .bg-emerald-950\/60,
+        html:not(.dark) .bg-emerald-950\/50,
+        html:not(.dark) .bg-emerald-950\/40,
+        html:not(.dark) .bg-emerald-950\/80,
+        html:not(.dark) .bg-emerald-950 { background-color: #064e3b !important; }
+        html:not(.dark) .bg-cyan-950\/60,
+        html:not(.dark) .bg-cyan-950\/80,
+        html:not(.dark) .bg-cyan-950 { background-color: #164e63 !important; }
+        html:not(.dark) .bg-purple-950\/60,
+        html:not(.dark) .bg-purple-950\/80,
+        html:not(.dark) .bg-purple-950 { background-color: #581c87 !important; }
+        html:not(.dark) .bg-blue-950\/60 { background-color: #1e3a8a !important; }
+
+        /* Restaura o texto claro original nesses chips (specificidade maior que o
+           escurecimento geral de texto-de-destaque acima) */
+        html:not(.dark) .bg-red-950\/60.text-red-300,
+        html:not(.dark) .bg-red-950\/80.text-red-300,
+        html:not(.dark) .bg-red-950.text-red-300 { color: #fca5a5 !important; }
+        html:not(.dark) .bg-red-950\/60.text-red-400,
+        html:not(.dark) .bg-red-950\/80.text-red-400,
+        html:not(.dark) .bg-red-950.text-red-400 { color: #f87171 !important; }
+        html:not(.dark) .bg-amber-950\/60.text-amber-300,
+        html:not(.dark) .bg-amber-950\/80.text-amber-300,
+        html:not(.dark) .bg-amber-950.text-amber-300 { color: #fcd34d !important; }
+        html:not(.dark) .bg-amber-950\/60.text-amber-400,
+        html:not(.dark) .bg-amber-950\/80.text-amber-400,
+        html:not(.dark) .bg-amber-950.text-amber-400 { color: #fbbf24 !important; }
+        html:not(.dark) .bg-emerald-950\/60.text-emerald-300,
+        html:not(.dark) .bg-emerald-950\/50.text-emerald-300,
+        html:not(.dark) .bg-emerald-950\/40.text-emerald-300,
+        html:not(.dark) .bg-emerald-950\/80.text-emerald-300,
+        html:not(.dark) .bg-emerald-950.text-emerald-300 { color: #6ee7b7 !important; }
+        html:not(.dark) .bg-emerald-950\/60.text-emerald-400,
+        html:not(.dark) .bg-emerald-950\/50.text-emerald-400,
+        html:not(.dark) .bg-emerald-950\/40.text-emerald-400,
+        html:not(.dark) .bg-emerald-950\/80.text-emerald-400,
+        html:not(.dark) .bg-emerald-950.text-emerald-400 { color: #34d399 !important; }
+        html:not(.dark) .bg-cyan-950\/60.text-cyan-300,
+        html:not(.dark) .bg-cyan-950\/80.text-cyan-300,
+        html:not(.dark) .bg-cyan-950.text-cyan-300 { color: #67e8f9 !important; }
+        html:not(.dark) .bg-cyan-950\/60.text-cyan-400,
+        html:not(.dark) .bg-cyan-950\/80.text-cyan-400,
+        html:not(.dark) .bg-cyan-950.text-cyan-400 { color: #22d3ee !important; }
+        html:not(.dark) .bg-purple-950\/60.text-purple-300,
+        html:not(.dark) .bg-purple-950\/80.text-purple-300,
+        html:not(.dark) .bg-purple-950.text-purple-300 { color: #d8b4fe !important; }
+        html:not(.dark) .bg-purple-950\/60.text-purple-400,
+        html:not(.dark) .bg-purple-950\/80.text-purple-400,
+        html:not(.dark) .bg-purple-950.text-purple-400 { color: #c084fc !important; }
+        html:not(.dark) .bg-blue-950\/60.text-blue-300 { color: #93c5fd !important; }
+        html:not(.dark) .bg-blue-950\/60.text-blue-400 { color: #60a5fa !important; }
+
         /* Ícone de tema: usa o mesmo par sol/lua já presente no botão, sem alterações adicionais aqui */
     </style>
 </head>
