@@ -311,6 +311,47 @@
         html:not(.dark) .border-white\/10 { border-color: rgba(15, 23, 42, 0.08) !important; }
         html:not(.dark) .hover\:bg-white\/5:hover { background-color: rgba(15, 23, 42, 0.035) !important; }
 
+        /* Exceção: botões com fundo colorido/sólido próprio devem manter texto branco
+           (o texto neles nunca fica sobre o fundo claro da página, então .text-white
+           não deve ser escurecido nesses casos) */
+        html:not(.dark) .bg-gradient-to-r.text-white,
+        html:not(.dark) .bg-lube-navy.text-white,
+        html:not(.dark) .bg-lube-red.text-white {
+            color: #ffffff !important;
+        }
+
+        /* Texto de destaque (números, percentuais, KPIs) em tons claros pensados para
+           fundo escuro ficam ilegíveis sobre o fundo claro da página; escurecemos
+           mantendo o matiz original */
+        html:not(.dark) .text-cyan-300,
+        html:not(.dark) .text-cyan-400 { color: #0e7490 !important; }
+        html:not(.dark) .text-emerald-300,
+        html:not(.dark) .text-emerald-400 { color: #047857 !important; }
+        html:not(.dark) .text-red-300,
+        html:not(.dark) .text-red-400 { color: #b91c1c !important; }
+        html:not(.dark) .text-purple-300,
+        html:not(.dark) .text-purple-400 { color: #7e22ce !important; }
+        html:not(.dark) .text-amber-300,
+        html:not(.dark) .text-amber-400 { color: #b45309 !important; }
+        html:not(.dark) .text-blue-300,
+        html:not(.dark) .text-blue-400 { color: #1d4ed8 !important; }
+        html:not(.dark) .text-rose-400 { color: #be123c !important; }
+
+        /* Rótulo cinza claro (labels auxiliares tipo "Head Atual:", "entradas •") */
+        html:not(.dark) .text-slate-400 { color: #64748b !important; }
+        html:not(.dark) .text-slate-500 { color: #64748b !important; }
+
+        /* Faixas de cabeçalho de grupo (Turnover, Painel HEAD): eram lavagens quase
+           invisíveis sobre fundo claro; ganham um tingimento sutil porém perceptível */
+        html:not(.dark) .bg-purple-950\/30 { background-color: rgba(147, 51, 234, 0.09) !important; }
+        html:not(.dark) .bg-amber-950\/20 { background-color: rgba(245, 158, 11, 0.10) !important; }
+        html:not(.dark) .bg-emerald-950\/20,
+        html:not(.dark) .bg-emerald-950\/30 { background-color: rgba(16, 185, 129, 0.09) !important; }
+        html:not(.dark) .bg-cyan-950\/20,
+        html:not(.dark) .bg-cyan-950\/30 { background-color: rgba(6, 182, 212, 0.09) !important; }
+        html:not(.dark) .bg-red-950\/20,
+        html:not(.dark) .bg-red-950\/30 { background-color: rgba(239, 68, 68, 0.08) !important; }
+
         /* Ícone de tema: usa o mesmo par sol/lua já presente no botão, sem alterações adicionais aqui */
     </style>
 </head>
