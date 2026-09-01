@@ -200,6 +200,118 @@
                 color: #000000 !important;
             }
         }
+
+        /* ==========================================================
+           MODO CLARO (Light Mode)
+           O painel foi desenhado "dark-first"; este bloco reestiliza,
+           via seletores de classe, as superfícies e textos que só
+           existiam na versão escura. Escopado a html:not(.dark) para
+           nunca interferir no modo escuro (o padrão do arquivo).
+           ========================================================== */
+
+        /* Fundo da página */
+        html:not(.dark) body {
+            background-color: #eef2f9;
+            background-image:
+                radial-gradient(circle at 15% 15%, rgba(227, 6, 19, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(0, 212, 255, 0.06) 0%, transparent 40%),
+                linear-gradient(rgba(15, 23, 42, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(15, 23, 42, 0.025) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+        }
+
+        /* Cards executivos */
+        html:not(.dark) .executive-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-color: rgba(15, 23, 42, 0.08);
+            box-shadow: 0 10px 28px -10px rgba(15, 23, 42, 0.14), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+        }
+        html:not(.dark) .executive-card:hover {
+            border-color: rgba(0, 212, 255, 0.35);
+            box-shadow: 0 16px 34px -10px rgba(15, 23, 42, 0.18), 0 0 20px -6px rgba(0, 212, 255, 0.2);
+        }
+
+        /* Sidebar e navegação */
+        html:not(.dark) #appSidebar,
+        html:not(.dark) #assistantPanel,
+        html:not(.dark) header {
+            background-color: rgba(255, 255, 255, 0.92) !important;
+            border-color: rgba(15, 23, 42, 0.08) !important;
+        }
+        html:not(.dark) #assistantPanel > div:first-child,
+        html:not(.dark) #assistantPanel > div:last-child {
+            background-color: #f8fafc !important;
+            border-color: rgba(15, 23, 42, 0.08) !important;
+        }
+        html:not(.dark) .sidebar-nav-btn {
+            color: #475569;
+        }
+        html:not(.dark) .sidebar-nav-btn:hover {
+            background: rgba(0, 212, 255, 0.08);
+            color: #0f172a;
+        }
+        html:not(.dark) .sidebar-nav-btn.active {
+            color: #0e7490;
+        }
+
+        /* Superfícies "recessadas" (inputs, cabeçalhos/rodapés de modal, badges internas) */
+        html:not(.dark) .bg-\[\#070d1e\] {
+            background-color: #f1f5f9 !important;
+        }
+        html:not(.dark) .border-\[\#070d1e\] {
+            border-color: #e2e8f0 !important;
+        }
+        html:not(.dark) .bg-\[\#0b152b\],
+        html:not(.dark) .bg-\[\#12203f\] {
+            background-color: #ffffff !important;
+        }
+
+        /* Texto principal */
+        html:not(.dark) .text-white { color: #0f172a !important; }
+        html:not(.dark) .text-slate-100 { color: #1e293b !important; }
+        html:not(.dark) .text-slate-200 { color: #334155 !important; }
+        html:not(.dark) .text-slate-300 { color: #475569 !important; }
+
+        /* Bordas */
+        html:not(.dark) .border-slate-800,
+        html:not(.dark) .border-slate-800\/80,
+        html:not(.dark) .border-slate-800\/60,
+        html:not(.dark) .border-slate-700,
+        html:not(.dark) .border-slate-600,
+        html:not(.dark) .divide-slate-800,
+        html:not(.dark) .divide-slate-800\/80 {
+            border-color: #e2e8f0 !important;
+        }
+
+        /* Botões e badges neutros (cinza escuro -> cinza claro) */
+        html:not(.dark) .bg-slate-800,
+        html:not(.dark) .bg-slate-800\/80,
+        html:not(.dark) .bg-slate-800\/60,
+        html:not(.dark) .bg-slate-800\/50,
+        html:not(.dark) .bg-slate-800\/40,
+        html:not(.dark) .bg-slate-700,
+        html:not(.dark) .bg-slate-700\/80,
+        html:not(.dark) .bg-slate-900,
+        html:not(.dark) .bg-slate-900\/90,
+        html:not(.dark) .bg-slate-900\/80 {
+            background-color: #eef1f6 !important;
+        }
+        html:not(.dark) .hover\:bg-slate-800:hover,
+        html:not(.dark) .hover\:bg-slate-800\/80:hover,
+        html:not(.dark) .hover\:bg-slate-800\/50:hover,
+        html:not(.dark) .hover\:bg-slate-800\/40:hover,
+        html:not(.dark) .hover\:bg-slate-700:hover,
+        html:not(.dark) .hover\:bg-slate-700\/80:hover {
+            background-color: #e2e8f0 !important;
+        }
+
+        /* Realces translúcidos brancos (pensados para fundo escuro) viram realces escuros translúcidos */
+        html:not(.dark) .bg-white\/10 { background-color: rgba(15, 23, 42, 0.045) !important; }
+        html:not(.dark) .bg-white\/5 { background-color: rgba(15, 23, 42, 0.03) !important; }
+        html:not(.dark) .border-white\/10 { border-color: rgba(15, 23, 42, 0.08) !important; }
+        html:not(.dark) .hover\:bg-white\/5:hover { background-color: rgba(15, 23, 42, 0.035) !important; }
+
+        /* Ícone de tema: usa o mesmo par sol/lua já presente no botão, sem alterações adicionais aqui */
     </style>
 </head>
 <body class="text-slate-200 min-h-screen font-sans transition-colors duration-200 antialiased selection:bg-lube-red selection:text-white">
@@ -289,11 +401,8 @@
         <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 
-                <!-- Brand & Logo -->
+                <!-- Section Title (logo lives only in the sidebar now) -->
                 <div class="flex items-center gap-4">
-                    <div class="relative bg-white/95 p-1.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-cyan-500/30 flex items-center justify-center">
-                        <img src="imagens/lube-logo.png" alt="Lube Distribuidora" class="h-10 w-auto object-contain" onerror="this.onerror=null; this.src='assets/imagens/lube-logo.png';">
-                    </div>
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 id="sectionTitleMain" class="text-xl font-extrabold text-white tracking-tight font-orbitron glow-text-cyan flex items-center gap-2">
@@ -2288,7 +2397,11 @@
         function toggleTheme() {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('lube_theme', isDark ? 'dark' : 'light');
-            renderAllCharts();
+
+            // Re-renderiza os gráficos da seção ativa para atualizar as cores de eixos/texto
+            if (currentActiveSection === 'turnover') applyTurnoverFilters();
+            else if (currentActiveSection === 'head') applyHeadFilters();
+            else renderAllCharts();
         }
 
         // Helper to normalize any weekday string reliably
@@ -5166,6 +5279,45 @@
             renderAssistantMessages();
         }
 
+        // Converte um subconjunto simples de Markdown (**negrito**, listas com * / - / 1.)
+        // em HTML seguro (o texto é escapado antes de qualquer formatação ser aplicada).
+        function formatAssistantMarkdown(rawText) {
+            const escaped = escapeHtml(rawText == null ? '' : String(rawText));
+            const lines = escaped.split('\n');
+            let html = '';
+            let listType = null; // 'ul' | 'ol' | null
+
+            const closeList = () => {
+                if (listType) { html += `</${listType}>`; listType = null; }
+            };
+            const inlineFormat = (line) => line
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                const bulletMatch = trimmed.match(/^[*-]\s+(.*)$/);
+                const orderedMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+
+                if (bulletMatch) {
+                    if (listType !== 'ul') { closeList(); html += '<ul class="list-disc pl-4 space-y-1 my-1.5">'; listType = 'ul'; }
+                    html += `<li>${inlineFormat(bulletMatch[1])}</li>`;
+                } else if (orderedMatch) {
+                    if (listType !== 'ol') { closeList(); html += '<ol class="list-decimal pl-4 space-y-1 my-1.5">'; listType = 'ol'; }
+                    html += `<li>${inlineFormat(orderedMatch[1])}</li>`;
+                } else {
+                    closeList();
+                    if (trimmed === '') {
+                        html += '<div class="h-2"></div>';
+                    } else {
+                        html += `<p class="mb-1.5 last:mb-0">${inlineFormat(line)}</p>`;
+                    }
+                }
+            });
+            closeList();
+            return html;
+        }
+
         function renderAssistantMessages() {
             const container = document.getElementById('assistantMessages');
             if (!container) return;
@@ -5188,7 +5340,7 @@
                 return `
                     <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
                         <div class="max-w-[85%] px-3.5 py-2.5 rounded-2xl leading-relaxed ${isUser ? 'bg-gradient-to-r from-cyan-600 to-purple-600 text-white rounded-br-sm' : 'bg-[#12203f] text-slate-100 border border-cyan-500/20 rounded-bl-sm'}">
-                            ${escapeHtml(m.content).replace(/\n/g, '<br>')}
+                            ${formatAssistantMarkdown(m.content)}
                         </div>
                     </div>
                 `;
