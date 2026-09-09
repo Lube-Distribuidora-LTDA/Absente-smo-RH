@@ -485,6 +485,79 @@ async function upsertHeadNecessidadeDB(records) {
 }
 
 /**
+ * Busca todos os lançamentos de pagamento de hora extra (50%/100%)
+ */
+async function fetchPagamentoHoraExtraDB() {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    let allRecords = [];
+    let from = 0;
+    const step = 1000;
+    let keepFetching = true;
+
+    while (keepFetching) {
+        const { data, error } = await client
+            .from('pagamento_hora_extra')
+            .select('*')
+            .order('ano_mes_sort', { ascending: true })
+            .order('funcionario_nome', { ascending: true })
+            .range(from, from + step - 1);
+
+        if (error) {
+            console.error('Erro ao buscar pagamento de hora extra:', error);
+            throw error;
+        }
+
+        if (data && data.length > 0) {
+            allRecords = allRecords.concat(data);
+            if (data.length < step) keepFetching = false;
+            else from += step;
+        } else {
+            keepFetching = false;
+        }
+    }
+
+    return allRecords;
+}
+
+/**
+ * Substitui todos os lançamentos de um mês específico (ano_mes_sort) por um novo lote
+ * importado da planilha. Apaga primeiro os registros existentes daquele mês para permitir
+ * reimportação sem duplicar dados.
+ */
+async function importPagamentoHoraExtraMesDB(anoMesSort, records) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { error: delError } = await client
+        .from('pagamento_hora_extra')
+        .delete()
+        .eq('ano_mes_sort', anoMesSort);
+
+    if (delError) {
+        console.error('Erro ao limpar mês antes da reimportação:', delError);
+        throw delError;
+    }
+
+    if (!records || records.length === 0) return { count: 0 };
+
+    const batchSize = 250;
+    let insertedCount = 0;
+    for (let i = 0; i < records.length; i += batchSize) {
+        const chunk = records.slice(i, i + batchSize);
+        const { error } = await client.from('pagamento_hora_extra').insert(chunk);
+        if (error) {
+            console.error(`Erro ao inserir lote ${i} de hora extra:`, error);
+            throw error;
+        }
+        insertedCount += chunk.length;
+    }
+
+    return { count: insertedCount };
+}
+
+/**
  * Exclui uma ocorrência pelo ID
  */
 async function deleteOcorrenciaDB(id) {
@@ -576,5 +649,7 @@ window.SupabaseService = {
     fetchColaboradores: fetchColaboradoresDB,
     insertColaborador: insertColaboradorDB,
     fetchHeadNecessidade: fetchHeadNecessidadeDB,
-    upsertHeadNecessidade: upsertHeadNecessidadeDB
+    upsertHeadNecessidade: upsertHeadNecessidadeDB,
+    fetchPagamentoHoraExtra: fetchPagamentoHoraExtraDB,
+    importPagamentoHoraExtraMes: importPagamentoHoraExtraMesDB
 };
