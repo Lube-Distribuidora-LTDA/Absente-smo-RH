@@ -1671,9 +1671,9 @@
             <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
                 <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
                     <i data-lucide="table" class="w-4 h-4 text-blue-400"></i>
-                    Lançamentos Detalhados por Mês
+                    Lançamentos Consolidados por Colaborador
                 </h3>
-                <span id="horaExtraTableCount" class="text-xs font-semibold px-3 py-1 rounded-xl bg-slate-900/90 text-cyan-300 border border-cyan-500/30">0 registros</span>
+                <span id="horaExtraTableCount" class="text-xs font-semibold px-3 py-1 rounded-xl bg-slate-900/90 text-cyan-300 border border-cyan-500/30">0 colaboradores</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-xs text-left">
@@ -1682,9 +1682,10 @@
                             <th class="py-2 pr-4">Colaborador</th>
                             <th class="py-2 pr-4">Departamento</th>
                             <th class="py-2 pr-4">Função</th>
-                            <th class="py-2 pr-4 text-center">%</th>
-                            <th class="py-2 pr-4 text-right">Horas</th>
-                            <th class="py-2 pr-4 text-right">Valor Pago</th>
+                            <th class="py-2 pr-4 text-right">Meses</th>
+                            <th class="py-2 pr-4 text-right">Horas Totais</th>
+                            <th class="py-2 pr-4 text-right">Valor Total</th>
+                            <th class="py-2 pr-4 text-center">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="horaExtraTableBody"></tbody>
@@ -1693,6 +1694,91 @@
         </div>
       </div>
     </section>
+
+    <!-- MODAL: FICHA DO COLABORADOR (Pagamento Hora Extra por Mês) -->
+    <div id="horaExtraFichaModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-[#0b152b] rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.25)] border border-blue-500/40 flex flex-col animate-fade-in">
+
+            <!-- Modal Header -->
+            <div class="p-6 bg-[#070d1e] border-b border-blue-500/30 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-950/80 flex items-center justify-center font-bold text-lg text-blue-300 border border-blue-500/40 font-orbitron shadow-[0_0_12px_rgba(59,130,246,0.4)]" id="heFichaAvatar">
+                        JS
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-white tracking-tight font-orbitron glow-text-cyan" id="heFichaNome">Nome do Colaborador</h4>
+                        <p class="text-xs text-blue-400 font-medium" id="heFichaCargo">Função &bull; Departamento</p>
+                    </div>
+                </div>
+                <button onclick="closeHoraExtraFichaModal()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-blue-300 border border-blue-500/20 transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body Scrollable -->
+            <div class="p-6 overflow-y-auto space-y-6">
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-[#070d1e] p-3.5 rounded-2xl border border-blue-500/30 text-center shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                        <span class="text-[10px] font-bold text-blue-400 block uppercase font-orbitron tracking-wider">Total Pago</span>
+                        <span class="text-lg font-extrabold text-white font-jetbrains" id="heFichaTotalPago">R$ 0</span>
+                    </div>
+                    <div class="bg-[#031a17] p-3.5 rounded-2xl border border-emerald-500/40 text-center shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                        <span class="text-[10px] font-bold text-emerald-400 block uppercase font-orbitron tracking-wider">Total Horas</span>
+                        <span class="text-lg font-extrabold text-emerald-400 font-jetbrains" id="heFichaTotalHoras">0h</span>
+                    </div>
+                    <div class="bg-[#1f1303] p-3.5 rounded-2xl border border-amber-500/40 text-center shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                        <span class="text-[10px] font-bold text-amber-400 block uppercase font-orbitron tracking-wider">Meses c/ Lançamento</span>
+                        <span class="text-lg font-extrabold text-amber-400 font-jetbrains" id="heFichaMeses">0</span>
+                    </div>
+                    <div class="bg-[#04142a] p-3.5 rounded-2xl border border-cyan-500/40 text-center shadow-[0_0_15px_rgba(0,212,255,0.2)]">
+                        <span class="text-[10px] font-bold text-cyan-400 block uppercase font-orbitron tracking-wider">Média Mensal</span>
+                        <span class="text-lg font-extrabold text-cyan-300 font-jetbrains" id="heFichaMedia">R$ 0</span>
+                    </div>
+                </div>
+
+                <!-- Meta Details -->
+                <div class="bg-[#070d1e] p-4 rounded-2xl border border-blue-500/20 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                        <span class="text-slate-400 block font-medium">Empresa</span>
+                        <span class="font-bold text-white" id="heFichaEmpresa">-</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Admissão</span>
+                        <span class="font-bold text-white font-jetbrains" id="heFichaAdmissao">-</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-medium">Salário Base (mais recente)</span>
+                        <span class="font-bold text-blue-300 font-jetbrains" id="heFichaSalario">-</span>
+                    </div>
+                </div>
+
+                <!-- Monthly Breakdown Table -->
+                <div>
+                    <h5 class="text-xs font-bold text-white uppercase tracking-wider mb-2 font-orbitron glow-text-cyan flex items-center gap-1.5">
+                        <i data-lucide="calendar-clock" class="w-4 h-4 text-blue-400"></i>
+                        Detalhamento por Mês
+                    </h5>
+                    <div class="max-h-72 overflow-y-auto rounded-xl border border-blue-500/20 shadow-inner">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-[#070d1e] text-blue-300 font-bold sticky top-0 border-b border-blue-500/20">
+                                <tr>
+                                    <th class="p-2.5">Mês/Ano</th>
+                                    <th class="p-2.5 text-right">Horas 50%</th>
+                                    <th class="p-2.5 text-right">Valor 50%</th>
+                                    <th class="p-2.5 text-right">Horas 100%</th>
+                                    <th class="p-2.5 text-right">Valor 100%</th>
+                                    <th class="p-2.5 text-right">Total Mês</th>
+                                </tr>
+                            </thead>
+                            <tbody id="heFichaTableBody" class="divide-y divide-slate-800/80 text-slate-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL: LANÇAR MOVIMENTAÇÃO DE TURNOVER -->
     <div id="turnoverEntryModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
@@ -5824,62 +5910,112 @@
             const countBadge = document.getElementById('horaExtraTableCount');
             if (!tbody) return;
 
-            if (countBadge) countBadge.textContent = `${rows.length.toLocaleString('pt-BR')} registros`;
-
             if (rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Nenhum dado para os filtros selecionados.</td></tr>';
+                if (countBadge) countBadge.textContent = '0 colaboradores';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Nenhum dado para os filtros selecionados.</td></tr>';
                 return;
             }
 
-            // Agrupa por mês (mais recente primeiro); dentro do mês, maior valor pago primeiro
-            const byMes = {};
-            rows.forEach(r => { (byMes[r.ano_mes_sort] = byMes[r.ano_mes_sort] || []).push(r); });
-            const mesesOrdenados = Object.keys(byMes).sort().reverse();
+            // Consolida por colaborador (chave: código, com fallback pro nome)
+            const porColaborador = {};
+            rows.forEach(r => {
+                const key = r.funcionario_codigo || r.funcionario_nome;
+                if (!porColaborador[key]) {
+                    porColaborador[key] = {
+                        codigo: key, nome: r.funcionario_nome, departamento: r.departamento, funcao: r.funcao,
+                        meses: new Set(), horas: 0, valor: 0
+                    };
+                }
+                const c = porColaborador[key];
+                c.meses.add(r.ano_mes_sort);
+                c.horas += Number(r.qtde_horas_decimal || 0);
+                c.valor += Number(r.valor_pago || 0);
+            });
+
+            const colaboradores = Object.values(porColaborador).sort((a, b) => b.valor - a.valor);
+            if (countBadge) countBadge.textContent = `${colaboradores.length.toLocaleString('pt-BR')} colaboradores`;
 
             let html = '';
-            mesesOrdenados.forEach(mes => {
-                const mesRows = [...byMes[mes]].sort((a, b) => Number(b.valor_pago || 0) - Number(a.valor_pago || 0));
-                const totalValor = mesRows.reduce((s, r) => s + Number(r.valor_pago || 0), 0);
-                const totalHoras = mesRows.reduce((s, r) => s + Number(r.qtde_horas_decimal || 0), 0);
-                const sample = mesRows[0];
-                const label = sample ? `${sample.mes_nome}/${sample.ano}` : mes;
-
+            colaboradores.forEach(c => {
                 html += `
-                    <tr class="bg-blue-950/30 border-b border-blue-500/20">
-                        <td colspan="6" class="py-2 pr-4">
-                            <div class="flex items-center justify-between flex-wrap gap-2">
-                                <span class="font-extrabold text-white uppercase tracking-wide flex items-center gap-1.5">
-                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-400"></i> ${escapeHtml(label)}
-                                </span>
-                                <span class="text-[11px] text-slate-400 font-normal normal-case">
-                                    <span class="text-cyan-300 font-bold">${mesRows.length}</span> lançamentos &bull;
-                                    <span class="text-cyan-300 font-bold">${totalHoras.toFixed(1)}h</span> &bull;
-                                    Total: <span class="text-emerald-400 font-bold">${formatCurrencyBRL(totalValor)}</span>
-                                </span>
-                            </div>
+                    <tr class="border-b border-slate-800/60 hover:bg-white/5">
+                        <td class="py-2 pr-4 font-semibold text-slate-200">${escapeHtml(c.nome)}</td>
+                        <td class="py-2 pr-4 text-slate-400">${escapeHtml(c.departamento || '—')}</td>
+                        <td class="py-2 pr-4 text-slate-400">${escapeHtml(c.funcao || '—')}</td>
+                        <td class="py-2 pr-4 text-right text-purple-300 font-bold">${c.meses.size}</td>
+                        <td class="py-2 pr-4 text-right text-cyan-300">${c.horas.toFixed(1)}h</td>
+                        <td class="py-2 pr-4 text-right font-bold text-blue-300">${formatCurrencyBRL(c.valor)}</td>
+                        <td class="py-2 pr-4 text-center">
+                            <button onclick="openHoraExtraFicha('${String(c.codigo).replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-lube-navy dark:bg-slate-800 text-white hover:bg-lube-red transition shadow-sm" title="Ver ficha completa de hora extra do colaborador">
+                                <i data-lucide="user" class="w-3 h-3"></i> Ver Ficha
+                            </button>
                         </td>
                     </tr>
                 `;
-
-                mesRows.forEach(r => {
-                    const pctBadge = r.percentual === 100
-                        ? '<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-950/60 text-amber-300 border border-amber-500/40">100%</span>'
-                        : '<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-500/40">50%</span>';
-                    html += `
-                        <tr class="border-b border-slate-800/60 hover:bg-white/5">
-                            <td class="py-2 pr-4 pl-6 font-semibold text-slate-200">${escapeHtml(r.funcionario_nome)}</td>
-                            <td class="py-2 pr-4 text-slate-400">${escapeHtml(r.departamento || '—')}</td>
-                            <td class="py-2 pr-4 text-slate-400">${escapeHtml(r.funcao || '—')}</td>
-                            <td class="py-2 pr-4 text-center">${pctBadge}</td>
-                            <td class="py-2 pr-4 text-right text-cyan-300">${Number(r.qtde_horas_decimal || 0).toFixed(1)}h</td>
-                            <td class="py-2 pr-4 text-right font-bold text-blue-300">${formatCurrencyBRL(r.valor_pago)}</td>
-                        </tr>
-                    `;
-                });
             });
 
             tbody.innerHTML = html;
             safeCreateIcons();
+        }
+
+        // --- Ficha do colaborador: sempre mostra o historico COMPLETO (todos os meses), independente dos filtros ativos ---
+        function openHoraExtraFicha(codigo) {
+            const registros = horaExtraRawData.filter(r => (r.funcionario_codigo || r.funcionario_nome) === codigo);
+            if (registros.length === 0) return;
+
+            const sample = [...registros].sort((a, b) => b.ano_mes_sort.localeCompare(a.ano_mes_sort))[0];
+            const nome = sample.funcionario_nome;
+            const iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+
+            document.getElementById('heFichaAvatar').textContent = iniciais || '?';
+            document.getElementById('heFichaNome').textContent = nome;
+            document.getElementById('heFichaCargo').textContent = `${sample.funcao || 'Função não informada'} • ${sample.departamento || 'Departamento não informado'}`;
+            document.getElementById('heFichaEmpresa').textContent = sample.empresa_nome || '-';
+            document.getElementById('heFichaAdmissao').textContent = sample.admissao_iso ? new Date(sample.admissao_iso + 'T00:00:00').toLocaleDateString('pt-BR') : '-';
+            document.getElementById('heFichaSalario').textContent = sample.salario_base ? formatCurrencyBRL(sample.salario_base) : '-';
+
+            const totalValor = registros.reduce((s, r) => s + Number(r.valor_pago || 0), 0);
+            const totalHoras = registros.reduce((s, r) => s + Number(r.qtde_horas_decimal || 0), 0);
+            const meses = [...new Set(registros.map(r => r.ano_mes_sort))];
+            const media = meses.length > 0 ? totalValor / meses.length : 0;
+
+            document.getElementById('heFichaTotalPago').textContent = formatCurrencyBRL(totalValor);
+            document.getElementById('heFichaTotalHoras').textContent = `${totalHoras.toFixed(1)}h`;
+            document.getElementById('heFichaMeses').textContent = meses.length;
+            document.getElementById('heFichaMedia').textContent = formatCurrencyBRL(media);
+
+            const byMes = {};
+            registros.forEach(r => {
+                if (!byMes[r.ano_mes_sort]) byMes[r.ano_mes_sort] = { mes_nome: r.mes_nome, ano: r.ano, horas50: 0, valor50: 0, horas100: 0, valor100: 0 };
+                const m = byMes[r.ano_mes_sort];
+                if (r.percentual === 100) { m.horas100 += Number(r.qtde_horas_decimal || 0); m.valor100 += Number(r.valor_pago || 0); }
+                else { m.horas50 += Number(r.qtde_horas_decimal || 0); m.valor50 += Number(r.valor_pago || 0); }
+            });
+
+            const mesesOrdenados = Object.keys(byMes).sort().reverse();
+            const tbody = document.getElementById('heFichaTableBody');
+            tbody.innerHTML = mesesOrdenados.map(m => {
+                const d = byMes[m];
+                const totalMes = d.valor50 + d.valor100;
+                return `
+                    <tr>
+                        <td class="p-2.5 font-semibold text-slate-200">${escapeHtml(d.mes_nome)}/${d.ano}</td>
+                        <td class="p-2.5 text-right text-emerald-400">${d.horas50 > 0 ? d.horas50.toFixed(1) + 'h' : '—'}</td>
+                        <td class="p-2.5 text-right text-emerald-400">${d.valor50 > 0 ? formatCurrencyBRL(d.valor50) : '—'}</td>
+                        <td class="p-2.5 text-right text-amber-300">${d.horas100 > 0 ? d.horas100.toFixed(1) + 'h' : '—'}</td>
+                        <td class="p-2.5 text-right text-amber-300">${d.valor100 > 0 ? formatCurrencyBRL(d.valor100) : '—'}</td>
+                        <td class="p-2.5 text-right font-bold text-blue-300">${formatCurrencyBRL(totalMes)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('horaExtraFichaModal').classList.remove('hidden');
+            safeCreateIcons();
+        }
+
+        function closeHoraExtraFichaModal() {
+            const modal = document.getElementById('horaExtraFichaModal');
+            if (modal) modal.classList.add('hidden');
         }
 
         // --- Import: exige selecionar o mês/ano antes de liberar o botão de importar ---
