@@ -1506,15 +1506,8 @@
                 </span>
                 <select id="heImportMes" onchange="onHoraExtraImportSelectChange()" class="bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
                     <option value="">Selecione o mês...</option>
-                    <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
-                    <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
-                    <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
-                    <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
                 </select>
-                <select id="heImportAno" onchange="onHoraExtraImportSelectChange()" class="bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
-                    <option value="2025">2025</option>
-                    <option value="2026" selected>2026</option>
-                    <option value="2027">2027</option>
+                <select id="heImportAno" disabled title="A importação sempre usa o ano atual" class="bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 opacity-80 cursor-not-allowed focus:outline-none transition shadow-inner">
                 </select>
                 <button id="btnHoraExtraImport" onclick="triggerHoraExtraImport()" disabled title="Selecione o mês da importação primeiro" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-700 to-cyan-600 text-white shadow-neon-blue border border-cyan-400/40 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale">
                     <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
@@ -5679,6 +5672,7 @@
         let chartHoraExtraEvolucao = null, chartHoraExtraDistribuicao = null, chartHoraExtraTopColaboradores = null, chartHoraExtraFuncao = null;
 
         async function loadHoraExtraSection() {
+            populateHoraExtraImportOptions();
             if (horaExtraDataLoaded) { applyHoraExtraFilters(); return; }
             const tbody = document.getElementById('horaExtraTableBody');
             if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Carregando dados de hora extra...</td></tr>';
@@ -6016,6 +6010,28 @@
         function closeHoraExtraFichaModal() {
             const modal = document.getElementById('horaExtraFichaModal');
             if (modal) modal.classList.add('hidden');
+        }
+
+        // --- Import: sempre no ano atual; meses disponíveis vão do mês atual até dezembro ---
+        function populateHoraExtraImportOptions() {
+            const anoSel = document.getElementById('heImportAno');
+            const mesSel = document.getElementById('heImportMes');
+            if (!anoSel || !mesSel) return;
+
+            const now = new Date();
+            const anoAtual = now.getFullYear();
+            const mesAtual = now.getMonth() + 1;
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+            anoSel.innerHTML = `<option value="${anoAtual}" selected>${anoAtual}</option>`;
+
+            const preserved = mesSel.value;
+            let opts = '<option value="">Selecione o mês...</option>';
+            for (let m = mesAtual; m <= 12; m++) {
+                opts += `<option value="${m}">${monthNames[m - 1]}</option>`;
+            }
+            mesSel.innerHTML = opts;
+            if ([...mesSel.options].some(o => o.value === preserved)) mesSel.value = preserved;
         }
 
         // --- Import: exige selecionar o mês/ano antes de liberar o botão de importar ---
