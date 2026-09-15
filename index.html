@@ -4561,6 +4561,41 @@
             return { categoria: m, tipo: 'Outros' };
         }
 
+        // O PontoMais exporta "Relatório de Faltas" em blocos por colaborador (Colaborador / Nome,Data,Motivo /
+        // ... / Resumo,Totais / Total,n), não como tabela simples com cabeçalho na 1ª linha. Detecta esse
+        // formato pelo título da 1ª célula e devolve linhas sintéticas {Nome, Data, Motivo} que o restante do
+        // importador de Absenteísmo (getRowValue com os mesmos nomes de coluna) já sabe processar.
+        function isPontoMaisFaltasFormat(arrayRows) {
+            return !!(arrayRows[0] && /relat[oó]rio de faltas/i.test(String(arrayRows[0][0] || '')));
+        }
+
+        function parsePontoMaisFaltasBlocks(arrayRows) {
+            const rows = [];
+            let i = 0;
+            while (i < arrayRows.length) {
+                const col0 = String(arrayRows[i][0] || '').trim();
+                if (col0 === 'Colaborador') {
+                    i++;
+                    if (arrayRows[i] && String(arrayRows[i][0] || '').trim() === 'Nome') i++;
+                    while (i < arrayRows.length) {
+                        const row = arrayRows[i];
+                        const c0 = String(row[0] || '').trim();
+                        if (c0 === '' || c0 === 'Colaborador') break;
+                        if (c0 === 'Resumo') {
+                            i++;
+                            if (arrayRows[i] && String(arrayRows[i][0] || '').trim() === 'Total') i++;
+                            break;
+                        }
+                        rows.push({ Nome: c0, Data: row[1], Motivo: String(row[2] || '').trim() });
+                        i++;
+                    }
+                    continue;
+                }
+                i++;
+            }
+            return rows;
+        }
+
         function getRowValue(row, patterns) {
             const keys = Object.keys(row);
             for (const p of patterns) {
@@ -4621,7 +4656,10 @@
                     }
 
                     const sheet = workbook.Sheets[targetSheetName];
-                    const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                    const arrayRows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+                    const rawRows = isPontoMaisFaltasFormat(arrayRows)
+                        ? parsePontoMaisFaltasBlocks(arrayRows)
+                        : XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
                     if (!rawRows || rawRows.length === 0) {
                         showToast('Planilha Vazia', `A aba "${targetSheetName}" não contém registros.`, true);
