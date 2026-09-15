@@ -558,6 +558,71 @@ async function importPagamentoHoraExtraMesDB(anoMesSort, records) {
 }
 
 /**
+ * Busca todos os registros de ponto usados no controle de interjornada
+ * (entrada/saída diária por colaborador, importados do relatório PontoMais)
+ */
+async function fetchInterjornadaRegistrosDB() {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    let allRecords = [];
+    let from = 0;
+    const step = 1000;
+    let keepFetching = true;
+
+    while (keepFetching) {
+        const { data, error } = await client
+            .from('interjornada_registros')
+            .select('*')
+            .order('colaborador_nome', { ascending: true })
+            .order('data_iso', { ascending: true })
+            .range(from, from + step - 1);
+
+        if (error) {
+            console.error('Erro ao buscar registros de interjornada:', error);
+            throw error;
+        }
+
+        if (data && data.length > 0) {
+            allRecords = allRecords.concat(data);
+            if (data.length < step) keepFetching = false;
+            else from += step;
+        } else {
+            keepFetching = false;
+        }
+    }
+
+    return allRecords;
+}
+
+/**
+ * Insere/atualiza (upsert) em lote os registros de ponto importados da planilha
+ * de interjornada. onConflict por (colaborador_nome, data_iso) permite reimportar
+ * o mesmo período sem duplicar linhas.
+ */
+async function upsertInterjornadaRegistrosDB(records) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+    if (!records || records.length === 0) return { count: 0 };
+
+    const batchSize = 250;
+    let upsertedCount = 0;
+    for (let i = 0; i < records.length; i += batchSize) {
+        const chunk = records.slice(i, i + batchSize);
+        const { error } = await client
+            .from('interjornada_registros')
+            .upsert(chunk, { onConflict: 'colaborador_nome,data_iso' });
+        if (error) {
+            console.error(`Erro ao inserir lote ${i} de interjornada:`, error);
+            throw error;
+        }
+        upsertedCount += chunk.length;
+    }
+
+    return { count: upsertedCount };
+}
+
+/**
  * Exclui uma ocorrência pelo ID
  */
 async function deleteOcorrenciaDB(id) {
@@ -651,5 +716,7 @@ window.SupabaseService = {
     fetchHeadNecessidade: fetchHeadNecessidadeDB,
     upsertHeadNecessidade: upsertHeadNecessidadeDB,
     fetchPagamentoHoraExtra: fetchPagamentoHoraExtraDB,
-    importPagamentoHoraExtraMes: importPagamentoHoraExtraMesDB
+    importPagamentoHoraExtraMes: importPagamentoHoraExtraMesDB,
+    fetchInterjornadaRegistros: fetchInterjornadaRegistrosDB,
+    upsertInterjornadaRegistros: upsertInterjornadaRegistrosDB
 };

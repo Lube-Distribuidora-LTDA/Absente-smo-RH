@@ -461,6 +461,10 @@
                 <i data-lucide="clock" class="w-4.5 h-4.5 shrink-0"></i>
                 <span>Pagamento Hora Extra</span>
             </button>
+            <button onclick="switchSection('interjornada')" data-section-nav="interjornada" class="sidebar-nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer">
+                <i data-lucide="bed" class="w-4.5 h-4.5 shrink-0"></i>
+                <span>InterJornadas</span>
+            </button>
         </nav>
 
         <div class="px-5 py-4 border-t border-cyan-500/20 text-[10px] text-slate-500">
@@ -1688,6 +1692,205 @@
       </div>
     </section>
 
+    <section id="section-interjornada" class="hidden">
+      <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Filter Panel -->
+        <div class="executive-card rounded-2xl p-5 border border-cyan-500/20 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-xl bg-red-950/60 border border-red-500/40 text-red-400 shadow-[0_0_12px_rgba(239,68,68,0.3)]">
+                        <i data-lucide="bed" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider font-orbitron glow-text-cyan">Interjornadas &bull; Descanso Mínimo de 11h</h2>
+                        <p class="text-xs text-slate-400">Motoristas e ajudantes &bull; horário de saída x próxima entrada, por colaborador e período</p>
+                    </div>
+                </div>
+                <button onclick="exportInterjornadaExcel()" title="Exportar dados filtrados para Excel" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] border border-emerald-400/40 transition cursor-pointer shrink-0">
+                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                    <span>Exportar Excel</span>
+                </button>
+            </div>
+
+            <!-- Import Panel -->
+            <div class="mt-4 pt-4 border-t border-slate-800 flex flex-wrap items-center gap-2.5">
+                <span class="text-[11px] font-bold text-slate-400 uppercase flex items-center gap-1.5">
+                    <i data-lucide="upload-cloud" class="w-3.5 h-3.5 text-blue-400"></i> Importar Relatório de Ponto (PontoMais)
+                </span>
+                <button id="btnInterjornadaImport" onclick="triggerInterjornadaImport()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-700 to-cyan-600 text-white shadow-neon-blue border border-cyan-400/40 transition cursor-pointer">
+                    <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
+                    <span>Importar Planilha (.xlsx)</span>
+                </button>
+                <span class="text-[11px] text-slate-500">O período (datas) é lido automaticamente de cada linha do relatório &mdash; pode reimportar o mesmo período quantas vezes precisar.</span>
+                <input type="file" id="fileImportInterjornada" accept=".xls, .xlsx, .xlsm" onchange="handleInterjornadaExcelImport(event)" class="hidden">
+            </div>
+
+            <!-- Filters -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-4 mt-4 border-t border-slate-800">
+                <div class="lg:col-span-2">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Buscar Colaborador</label>
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="ijFilterSearch" oninput="applyInterjornadaFilters()" placeholder="Nome do colaborador..." class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Mês/Ano</label>
+                    <select id="ijFilterMes" onchange="applyInterjornadaFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todos os Meses</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Função</label>
+                    <select id="ijFilterFuncao" onchange="applyInterjornadaFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todas as Funções</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Situação</label>
+                    <select id="ijFilterSituacao" onchange="applyInterjornadaFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todos os Colaboradores</option>
+                        <option value="VIOLACAO">Somente com violação de interjornada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end pt-3">
+                <button onclick="resetInterjornadaFilters()" title="Limpar filtros" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 border border-slate-700 hover:border-cyan-500/40 transition cursor-pointer">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    <span>Limpar Filtros</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-red-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Violações de Interjornada</span>
+                <div id="ijKpiViolacoes" class="text-2xl font-extrabold text-red-400 tracking-tight mt-2">0</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Dias com descanso &lt; 11h</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-amber-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i> Colaboradores em Risco</span>
+                <div id="ijKpiColaboradoresRisco" class="text-2xl font-extrabold text-amber-300 tracking-tight mt-2">0</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Com ao menos 1 violação</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-red-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="trending-down" class="w-3.5 h-3.5"></i> Pior Intervalo Registrado</span>
+                <div id="ijKpiPiorIntervalo" class="text-2xl font-extrabold text-red-300 tracking-tight mt-2">—</div>
+                <p id="ijKpiPiorIntervaloDetalhe" class="text-[11px] text-slate-400 mt-0.5">Menor descanso entre jornadas</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-blue-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="clock-3" class="w-3.5 h-3.5"></i> Horas Extras no Período</span>
+                <div id="ijKpiHorasExtras" class="text-2xl font-extrabold text-blue-300 tracking-tight mt-2">0h</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Fator 50% + 100% somados</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-purple-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="user-check" class="w-3.5 h-3.5"></i> Colaboradores Analisados</span>
+                <div id="ijKpiColaboradores" class="text-2xl font-extrabold text-purple-300 tracking-tight mt-2">0</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Com registros no período</p>
+            </div>
+            <div class="executive-card rounded-2xl p-4">
+                <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Conformidade</span>
+                <div id="ijKpiConformidade" class="text-2xl font-extrabold text-emerald-300 tracking-tight mt-2">0%</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Transições de jornada dentro das 11h</p>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="executive-card lg:col-span-2 p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="trending-up" class="w-4 h-4 text-red-400"></i>
+                            Evolução das Violações por Dia
+                        </h3>
+                        <p class="text-xs text-slate-400">Nº de colaboradores com descanso abaixo de 11h, por data</p>
+                    </div>
+                </div>
+                <div class="relative h-[320px] w-full pt-4">
+                    <canvas id="chartInterjornadaEvolucao"></canvas>
+                </div>
+            </div>
+            <div class="executive-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-4 h-4 text-cyan-400"></i>
+                            Conformidade Interjornada
+                        </h3>
+                        <p class="text-xs text-slate-400">% de transições de jornada no período</p>
+                    </div>
+                </div>
+                <div class="relative h-[280px] w-full flex items-center justify-center pt-2">
+                    <canvas id="chartInterjornadaConformidade"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="executive-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 text-red-400"></i>
+                            Top 10 &bull; Mais Violações de Interjornada
+                        </h3>
+                        <p class="text-xs text-slate-400">Colaboradores com mais dias de descanso abaixo de 11h</p>
+                    </div>
+                </div>
+                <div class="relative h-[300px] w-full pt-2">
+                    <canvas id="chartInterjornadaTopViolacoes"></canvas>
+                </div>
+            </div>
+            <div class="executive-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                            <i data-lucide="clock-3" class="w-4 h-4 text-blue-400"></i>
+                            Top 10 &bull; Mais Horas Extras
+                        </h3>
+                        <p class="text-xs text-slate-400">Colaboradores com maior carga de hora extra no período</p>
+                    </div>
+                </div>
+                <div class="relative h-[300px] w-full pt-2">
+                    <canvas id="chartInterjornadaTopHoraExtra"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="executive-card rounded-2xl p-5">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                    <i data-lucide="table" class="w-4 h-4 text-red-400"></i>
+                    Horas Extras x Interjornada &bull; por Colaborador
+                </h3>
+                <span id="interjornadaTableCount" class="text-xs font-semibold px-3 py-1 rounded-xl bg-slate-900/90 text-cyan-300 border border-cyan-500/30">0 colaboradores</span>
+            </div>
+            <p class="text-xs text-slate-400 -mt-2 mb-4">Ordenado por maior nº de violações de interjornada e, em seguida, por horas extras &mdash; para priorizar o controle do horário de saída e da próxima entrada.</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left">
+                    <thead>
+                        <tr class="text-slate-400 uppercase border-b border-slate-800">
+                            <th class="py-2 pr-4">Colaborador</th>
+                            <th class="py-2 pr-4">Função</th>
+                            <th class="py-2 pr-4 text-right">Dias Analisados</th>
+                            <th class="py-2 pr-4 text-right">Violações Interjornada</th>
+                            <th class="py-2 pr-4 text-right">Pior Intervalo</th>
+                            <th class="py-2 pr-4 text-right">Horas Extras</th>
+                            <th class="py-2 pr-4 text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="interjornadaTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+    </section>
+
     <!-- MODAL: FICHA DO COLABORADOR (Pagamento Hora Extra por Mês) -->
     <div id="horaExtraFichaModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="bg-[#0b152b] rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.25)] border border-blue-500/40 flex flex-col animate-fade-in">
@@ -1766,6 +1969,77 @@
                                 </tr>
                             </thead>
                             <tbody id="heFichaTableBody" class="divide-y divide-slate-800/80 text-slate-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FICHA DO COLABORADOR (Interjornada / Ponto Diário) -->
+    <div id="interjornadaFichaModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-[#0b152b] rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-[0_0_40px_rgba(239,68,68,0.25)] border border-red-500/40 flex flex-col animate-fade-in">
+
+            <!-- Modal Header -->
+            <div class="p-6 bg-[#070d1e] border-b border-red-500/30 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-red-950/80 flex items-center justify-center font-bold text-lg text-red-300 border border-red-500/40 font-orbitron shadow-[0_0_12px_rgba(239,68,68,0.4)]" id="ijFichaAvatar">
+                        JS
+                    </div>
+                    <div>
+                        <h4 class="text-base font-bold text-white tracking-tight font-orbitron glow-text-cyan" id="ijFichaNome">Nome do Colaborador</h4>
+                        <p class="text-xs text-red-400 font-medium" id="ijFichaCargo">Função &bull; Equipe</p>
+                    </div>
+                </div>
+                <button onclick="closeInterjornadaFichaModal()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-red-300 border border-red-500/20 transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body Scrollable -->
+            <div class="p-6 overflow-y-auto space-y-6">
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-[#070d1e] p-3.5 rounded-2xl border border-slate-700 text-center shadow-inner">
+                        <span class="text-[10px] font-bold text-slate-400 block uppercase font-orbitron tracking-wider">Dias Analisados</span>
+                        <span class="text-lg font-extrabold text-white font-jetbrains" id="ijFichaDias">0</span>
+                    </div>
+                    <div class="bg-[#1a0505] p-3.5 rounded-2xl border border-red-500/40 text-center shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                        <span class="text-[10px] font-bold text-red-400 block uppercase font-orbitron tracking-wider">Violações Interjornada</span>
+                        <span class="text-lg font-extrabold text-red-400 font-jetbrains" id="ijFichaViolacoes">0</span>
+                    </div>
+                    <div class="bg-[#1f1303] p-3.5 rounded-2xl border border-amber-500/40 text-center shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                        <span class="text-[10px] font-bold text-amber-400 block uppercase font-orbitron tracking-wider">Pior Intervalo</span>
+                        <span class="text-lg font-extrabold text-amber-400 font-jetbrains" id="ijFichaPiorIntervalo">—</span>
+                    </div>
+                    <div class="bg-[#04142a] p-3.5 rounded-2xl border border-cyan-500/40 text-center shadow-[0_0_15px_rgba(0,212,255,0.2)]">
+                        <span class="text-[10px] font-bold text-cyan-400 block uppercase font-orbitron tracking-wider">Horas Extras Totais</span>
+                        <span class="text-lg font-extrabold text-cyan-300 font-jetbrains" id="ijFichaHorasExtras">0h</span>
+                    </div>
+                </div>
+
+                <!-- Daily Breakdown Table -->
+                <div>
+                    <h5 class="text-xs font-bold text-white uppercase tracking-wider mb-2 font-orbitron glow-text-cyan flex items-center gap-1.5">
+                        <i data-lucide="calendar-clock" class="w-4 h-4 text-red-400"></i>
+                        Ponto Diário &amp; Descanso até a Próxima Entrada
+                    </h5>
+                    <div class="max-h-96 overflow-y-auto rounded-xl border border-slate-700 shadow-inner">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-[#070d1e] text-red-300 font-bold sticky top-0 border-b border-slate-700">
+                                <tr>
+                                    <th class="p-2.5">Data</th>
+                                    <th class="p-2.5">1ª Entrada</th>
+                                    <th class="p-2.5">1ª Saída</th>
+                                    <th class="p-2.5">2ª Entrada</th>
+                                    <th class="p-2.5">2ª Saída</th>
+                                    <th class="p-2.5 text-right">H. Extras</th>
+                                    <th class="p-2.5 text-right">Descanso até Próx. Entrada</th>
+                                    <th class="p-2.5 text-center">Situação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ijFichaTableBody" class="divide-y divide-slate-800/80 text-slate-200"></tbody>
                         </table>
                     </div>
                 </div>
@@ -4475,12 +4749,13 @@
             turnover: { title: 'TURNOVER RH', subtitle: 'Controle de entrada e saída de funcionários' },
             empregados: { title: 'LISTAGEM DE EMPREGADOS', subtitle: 'Cadastro e busca dinâmica de colaboradores' },
             head: { title: 'PAINEL HEAD', subtitle: 'Necessidade de contratação e redução por função' },
-            horaextra: { title: 'PAGAMENTO HORA EXTRA', subtitle: 'Análise de horas extras 50% e 100% por colaborador e período' }
+            horaextra: { title: 'PAGAMENTO HORA EXTRA', subtitle: 'Análise de horas extras 50% e 100% por colaborador e período' },
+            interjornada: { title: 'INTERJORNADAS', subtitle: 'Controle do intervalo mínimo de 11h de descanso entre jornadas — motoristas e ajudantes' }
         };
 
         function switchSection(name) {
             currentActiveSection = name;
-            ['absenteismo', 'turnover', 'empregados', 'head', 'horaextra'].forEach(s => {
+            ['absenteismo', 'turnover', 'empregados', 'head', 'horaextra', 'interjornada'].forEach(s => {
                 const el = document.getElementById(`section-${s}`);
                 if (el) el.classList.toggle('hidden', s !== name);
                 const navBtn = document.querySelector(`[data-section-nav="${s}"]`);
@@ -4500,6 +4775,7 @@
             if (name === 'empregados') loadEmpregadosSection();
             if (name === 'head') loadHeadSection();
             if (name === 'horaextra') loadHoraExtraSection();
+            if (name === 'interjornada') loadInterjornadaSection();
 
             closeSidebarMobile();
             safeCreateIcons();
@@ -6203,6 +6479,565 @@
                 showToast('Exportação Concluída!', 'A planilha de hora extra foi baixada com sucesso.');
             } catch (err) {
                 console.error('Erro ao exportar Excel de hora extra:', err);
+                showToast('Erro na Exportação', err.message || String(err), true);
+            }
+        }
+
+        // ================================================================
+        // INTERJORNADAS (Controle de 11h de Descanso Entre Jornadas)
+        // Motoristas e Ajudantes • Relatório de Ponto (PontoMais) por Equipe
+        // ================================================================
+        const INTERJORNADA_LIMITE_MINUTOS = 11 * 60;
+
+        let interjornadaDataLoaded = false;
+        let interjornadaRawRows = [];
+        let interjornadaAnalysisRows = [];
+        let interjornadaFilteredRows = [];
+        let interjornadaFuncaoMap = {};
+        let interjornadaFuncaoMapLoaded = false;
+        let chartInterjornadaEvolucao = null, chartInterjornadaConformidade = null, chartInterjornadaTopViolacoes = null, chartInterjornadaTopHoraExtra = null;
+
+        function normalizeNomeColaborador(nome) {
+            return String(nome || '').trim().toUpperCase().replace(/\s+/g, ' ');
+        }
+
+        async function ensureInterjornadaFuncaoMap() {
+            if (interjornadaFuncaoMapLoaded) return;
+            try {
+                if (window.SupabaseService && isSupabaseOnline) {
+                    const colaboradores = await window.SupabaseService.fetchColaboradores();
+                    (colaboradores || []).forEach(c => {
+                        interjornadaFuncaoMap[normalizeNomeColaborador(c.nome)] = c.funcao || null;
+                    });
+                }
+            } catch (err) {
+                console.error('Erro ao carregar função dos colaboradores para interjornada:', err);
+            }
+            interjornadaFuncaoMapLoaded = true;
+        }
+
+        function isoToEpochDays(iso) {
+            const [y, m, d] = iso.split('-').map(Number);
+            return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
+        }
+
+        function parseInterjornadaTimeToMinutes(val) {
+            const s = String(val || '').trim();
+            if (!s) return null;
+            const m = s.match(/^(\d{1,2}):(\d{2})$/);
+            if (!m) return null;
+            return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+        }
+
+        function parseInterjornadaDurationHoras(val) {
+            const s = String(val || '').trim();
+            if (!s) return 0;
+            const m = s.match(/^(-?)(\d{1,3}):(\d{2})/);
+            if (!m) return 0;
+            const sign = m[1] === '-' ? -1 : 1;
+            return +(sign * (parseInt(m[2], 10) + parseInt(m[3], 10) / 60)).toFixed(2);
+        }
+
+        function formatGapLabel(min) {
+            if (min === null || min === undefined) return '—';
+            const sign = min < 0 ? '-' : '';
+            const abs = Math.abs(min);
+            const hh = Math.floor(abs / 60);
+            const mm = abs % 60;
+            return `${sign}${hh}h${String(mm).padStart(2, '0')}`;
+        }
+
+        function formatDateBR(iso) {
+            if (!iso) return '-';
+            const [y, m, d] = iso.split('-');
+            return `${d}/${m}/${y}`;
+        }
+
+        // Para cada colaborador, ordena os dias e calcula o descanso (em minutos) entre
+        // o último registro de saída de um dia e o primeiro registro de entrada do
+        // próximo dia trabalhado — a "interjornada" (mínimo legal de 11h, CLT Art. 66).
+        function computeInterjornadaAnalysis(rawRows) {
+            const byColab = {};
+            rawRows.forEach(r => {
+                if (!byColab[r.colaborador_nome]) byColab[r.colaborador_nome] = [];
+                byColab[r.colaborador_nome].push(r);
+            });
+
+            const enriched = [];
+            Object.keys(byColab).forEach(nome => {
+                const dias = [...byColab[nome]].sort((a, b) => a.data_iso.localeCompare(b.data_iso));
+                const funcao = dias[0] ? (dias[0].funcao || interjornadaFuncaoMap[normalizeNomeColaborador(nome)] || null) : null;
+                let lastExit = null; // { data_iso, minutos, row }
+
+                const diasEnriquecidos = dias.map(d => ({
+                    ...d,
+                    funcao,
+                    heHoras: +(Number(d.he_50_horas || 0) + Number(d.he_100_horas || 0)).toFixed(2),
+                    descansoMinutos: null,
+                    violacao: false
+                }));
+
+                diasEnriquecidos.forEach(row => {
+                    const entradaMin = parseInterjornadaTimeToMinutes(row.entrada1) ?? parseInterjornadaTimeToMinutes(row.entrada2);
+                    const saidaMin = parseInterjornadaTimeToMinutes(row.saida2) ?? parseInterjornadaTimeToMinutes(row.saida1);
+
+                    if (entradaMin !== null && lastExit) {
+                        const gapMin = (isoToEpochDays(row.data_iso) * 1440 + entradaMin) - (isoToEpochDays(lastExit.data_iso) * 1440 + lastExit.minutos);
+                        lastExit.row.descansoMinutos = gapMin;
+                        lastExit.row.violacao = gapMin < INTERJORNADA_LIMITE_MINUTOS;
+                    }
+
+                    if (saidaMin !== null) {
+                        lastExit = { data_iso: row.data_iso, minutos: saidaMin, row };
+                    }
+                });
+
+                enriched.push(...diasEnriquecidos);
+            });
+
+            return enriched;
+        }
+
+        async function loadInterjornadaSection() {
+            if (interjornadaDataLoaded) { applyInterjornadaFilters(); return; }
+            const tbody = document.getElementById('interjornadaTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Carregando registros de ponto...</td></tr>';
+
+            try {
+                await ensureInterjornadaFuncaoMap();
+                if (window.SupabaseService && isSupabaseOnline) {
+                    interjornadaRawRows = await window.SupabaseService.fetchInterjornadaRegistros();
+                } else {
+                    interjornadaRawRows = [];
+                }
+            } catch (err) {
+                console.error('Erro ao carregar registros de interjornada:', err);
+                interjornadaRawRows = [];
+                showToast('Erro ao Carregar Interjornadas', err.message || String(err), true);
+            }
+
+            interjornadaAnalysisRows = computeInterjornadaAnalysis(interjornadaRawRows);
+            interjornadaDataLoaded = true;
+            populateInterjornadaFilterOptions();
+            applyInterjornadaFilters();
+        }
+
+        function populateInterjornadaFilterOptions() {
+            const mesSel = document.getElementById('ijFilterMes');
+            const funcSel = document.getElementById('ijFilterFuncao');
+            if (!mesSel || !funcSel) return;
+
+            const monthNamesPt = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const meses = [...new Set(interjornadaAnalysisRows.map(r => r.ano_mes_sort))].sort();
+            const curMes = mesSel.value;
+            mesSel.innerHTML = '<option value="ALL">Todos os Meses</option>' + meses.map(m => {
+                const [y, mm] = m.split('-');
+                return `<option value="${m}">${monthNamesPt[parseInt(mm, 10) - 1]}/${y}</option>`;
+            }).join('');
+            if (meses.includes(curMes)) mesSel.value = curMes;
+
+            const funcs = [...new Set(interjornadaAnalysisRows.map(r => r.funcao).filter(Boolean))].sort();
+            const curFunc = funcSel.value;
+            funcSel.innerHTML = '<option value="ALL">Todas as Funções</option>' + funcs.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('') + '<option value="__SEM_FUNCAO__">Não informado</option>';
+            if ([...funcSel.options].some(o => o.value === curFunc)) funcSel.value = curFunc;
+        }
+
+        function applyInterjornadaFilters() {
+            const mes = document.getElementById('ijFilterMes').value;
+            const funcao = document.getElementById('ijFilterFuncao').value;
+            const situacao = document.getElementById('ijFilterSituacao').value;
+            const search = document.getElementById('ijFilterSearch').value.trim().toUpperCase();
+
+            interjornadaFilteredRows = interjornadaAnalysisRows.filter(r => {
+                if (mes !== 'ALL' && r.ano_mes_sort !== mes) return false;
+                if (funcao !== 'ALL') {
+                    if (funcao === '__SEM_FUNCAO__') { if (r.funcao) return false; }
+                    else if (r.funcao !== funcao) return false;
+                }
+                if (situacao === 'VIOLACAO' && !r.violacao) return false;
+                if (search && !String(r.colaborador_nome || '').toUpperCase().includes(search)) return false;
+                return true;
+            });
+
+            renderInterjornadaKPIs(interjornadaFilteredRows);
+            renderInterjornadaCharts(interjornadaFilteredRows);
+            renderInterjornadaTable(interjornadaFilteredRows);
+            safeCreateIcons();
+        }
+
+        function resetInterjornadaFilters() {
+            document.getElementById('ijFilterMes').value = 'ALL';
+            document.getElementById('ijFilterFuncao').value = 'ALL';
+            document.getElementById('ijFilterSituacao').value = 'ALL';
+            document.getElementById('ijFilterSearch').value = '';
+            applyInterjornadaFilters();
+        }
+
+        function renderInterjornadaKPIs(rows) {
+            const violacoesRows = rows.filter(r => r.violacao);
+            const comDescanso = rows.filter(r => r.descansoMinutos !== null);
+            const totalHE = rows.reduce((s, r) => s + Number(r.heHoras || 0), 0);
+            const colaboradoresRisco = new Set(violacoesRows.map(r => r.colaborador_nome)).size;
+            const colaboradoresAnalisados = new Set(rows.map(r => r.colaborador_nome)).size;
+            const conformidade = comDescanso.length > 0 ? ((comDescanso.length - violacoesRows.length) / comDescanso.length) * 100 : 0;
+
+            let pior = null;
+            comDescanso.forEach(r => { if (!pior || r.descansoMinutos < pior.descansoMinutos) pior = r; });
+
+            document.getElementById('ijKpiViolacoes').textContent = violacoesRows.length.toLocaleString('pt-BR');
+            document.getElementById('ijKpiColaboradoresRisco').textContent = colaboradoresRisco.toLocaleString('pt-BR');
+            document.getElementById('ijKpiPiorIntervalo').textContent = pior ? formatGapLabel(pior.descansoMinutos) : '—';
+            document.getElementById('ijKpiPiorIntervaloDetalhe').textContent = pior ? `${pior.colaborador_nome} • saída ${formatDateBR(pior.data_iso)}` : 'Menor descanso entre jornadas';
+            document.getElementById('ijKpiHorasExtras').textContent = `${totalHE.toFixed(1)}h`;
+            document.getElementById('ijKpiColaboradores').textContent = colaboradoresAnalisados.toLocaleString('pt-BR');
+            document.getElementById('ijKpiConformidade').textContent = `${conformidade.toFixed(1)}%`;
+        }
+
+        function renderInterjornadaCharts(rows) {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#334155';
+            const gridColor = isDark ? 'rgba(0, 212, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+
+            // 1. Evolução das violações por dia (data do registro de saída analisado)
+            const comDescanso = rows.filter(r => r.descansoMinutos !== null);
+            const datas = [...new Set(comDescanso.map(r => r.data_iso))].sort();
+            const violacoesPorDia = datas.map(d => comDescanso.filter(r => r.data_iso === d && r.violacao).length);
+
+            const evoCanvas = document.getElementById('chartInterjornadaEvolucao');
+            if (evoCanvas) {
+                if (chartInterjornadaEvolucao) chartInterjornadaEvolucao.destroy();
+                chartInterjornadaEvolucao = new Chart(evoCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: datas.map(formatDateBR),
+                        datasets: [{ label: 'Violações de Interjornada', data: violacoesPorDia, backgroundColor: 'rgba(239,68,68,0.8)', borderRadius: 4 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: textColor, font: { size: 10 } } } },
+                        scales: {
+                            x: { ticks: { color: textColor, maxRotation: 60, minRotation: 60, font: { size: 8 } }, grid: { display: false } },
+                            y: { ticks: { color: textColor, precision: 0 }, grid: { color: gridColor }, beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            // 2. Conformidade (donut)
+            const totalViol = comDescanso.filter(r => r.violacao).length;
+            const totalConforme = comDescanso.length - totalViol;
+            const confCanvas = document.getElementById('chartInterjornadaConformidade');
+            if (confCanvas) {
+                if (chartInterjornadaConformidade) chartInterjornadaConformidade.destroy();
+                chartInterjornadaConformidade = new Chart(confCanvas.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Dentro das 11h', 'Abaixo de 11h'],
+                        datasets: [{ data: [totalConforme, totalViol], backgroundColor: ['#10b981', '#ef4444'], borderColor: isDark ? '#0b152b' : '#ffffff', borderWidth: 2 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10 } } }
+                    }
+                });
+            }
+
+            // 3. Top 10 colaboradores com mais violações de interjornada
+            const violacoesPorColab = {};
+            rows.forEach(r => { if (r.violacao) violacoesPorColab[r.colaborador_nome] = (violacoesPorColab[r.colaborador_nome] || 0) + 1; });
+            const topViolacoes = Object.entries(violacoesPorColab).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+            const topViolCanvas = document.getElementById('chartInterjornadaTopViolacoes');
+            if (topViolCanvas) {
+                if (chartInterjornadaTopViolacoes) chartInterjornadaTopViolacoes.destroy();
+                chartInterjornadaTopViolacoes = new Chart(topViolCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: topViolacoes.map(c => c[0]), datasets: [{ label: 'Violações', data: topViolacoes.map(c => c[1]), backgroundColor: 'rgba(239,68,68,0.8)', borderRadius: 4 }] },
+                    options: {
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { ticks: { color: textColor, precision: 0 }, grid: { color: gridColor }, beginAtZero: true }, y: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } } }
+                    }
+                });
+            }
+
+            // 4. Top 10 colaboradores com mais horas extras
+            const hePorColab = {};
+            rows.forEach(r => { hePorColab[r.colaborador_nome] = (hePorColab[r.colaborador_nome] || 0) + Number(r.heHoras || 0); });
+            const topHE = Object.entries(hePorColab).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+            const topHECanvas = document.getElementById('chartInterjornadaTopHoraExtra');
+            if (topHECanvas) {
+                if (chartInterjornadaTopHoraExtra) chartInterjornadaTopHoraExtra.destroy();
+                chartInterjornadaTopHoraExtra = new Chart(topHECanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: topHE.map(c => c[0]), datasets: [{ label: 'Horas Extras', data: topHE.map(c => +c[1].toFixed(1)), backgroundColor: 'rgba(59,130,246,0.8)', borderRadius: 4 }] },
+                    options: {
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${Number(ctx.parsed.x).toFixed(1)}h` } } },
+                        scales: { x: { ticks: { color: textColor, callback: v => v + 'h' }, grid: { color: gridColor } }, y: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } } }
+                    }
+                });
+            }
+        }
+
+        function renderInterjornadaTable(rows) {
+            const tbody = document.getElementById('interjornadaTableBody');
+            const countBadge = document.getElementById('interjornadaTableCount');
+            if (!tbody) return;
+
+            if (rows.length === 0) {
+                if (countBadge) countBadge.textContent = '0 colaboradores';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Nenhum dado para os filtros selecionados.</td></tr>';
+                return;
+            }
+
+            const porColaborador = {};
+            rows.forEach(r => {
+                if (!porColaborador[r.colaborador_nome]) {
+                    porColaborador[r.colaborador_nome] = { nome: r.colaborador_nome, funcao: r.funcao, dias: new Set(), violacoes: 0, piorMin: null, horas: 0 };
+                }
+                const c = porColaborador[r.colaborador_nome];
+                c.dias.add(r.data_iso);
+                if (r.violacao) c.violacoes++;
+                if (r.descansoMinutos !== null && (c.piorMin === null || r.descansoMinutos < c.piorMin)) c.piorMin = r.descansoMinutos;
+                c.horas += Number(r.heHoras || 0);
+            });
+
+            const colaboradores = Object.values(porColaborador).sort((a, b) => b.violacoes - a.violacoes || b.horas - a.horas);
+            if (countBadge) countBadge.textContent = `${colaboradores.length.toLocaleString('pt-BR')} colaboradores`;
+
+            let html = '';
+            colaboradores.forEach(c => {
+                const violBadge = c.violacoes > 0
+                    ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-red-950/60 text-red-300 border border-red-500/40 font-bold">${c.violacoes}</span>`
+                    : `<span class="text-emerald-400 font-semibold">0</span>`;
+                const piorClasse = c.piorMin !== null && c.piorMin < INTERJORNADA_LIMITE_MINUTOS ? 'text-red-400 font-bold' : 'text-slate-300';
+                html += `
+                    <tr class="border-b border-slate-800/60 hover:bg-white/5">
+                        <td class="py-2 pr-4 font-semibold text-slate-200">${escapeHtml(c.nome)}</td>
+                        <td class="py-2 pr-4 text-slate-400">${escapeHtml(c.funcao || '—')}</td>
+                        <td class="py-2 pr-4 text-right text-slate-300">${c.dias.size}</td>
+                        <td class="py-2 pr-4 text-right">${violBadge}</td>
+                        <td class="py-2 pr-4 text-right ${piorClasse}">${formatGapLabel(c.piorMin)}</td>
+                        <td class="py-2 pr-4 text-right text-cyan-300 font-bold">${c.horas.toFixed(1)}h</td>
+                        <td class="py-2 pr-4 text-center">
+                            <button onclick="openInterjornadaFicha('${String(c.nome).replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-lube-navy dark:bg-slate-800 text-white hover:bg-lube-red transition shadow-sm" title="Ver ficha de ponto e interjornada do colaborador">
+                                <i data-lucide="user" class="w-3 h-3"></i> Ver Ficha
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+            safeCreateIcons();
+        }
+
+        // --- Ficha do colaborador: sempre mostra o ponto diário COMPLETO, independente dos filtros ativos ---
+        function openInterjornadaFicha(nome) {
+            const registros = interjornadaAnalysisRows.filter(r => r.colaborador_nome === nome).sort((a, b) => a.data_iso.localeCompare(b.data_iso));
+            if (registros.length === 0) return;
+
+            const iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+            const funcaoInfo = registros.find(r => r.funcao);
+            const funcao = funcaoInfo ? funcaoInfo.funcao : 'Função não informada';
+            const equipe = registros[0].equipe || 'LLOG';
+
+            document.getElementById('ijFichaAvatar').textContent = iniciais || '?';
+            document.getElementById('ijFichaNome').textContent = nome;
+            document.getElementById('ijFichaCargo').textContent = `${funcao} • Equipe ${equipe}`;
+
+            const violacoes = registros.filter(r => r.violacao);
+            const comDescanso = registros.filter(r => r.descansoMinutos !== null);
+            let pior = null;
+            comDescanso.forEach(r => { if (!pior || r.descansoMinutos < pior.descansoMinutos) pior = r; });
+            const totalHE = registros.reduce((s, r) => s + Number(r.heHoras || 0), 0);
+
+            document.getElementById('ijFichaDias').textContent = registros.length;
+            document.getElementById('ijFichaViolacoes').textContent = violacoes.length;
+            document.getElementById('ijFichaPiorIntervalo').textContent = pior ? formatGapLabel(pior.descansoMinutos) : '—';
+            document.getElementById('ijFichaHorasExtras').textContent = `${totalHE.toFixed(1)}h`;
+
+            const tbody = document.getElementById('ijFichaTableBody');
+            tbody.innerHTML = registros.map(r => {
+                let situacaoBadge;
+                if (r.descansoMinutos === null) situacaoBadge = '<span class="text-slate-500">—</span>';
+                else if (r.violacao) situacaoBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-red-950/60 text-red-300 border border-red-500/40 font-bold text-[10px]">VIOLAÇÃO</span>';
+                else situacaoBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 font-bold text-[10px]">OK</span>';
+
+                return `
+                    <tr class="${r.violacao ? 'bg-red-950/20' : ''}">
+                        <td class="p-2.5 font-semibold text-slate-200">${formatDateBR(r.data_iso)}</td>
+                        <td class="p-2.5 text-slate-300">${escapeHtml(r.entrada1 || '—')}</td>
+                        <td class="p-2.5 text-slate-300">${escapeHtml(r.saida1 || '—')}</td>
+                        <td class="p-2.5 text-slate-300">${escapeHtml(r.entrada2 || '—')}</td>
+                        <td class="p-2.5 text-slate-300">${escapeHtml(r.saida2 || '—')}</td>
+                        <td class="p-2.5 text-right text-cyan-300">${r.heHoras > 0 ? r.heHoras.toFixed(1) + 'h' : '—'}</td>
+                        <td class="p-2.5 text-right ${r.violacao ? 'text-red-400 font-bold' : 'text-slate-300'}">${formatGapLabel(r.descansoMinutos)}</td>
+                        <td class="p-2.5 text-center">${situacaoBadge}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('interjornadaFichaModal').classList.remove('hidden');
+            safeCreateIcons();
+        }
+
+        function closeInterjornadaFichaModal() {
+            const modal = document.getElementById('interjornadaFichaModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function triggerInterjornadaImport() {
+            const input = document.getElementById('fileImportInterjornada');
+            if (input) { input.value = ''; input.click(); }
+        }
+
+        // Faz o parse do relatório de ponto (formato PontoMais): um bloco por colaborador,
+        // com uma linha "Colaborador" + cabeçalho de colunas + uma linha por dia do período,
+        // encerrando com uma linha "TOTAIS" antes do próximo colaborador.
+        function handleInterjornadaExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const equipeMatch = file.name.match(/equipe\s+([A-Za-z0-9\-]+)/i);
+            const equipe = equipeMatch ? equipeMatch[1].toUpperCase() : 'LLOG';
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: false });
+                    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                        showToast('Erro na Importação', 'Nenhuma aba encontrada no arquivo.', true);
+                        return;
+                    }
+                    const ws = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+                    if (rows.length < 3) {
+                        showToast('Erro na Importação', 'Planilha vazia ou fora do formato esperado.', true);
+                        return;
+                    }
+
+                    const diasSemanaPt = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+                    const parsedRows = [];
+                    let i = 0;
+                    while (i < rows.length) {
+                        const col0 = String(rows[i][0] || '').trim();
+                        if (col0 === 'Colaborador') {
+                            const nome = normalizeNomeColaborador(rows[i][1]);
+                            i++;
+                            if (rows[i] && String(rows[i][0] || '').trim() === 'Data') i++;
+
+                            while (i < rows.length) {
+                                const dayRow = rows[i];
+                                const dayCol0 = String(dayRow[0] || '').trim();
+                                if (dayCol0 === '' || dayCol0 === 'Colaborador') break;
+                                if (dayCol0.toUpperCase() === 'TOTAIS') { i++; break; }
+
+                                const dataDate = parseExcelDate(dayCol0);
+                                if (dataDate && nome) {
+                                    const iso = `${dataDate.getFullYear()}-${String(dataDate.getMonth() + 1).padStart(2, '0')}-${String(dataDate.getDate()).padStart(2, '0')}`;
+                                    parsedRows.push({
+                                        colaborador_nome: nome,
+                                        equipe,
+                                        data_iso: iso,
+                                        data_formatada: `${String(dataDate.getDate()).padStart(2, '0')}/${String(dataDate.getMonth() + 1).padStart(2, '0')}/${dataDate.getFullYear()}`,
+                                        dia_semana: diasSemanaPt[dataDate.getDay()],
+                                        ano_mes_sort: `${dataDate.getFullYear()}-${String(dataDate.getMonth() + 1).padStart(2, '0')}`,
+                                        entrada1: String(dayRow[1] || '').trim(),
+                                        saida1: String(dayRow[2] || '').trim(),
+                                        entrada2: String(dayRow[3] || '').trim(),
+                                        saida2: String(dayRow[4] || '').trim(),
+                                        credito: String(dayRow[5] || '').trim(),
+                                        debito: String(dayRow[6] || '').trim(),
+                                        horas_intervalo: String(dayRow[7] || '').trim(),
+                                        horas_normais: String(dayRow[8] || '').trim(),
+                                        he_50_horas: parseInterjornadaDurationHoras(dayRow[9]),
+                                        he_100_horas: parseInterjornadaDurationHoras(dayRow[10]),
+                                        adicional_noturno: String(dayRow[11] || '').trim(),
+                                        saldo: String(dayRow[12] || '').trim(),
+                                        motivo_observacao: String(dayRow[13] || '').trim(),
+                                        origem: 'IMPORTACAO'
+                                    });
+                                }
+                                i++;
+                            }
+                            continue;
+                        }
+                        i++;
+                    }
+
+                    if (parsedRows.length === 0) {
+                        showToast('Erro na Importação', 'Nenhum registro de ponto válido encontrado na planilha. Verifique se o arquivo é o relatório de jornada exportado do PontoMais.', true);
+                        return;
+                    }
+
+                    if (!window.SupabaseService || !isSupabaseOnline) throw new Error('Conecte-se ao Supabase para importar a planilha.');
+                    const result = await window.SupabaseService.upsertInterjornadaRegistros(parsedRows);
+                    const colaboradoresImportados = new Set(parsedRows.map(r => r.colaborador_nome)).size;
+
+                    interjornadaDataLoaded = false;
+                    await loadInterjornadaSection();
+                    showToast('Importação Concluída!', `${result.count} registros de ponto de ${colaboradoresImportados} colaboradores foram importados/atualizados com sucesso.`);
+                } catch (err) {
+                    console.error('Erro ao importar planilha de interjornada:', err);
+                    showToast('Erro na Importação', err.message || String(err), true);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function exportInterjornadaExcel() {
+            if (interjornadaFilteredRows.length === 0) {
+                showToast('Aviso de Exportação', 'Nenhum dado de interjornada para exportar.', true);
+                return;
+            }
+            try {
+                const porColaborador = {};
+                interjornadaFilteredRows.forEach(r => {
+                    if (!porColaborador[r.colaborador_nome]) porColaborador[r.colaborador_nome] = { nome: r.colaborador_nome, funcao: r.funcao, dias: new Set(), violacoes: 0, piorMin: null, horas: 0 };
+                    const c = porColaborador[r.colaborador_nome];
+                    c.dias.add(r.data_iso);
+                    if (r.violacao) c.violacoes++;
+                    if (r.descansoMinutos !== null && (c.piorMin === null || r.descansoMinutos < c.piorMin)) c.piorMin = r.descansoMinutos;
+                    c.horas += Number(r.heHoras || 0);
+                });
+                const linhas = Object.values(porColaborador).sort((a, b) => b.violacoes - a.violacoes || b.horas - a.horas);
+
+                const workbook = new ExcelJS.Workbook();
+                workbook.creator = 'Lube Distribuidora - RH Corporativo';
+                workbook.created = new Date();
+                const worksheet = workbook.addWorksheet('InterJornadas', { views: [{ showGridLines: true }] });
+
+                worksheet.mergeCells('A1:F1');
+                const titleCell = worksheet.getCell('A1');
+                titleCell.value = 'LUBE DISTRIBUIDORA LTDA • INTERJORNADAS (DESCANSO MÍNIMO 11H)';
+                titleCell.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+                titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B1B3D' } };
+                titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                worksheet.getRow(1).height = 28;
+
+                const headerRow = worksheet.addRow(['Colaborador', 'Função', 'Dias Analisados', 'Violações Interjornada', 'Pior Intervalo', 'Horas Extras']);
+                headerRow.eachCell(cell => {
+                    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F1D1D' } };
+                    cell.alignment = { horizontal: 'center' };
+                });
+
+                linhas.forEach(c => {
+                    worksheet.addRow([c.nome, c.funcao || '-', c.dias.size, c.violacoes, formatGapLabel(c.piorMin), +c.horas.toFixed(1)]);
+                });
+
+                worksheet.columns.forEach((col, idx) => { col.width = [34, 22, 14, 18, 14, 14][idx] || 16; });
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                saveAs(blob, `Interjornadas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                showToast('Exportação Concluída!', 'A planilha de interjornadas foi baixada com sucesso.');
+            } catch (err) {
+                console.error('Erro ao exportar Excel de interjornada:', err);
                 showToast('Erro na Exportação', err.message || String(err), true);
             }
         }

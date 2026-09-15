@@ -109,6 +109,39 @@ BEGIN
     END IF;
 END $$;
 
+-- 1.8 Registros de Ponto para Controle de Interjornada (Motoristas/Ajudantes)
+-- Importado do relatório de ponto (PontoMais) por equipe. Cada linha é um dia
+-- de um colaborador; o intervalo mínimo de 11h entre o último registro de
+-- saída de um dia e o primeiro registro de entrada do dia seguinte (interjornada,
+-- CLT Art. 66) é calculado no dashboard a partir destes dados.
+CREATE TABLE IF NOT EXISTS public.interjornada_registros (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    colaborador_nome TEXT NOT NULL,
+    equipe TEXT DEFAULT 'LLOG',
+    funcao TEXT,
+    data_iso DATE NOT NULL,
+    data_formatada TEXT,
+    dia_semana TEXT,
+    ano_mes_sort TEXT,
+    entrada1 TEXT,
+    saida1 TEXT,
+    entrada2 TEXT,
+    saida2 TEXT,
+    credito TEXT,
+    debito TEXT,
+    horas_intervalo TEXT,
+    horas_normais TEXT,
+    he_50_horas NUMERIC(6, 2) DEFAULT 0,
+    he_100_horas NUMERIC(6, 2) DEFAULT 0,
+    adicional_noturno TEXT,
+    saldo TEXT,
+    motivo_observacao TEXT,
+    origem TEXT DEFAULT 'IMPORTACAO',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT uq_interjornada_colaborador_dia UNIQUE (colaborador_nome, data_iso)
+);
+
 -- ==========================================================
 -- 2. ÍNDICES DE ALTA PERFORMANCE (B-TREE & COMPÓSITOS)
 -- ==========================================================
@@ -122,6 +155,10 @@ CREATE INDEX IF NOT EXISTS idx_absenteismo_ano_mes ON public.ocorrencias_absente
 CREATE INDEX IF NOT EXISTS idx_absenteismo_dia_semana ON public.ocorrencias_absenteismo(dia_semana);
 CREATE INDEX IF NOT EXISTS idx_absenteismo_comp_filtro ON public.ocorrencias_absenteismo(setor, tipo_absenteismo, data_iso);
 CREATE INDEX IF NOT EXISTS idx_absenteismo_import_id ON public.ocorrencias_absenteismo(import_id);
+
+CREATE INDEX IF NOT EXISTS idx_interjornada_colaborador ON public.interjornada_registros(colaborador_nome);
+CREATE INDEX IF NOT EXISTS idx_interjornada_data ON public.interjornada_registros(data_iso);
+CREATE INDEX IF NOT EXISTS idx_interjornada_ano_mes ON public.interjornada_registros(ano_mes_sort);
 
 -- ==========================================================
 -- 3. FUNÇÕES E TRIGGERS AUTOMÁTICOS
@@ -144,6 +181,11 @@ FOR EACH ROW EXECUTE FUNCTION public.fn_set_updated_at();
 DROP TRIGGER IF EXISTS trg_colaboradores_updated_at ON public.colaboradores;
 CREATE TRIGGER trg_colaboradores_updated_at
 BEFORE UPDATE ON public.colaboradores
+FOR EACH ROW EXECUTE FUNCTION public.fn_set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_interjornada_updated_at ON public.interjornada_registros;
+CREATE TRIGGER trg_interjornada_updated_at
+BEFORE UPDATE ON public.interjornada_registros
 FOR EACH ROW EXECUTE FUNCTION public.fn_set_updated_at();
 
 -- 3.2 Trigger para preenchimento inteligente de datas e calendários
@@ -288,6 +330,7 @@ ALTER TABLE public.setores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cargos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.motivos_ausencia ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.historico_importacoes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.interjornada_registros ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de Acesso Total para anon e authenticated (Dashboard RH)
 DROP POLICY IF EXISTS "Anon e Auth podem ler ocorrencias" ON public.ocorrencias_absenteismo;
@@ -317,6 +360,9 @@ CREATE POLICY "Anon e Auth motivos all" ON public.motivos_ausencia FOR ALL USING
 DROP POLICY IF EXISTS "Anon e Auth importacoes all" ON public.historico_importacoes;
 CREATE POLICY "Anon e Auth importacoes all" ON public.historico_importacoes FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Anon e Auth interjornada all" ON public.interjornada_registros;
+CREATE POLICY "Anon e Auth interjornada all" ON public.interjornada_registros FOR ALL USING (true) WITH CHECK (true);
+
 -- Conceder permissões explícitas de GRANT
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
@@ -341,9 +387,15 @@ BEGIN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.colaboradores;
     END IF;
     IF NOT EXISTS (
-        SELECT 1 FROM pg_publication_tables 
+        SELECT 1 FROM pg_publication_tables
         WHERE pubname = 'supabase_realtime' AND tablename = 'historico_importacoes'
     ) THEN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.historico_importacoes;
+    END IF;
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables
+        WHERE pubname = 'supabase_realtime' AND tablename = 'interjornada_registros'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.interjornada_registros;
     END IF;
 END $$;
