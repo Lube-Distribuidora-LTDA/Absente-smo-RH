@@ -6553,6 +6553,16 @@
             return `${d}/${m}/${y}`;
         }
 
+        // Quando há 1+ dia sem nenhum ponto (Folga/DSR/Férias...) entre a saída e a
+        // próxima entrada, o descanso calculado inclui esses dias inteiros — por isso
+        // pode aparecer bem maior que uma folga diária comum. Este rótulo deixa isso claro.
+        function formatFolgaEntreLabel(row) {
+            if (!row || !row.diasFolgaEntre) return '';
+            const motivos = row.motivosFolgaEntre && row.motivosFolgaEntre.length ? row.motivosFolgaEntre.join('/') : 'sem ponto';
+            const diaLabel = row.diasFolgaEntre === 1 ? 'dia' : 'dias';
+            return `inclui ${row.diasFolgaEntre} ${diaLabel} de ${motivos}`;
+        }
+
         // Para cada colaborador, ordena os dias e calcula o descanso (em minutos) entre
         // o último registro de saída de um dia e o primeiro registro de entrada do
         // próximo dia trabalhado — a "interjornada" (mínimo legal de 11h, CLT Art. 66).
@@ -6574,21 +6584,29 @@
                     funcao,
                     heHoras: +(Number(d.he_50_horas || 0) + Number(d.he_100_horas || 0)).toFixed(2),
                     descansoMinutos: null,
-                    violacao: false
+                    violacao: false,
+                    diasFolgaEntre: 0,
+                    motivosFolgaEntre: []
                 }));
 
-                diasEnriquecidos.forEach(row => {
+                // Dias sem nenhum registro de ponto (Folga/DSR/Férias/etc.) entre a saída e a
+                // próxima entrada inflam o "descanso" calculado — guardamos quantos e quais
+                // para não confundir um período com folga no meio com um erro de cálculo.
+                diasEnriquecidos.forEach((row, idx) => {
                     const entradaMin = parseInterjornadaTimeToMinutes(row.entrada1) ?? parseInterjornadaTimeToMinutes(row.entrada2);
                     const saidaMin = parseInterjornadaTimeToMinutes(row.saida2) ?? parseInterjornadaTimeToMinutes(row.saida1);
 
                     if (entradaMin !== null && lastExit) {
                         const gapMin = (isoToEpochDays(row.data_iso) * 1440 + entradaMin) - (isoToEpochDays(lastExit.data_iso) * 1440 + lastExit.minutos);
+                        const diasEntre = diasEnriquecidos.slice(lastExit.idx + 1, idx);
                         lastExit.row.descansoMinutos = gapMin;
                         lastExit.row.violacao = gapMin < INTERJORNADA_LIMITE_MINUTOS;
+                        lastExit.row.diasFolgaEntre = diasEntre.length;
+                        lastExit.row.motivosFolgaEntre = [...new Set(diasEntre.map(d => d.motivo_observacao).filter(Boolean))];
                     }
 
                     if (saidaMin !== null) {
-                        lastExit = { data_iso: row.data_iso, minutos: saidaMin, row };
+                        lastExit = { idx, data_iso: row.data_iso, minutos: saidaMin, row };
                     }
                 });
 
@@ -6874,7 +6892,10 @@
                         <td class="p-2.5 text-slate-300">${escapeHtml(r.entrada2 || '—')}</td>
                         <td class="p-2.5 text-slate-300">${escapeHtml(r.saida2 || '—')}</td>
                         <td class="p-2.5 text-right text-cyan-300">${r.heHoras > 0 ? r.heHoras.toFixed(1) + 'h' : '—'}</td>
-                        <td class="p-2.5 text-right ${r.violacao ? 'text-red-400 font-bold' : 'text-slate-300'}">${formatGapLabel(r.descansoMinutos)}</td>
+                        <td class="p-2.5 text-right ${r.violacao ? 'text-red-400 font-bold' : 'text-slate-300'}">
+                            ${formatGapLabel(r.descansoMinutos)}
+                            ${r.diasFolgaEntre ? `<span class="block text-[10px] font-normal text-slate-500 normal-case">${escapeHtml(formatFolgaEntreLabel(r))}</span>` : ''}
+                        </td>
                         <td class="p-2.5 text-center">${situacaoBadge}</td>
                     </tr>
                 `;
