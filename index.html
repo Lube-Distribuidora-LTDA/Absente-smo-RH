@@ -6008,11 +6008,7 @@
 
             const meses = [...new Set(horaExtraRawData.map(r => r.ano_mes_sort))].sort();
             const curMes = mesSel.value;
-            mesSel.innerHTML = '<option value="ALL">Todos os Meses</option>' + meses.map(m => {
-                const sample = horaExtraRawData.find(r => r.ano_mes_sort === m);
-                const label = sample ? `${sample.mes_nome}/${sample.ano}` : m;
-                return `<option value="${m}">${escapeHtml(label)}</option>`;
-            }).join('');
+            mesSel.innerHTML = '<option value="ALL">Todos os Meses</option>' + meses.map(m => `<option value="${m}">${escapeHtml(formatCompetenciaLabel(m, interjornadaDiaCorte))}</option>`).join('');
             if (meses.includes(curMes)) mesSel.value = curMes;
 
             const deps = [...new Set(horaExtraRawData.map(r => r.departamento).filter(Boolean))].sort();
@@ -6089,10 +6085,7 @@
             const gridColor = isDark ? 'rgba(0, 212, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
 
             const meses = [...new Set(rows.map(r => r.ano_mes_sort))].sort();
-            const monthLabels = meses.map(m => {
-                const sample = rows.find(r => r.ano_mes_sort === m);
-                return sample ? sample.mes_nome.slice(0, 3) : m;
-            });
+            const monthLabels = meses.map(m => formatCompetenciaLabel(m, interjornadaDiaCorte).split(' (')[0]);
 
             // 1. Evolução mensal (valor pago 50% vs 100%)
             const valor50PorMes = meses.map(m => rows.filter(r => r.ano_mes_sort === m && r.percentual === 50).reduce((s, r) => s + Number(r.valor_pago || 0), 0));
@@ -6114,7 +6107,12 @@
                         responsive: true, maintainAspectRatio: false,
                         plugins: {
                             legend: { labels: { color: textColor, font: { size: 10 } } },
-                            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatCurrencyBRL(ctx.parsed.y)}` } }
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => items[0] ? formatCompetenciaLabel(meses[items[0].dataIndex], interjornadaDiaCorte) : '',
+                                    label: (ctx) => `${ctx.dataset.label}: ${formatCurrencyBRL(ctx.parsed.y)}`
+                                }
+                            }
                         },
                         scales: {
                             x: { ticks: { color: textColor }, grid: { display: false } },
@@ -6299,7 +6297,7 @@
                 const totalMes = d.valor50 + d.valor100;
                 return `
                     <tr>
-                        <td class="p-2.5 font-semibold text-slate-200">${escapeHtml(d.mes_nome)}/${d.ano}</td>
+                        <td class="p-2.5 font-semibold text-slate-200">${escapeHtml(formatCompetenciaLabel(m, interjornadaDiaCorte))}</td>
                         <td class="p-2.5 text-right text-emerald-400">${d.horas50 > 0 ? d.horas50.toFixed(1) + 'h' : '—'}</td>
                         <td class="p-2.5 text-right text-emerald-400">${d.valor50 > 0 ? formatCurrencyBRL(d.valor50) : '—'}</td>
                         <td class="p-2.5 text-right text-amber-300">${d.horas100 > 0 ? d.horas100.toFixed(1) + 'h' : '—'}</td>
@@ -6327,14 +6325,14 @@
             const now = new Date();
             const anoAtual = now.getFullYear();
             const mesAtual = now.getMonth() + 1;
-            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
             anoSel.innerHTML = `<option value="${anoAtual}" selected>${anoAtual}</option>`;
 
             const preserved = mesSel.value;
             let opts = '<option value="">Selecione o mês...</option>';
             for (let m = mesAtual; m <= 12; m++) {
-                opts += `<option value="${m}">${monthNames[m - 1]}</option>`;
+                const competencia = `${anoAtual}-${String(m).padStart(2, '0')}`;
+                opts += `<option value="${m}">${escapeHtml(formatCompetenciaLabel(competencia, interjornadaDiaCorte))}</option>`;
             }
             mesSel.innerHTML = opts;
             if ([...mesSel.options].some(o => o.value === preserved)) mesSel.value = preserved;
@@ -6459,7 +6457,7 @@
                     await loadHoraExtraSection();
                     document.getElementById('heImportMes').value = '';
                     document.getElementById('btnHoraExtraImport').disabled = true;
-                    showToast('Importação Concluída!', `${result.count} lançamentos de ${monthNamesPt[mes - 1]}/${ano} foram importados com sucesso.`);
+                    showToast('Importação Concluída!', `${result.count} lançamentos de ${formatCompetenciaLabel(anoMesSort, interjornadaDiaCorte)} foram importados com sucesso.`);
                 } catch (err) {
                     console.error('Erro ao importar planilha de hora extra:', err);
                     showToast('Erro na Importação', err.message || String(err), true);
@@ -6496,12 +6494,12 @@
 
                 [...horaExtraFilteredData].sort((a, b) => b.ano_mes_sort.localeCompare(a.ano_mes_sort) || Number(b.valor_pago) - Number(a.valor_pago)).forEach(r => {
                     worksheet.addRow([
-                        `${r.mes_nome}/${r.ano}`, r.funcionario_nome, r.departamento, r.funcao,
+                        formatCompetenciaLabel(r.ano_mes_sort, interjornadaDiaCorte), r.funcionario_nome, r.departamento, r.funcao,
                         `${r.percentual}%`, Number(r.qtde_horas_decimal || 0), Number(r.valor_pago || 0)
                     ]);
                 });
 
-                worksheet.columns.forEach((col, idx) => { col.width = [14, 34, 18, 26, 12, 10, 16][idx] || 16; });
+                worksheet.columns.forEach((col, idx) => { col.width = [26, 34, 18, 26, 12, 10, 16][idx] || 16; });
 
                 const buffer = await workbook.xlsx.writeBuffer();
                 const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -6527,7 +6525,9 @@
         let interjornadaFilteredRows = [];
         let interjornadaFuncaoMap = {};
         let interjornadaFuncaoMapLoaded = false;
-        let interjornadaDiaCorte = INTERJORNADA_DIA_CORTE_PADRAO;
+        // Lido já na inicialização (não só ao abrir a aba Interjornada) para que a aba de
+        // Pagamento Hora Extra também use o mesmo dia de corte ao rotular os períodos.
+        let interjornadaDiaCorte = loadInterjornadaDiaCorte();
         let chartInterjornadaEvolucao = null, chartInterjornadaEvolucaoMensal = null, chartInterjornadaConformidade = null, chartInterjornadaTopViolacoes = null, chartInterjornadaTopHoraExtra = null;
 
         // Dia de corte do ponto é parametrizável (padrão 21): o período de apuração vai do
@@ -6555,6 +6555,11 @@
                 interjornadaAnalysisRows = computeInterjornadaAnalysis(interjornadaRawRows);
                 populateInterjornadaFilterOptions();
                 applyInterjornadaFilters();
+            }
+            // Pagamento Hora Extra rotula os períodos com o mesmo dia de corte — atualiza também.
+            if (horaExtraDataLoaded) {
+                populateHoraExtraFilterOptions();
+                applyHoraExtraFilters();
             }
         }
 
