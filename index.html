@@ -60,7 +60,9 @@
     
     <!-- Chart.js 4.4.x -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+    <!-- Chart.js Data Labels Plugin (desativado por padrão; ligado explicitamente por gráfico) -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
     <!-- Lucide Icons (UMD/IIFE bundle, pinned version) -->
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
     
@@ -2596,6 +2598,14 @@
         let chartTopGeral = null;
         let chartTempoCasa = null;
 
+        // Plugin de rótulos de dados (chartjs-plugin-datalabels): registrado globalmente mas
+        // desativado por padrão, para não alterar os gráficos já existentes — cada gráfico
+        // que precisar dos rótulos ativa explicitamente na sua própria config (ex.: Turnover).
+        if (window.Chart && window.ChartDataLabels) {
+            Chart.register(ChartDataLabels);
+            Chart.defaults.set('plugins.datalabels', { display: false });
+        }
+
         // Supabase Status State
         let isSupabaseOnline = false;
         let supabaseLatency = 0;
@@ -4979,7 +4989,18 @@
                         responsive: true, maintainAspectRatio: false,
                         plugins: {
                             legend: { labels: { color: textColor, font: { size: 10 } } },
-                            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y ?? '—'}%` } }
+                            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y ?? '—'}%` } },
+                            datalabels: {
+                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] !== null,
+                                color: (ctx) => ctx.dataset.borderColor,
+                                backgroundColor: isDark ? 'rgba(7,13,30,0.75)' : 'rgba(255,255,255,0.85)',
+                                borderRadius: 4,
+                                padding: 2,
+                                font: { size: 8, weight: 'bold' },
+                                align: 'top',
+                                offset: 4,
+                                formatter: (value) => value !== null ? `${value}%` : ''
+                            }
                         },
                         scales: {
                             x: { ticks: { color: textColor }, grid: { color: gridColor } },
@@ -5008,7 +5029,17 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { labels: { color: textColor, font: { size: 10 } } } },
+                        plugins: {
+                            legend: { labels: { color: textColor, font: { size: 10 } } },
+                            datalabels: {
+                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+                                color: textColor,
+                                font: { size: 9, weight: 'bold' },
+                                anchor: 'end',
+                                align: 'top',
+                                formatter: (value) => value
+                            }
+                        },
                         scales: {
                             x: { ticks: { color: textColor }, grid: { display: false } },
                             y: { ticks: { color: textColor }, grid: { color: gridColor }, beginAtZero: true }
@@ -5036,7 +5067,18 @@
                     options: {
                         indexAxis: 'y',
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.x}%` } } },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.x}%` } },
+                            datalabels: {
+                                display: true,
+                                color: textColor,
+                                font: { size: 10, weight: 'bold' },
+                                anchor: 'end',
+                                align: 'end',
+                                formatter: (value) => `${value}%`
+                            }
+                        },
                         scales: {
                             x: { ticks: { color: textColor, callback: v => v + '%' }, grid: { color: gridColor } },
                             y: { ticks: { color: textColor }, grid: { display: false } }
@@ -5063,7 +5105,15 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10 } } }
+                        plugins: {
+                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10 } },
+                            datalabels: {
+                                display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+                                color: '#fff',
+                                font: { size: 10, weight: 'bold' },
+                                formatter: (value) => value
+                            }
+                        }
                     }
                 });
             }
@@ -6984,17 +7034,23 @@
 
         // --- Ficha do colaborador: sempre mostra o ponto diário COMPLETO, independente dos filtros ativos ---
         function openInterjornadaFicha(nome) {
-            const registros = interjornadaAnalysisRows.filter(r => r.colaborador_nome === nome).sort((a, b) => a.data_iso.localeCompare(b.data_iso));
+            // Respeita o período selecionado no filtro (ex.: "Ago/26") — a ficha mostra só os
+            // dias daquele período de apuração, não o histórico completo do colaborador.
+            const periodoFiltro = document.getElementById('ijFilterMes').value;
+            let registros = interjornadaAnalysisRows.filter(r => r.colaborador_nome === nome);
+            if (periodoFiltro !== 'ALL') registros = registros.filter(r => r.competencia === periodoFiltro);
+            registros = registros.sort((a, b) => a.data_iso.localeCompare(b.data_iso));
             if (registros.length === 0) return;
 
             const iniciais = nome.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
             const funcaoInfo = registros.find(r => r.funcao);
             const funcao = funcaoInfo ? funcaoInfo.funcao : 'Função não informada';
             const equipe = registros[0].equipe || 'LLOG';
+            const periodoLabel = periodoFiltro !== 'ALL' ? formatCompetenciaLabel(periodoFiltro, interjornadaDiaCorte) : 'Todo o histórico importado';
 
             document.getElementById('ijFichaAvatar').textContent = iniciais || '?';
             document.getElementById('ijFichaNome').textContent = nome;
-            document.getElementById('ijFichaCargo').textContent = `${funcao} • Equipe ${equipe}`;
+            document.getElementById('ijFichaCargo').textContent = `${funcao} • Equipe ${equipe} • ${periodoLabel}`;
 
             const violacoes = registros.filter(r => r.violacao);
             const comDescanso = registros.filter(r => r.descansoMinutos !== null);
