@@ -2571,6 +2571,16 @@
         </button>
     </div>
 
+    <!-- IMPORT PROCESSING OVERLAY: cobre a tela durante a importação para entregar os dados
+         prontos de uma vez só, sem o usuário ver o dashboard "montando" aos poucos -->
+    <div id="importLoadingOverlay" class="hidden fixed inset-0 z-[60] bg-[#070d1e]/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#0b152b] rounded-3xl border border-cyan-500/30 shadow-[0_0_40px_rgba(0,212,255,0.2)] px-8 py-7 flex flex-col items-center gap-4 max-w-xs w-full text-center">
+            <i data-lucide="loader-2" class="w-9 h-9 text-cyan-400 animate-spin"></i>
+            <p id="importLoadingOverlayText" class="text-sm font-bold text-white font-orbitron">Processando planilha...</p>
+            <p class="text-[11px] text-slate-400">Isso só leva alguns instantes. O painel será atualizado assim que tudo estiver pronto.</p>
+        </div>
+    </div>
+
     <!-- SUPABASE JS SDK & CLIENT (UMD, pinned version) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -2615,6 +2625,14 @@
         let currentImportId = null;
         let isViewingHistoricalImport = false;
 
+        // Enquanto uma importação em lote está rodando, o Supabase Realtime ecoa de volta
+        // CADA linha inserida (um evento INSERT por registro). Sem essa janela de supressão,
+        // o dashboard reagia a cada eco individualmente — recalculando filtros/gráficos e
+        // duplicando registros na tela um por um até "alcançar" o total final. Como o próprio
+        // fluxo de importação já atualiza o estado local de uma vez só com o resultado
+        // completo, os ecos do Realtime da NOSSA importação podem ser ignorados com segurança.
+        let bulkImportSuppressRealtimeUntil = 0;
+
         // AI Executive Diagnostic State (cached per-import, generated on new import only)
         let aiDiagnosticoCache = null;
 
@@ -2653,6 +2671,7 @@
             if (!rawData || rawData.length === 0) {
                 rawData = window.ABSENTEEISM_DATA || [];
             }
+            recomputeCompetenciaAbsenteismoLista(rawData);
             safeCreateIcons();
             initTheme();
             updateHeaderBaseBadge();
@@ -2697,6 +2716,7 @@
                     const dbData = await window.SupabaseService.fetchOcorrencias(currentImportId);
                     if (dbData && dbData.length > 0) {
                         rawData = dbData;
+                        recomputeCompetenciaAbsenteismoLista(rawData);
                         try {
                             localStorage.setItem('lube_custom_absenteismo_data', JSON.stringify(rawData));
                         } catch (err) {}
@@ -2713,12 +2733,14 @@
                     window.SupabaseService.subscribeRealtime(
                         // onInsert
                         (newRec) => {
+                            if (Date.now() < bulkImportSuppressRealtimeUntil) return;
                             // Ignora inserts de outras importações ou enquanto visualiza um histórico arquivado
                             if (isViewingHistoricalImport || newRec.import_id !== currentImportId) return;
 
                             // Check if already in array
                             const exists = rawData.some(r => r.id === newRec.id);
                             if (!exists) {
+                                recomputeCompetenciaAbsenteismo(newRec);
                                 rawData.unshift(newRec);
                                 populateFilterOptions();
                                 populateRecordFormDatalists();
@@ -2729,8 +2751,10 @@
                         },
                         // onUpdate
                         (updatedRec) => {
+                            if (Date.now() < bulkImportSuppressRealtimeUntil) return;
                             const idx = rawData.findIndex(r => r.id === updatedRec.id);
                             if (idx !== -1) {
+                                recomputeCompetenciaAbsenteismo(updatedRec);
                                 rawData[idx] = updatedRec;
                                 populateFilterOptions();
                                 applyFilters();
@@ -2739,6 +2763,7 @@
                         },
                         // onDelete
                         (deletedRec) => {
+                            if (Date.now() < bulkImportSuppressRealtimeUntil) return;
                             rawData = rawData.filter(r => r.id !== deletedRec.id);
                             populateFilterOptions();
                             applyFilters();
@@ -2932,6 +2957,7 @@
             try {
                 const dbData = await window.SupabaseService.fetchOcorrencias(importId);
                 rawData = dbData || [];
+                recomputeCompetenciaAbsenteismoLista(rawData);
                 currentImportId = importId;
                 isViewingHistoricalImport = true;
 
@@ -3083,6 +3109,7 @@
 
                 // Add to local state if not added by realtime yet
                 if (!rawData.some(r => r.id === record.id)) {
+                    recomputeCompetenciaAbsenteismo(record);
                     rawData.unshift(record);
                 }
 
@@ -4483,6 +4510,21 @@
             }
         }
 
+        // Cobre a tela durante uma importação para que o usuário veja o resultado pronto de
+        // uma vez só, em vez do dashboard recalculando e "contando" os dados aos poucos.
+        function showImportLoadingOverlay(message) {
+            const overlay = document.getElementById('importLoadingOverlay');
+            const text = document.getElementById('importLoadingOverlayText');
+            if (text) text.textContent = message || 'Processando planilha...';
+            if (overlay) overlay.classList.remove('hidden');
+            safeCreateIcons();
+        }
+
+        function hideImportLoadingOverlay() {
+            const overlay = document.getElementById('importLoadingOverlay');
+            if (overlay) overlay.classList.add('hidden');
+        }
+
         function parseExcelDate(val) {
             if (!val && val !== 0) return null;
             if (val instanceof Date) {
@@ -4616,6 +4658,12 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            showImportLoadingOverlay('Lendo e processando a planilha...');
+            // Suprime os ecos do Realtime desta importação por uma janela generosa: eles chegam
+            // um a um pouco depois de cada inserção e não trazem nenhuma informação nova, já que
+            // o estado local já foi atualizado de uma vez com o resultado completo do lote.
+            bulkImportSuppressRealtimeUntil = Date.now() + 30000;
+
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
@@ -4748,6 +4796,7 @@
 
                     // Update state & save to localStorage for persistence
                     rawData = parsedItems;
+                    recomputeCompetenciaAbsenteismoLista(rawData);
                     try {
                         localStorage.setItem('lube_custom_absenteismo_data', JSON.stringify(rawData));
                     } catch (err) {
@@ -4791,10 +4840,13 @@
                 } catch (err) {
                     console.error('Erro ao processar planilha:', err);
                     showToast('Falha na Leitura', 'Erro ao ler o arquivo Excel: ' + (err.message || err), true);
+                } finally {
+                    hideImportLoadingOverlay();
                 }
             };
             reader.onerror = function() {
                 showToast('Erro de Arquivo', 'Não foi possível ler o arquivo do disco.', true);
+                hideImportLoadingOverlay();
             };
             reader.readAsArrayBuffer(file);
         }
@@ -4802,6 +4854,7 @@
         function restoreDefaultData() {
             localStorage.removeItem('lube_custom_absenteismo_data');
             rawData = window.ABSENTEEISM_DATA || [];
+            recomputeCompetenciaAbsenteismoLista(rawData);
             populateFilterOptions();
             resetAllFilters();
             updateHeaderBaseBadge();
@@ -5001,7 +5054,8 @@
             });
             const setores = [...new Set(allYearRows.map(r => r.setor))].sort();
 
-            // 1. Evolução mensal do turnover (linha, por setor ou apenas o setor filtrado)
+            // 1. Evolução mensal do turnover (barras agrupadas por setor, mesmo padrão visual
+            // do gráfico de Evolução Temporal do Absenteísmo, com o valor sempre visível em cima de cada barra)
             const seriesSetores = setorFiltro === 'ALL' ? setores : [setorFiltro];
             const evoDatasets = seriesSetores.map((s, i) => ({
                 label: s,
@@ -5009,19 +5063,17 @@
                     const row = allYearRows.find(r => r.setor === s && r.ano_mes_sort === m);
                     return row && row.turnover_pct !== null ? +row.turnover_pct.toFixed(1) : null;
                 }),
-                borderColor: palette[i % palette.length],
-                backgroundColor: palette[i % palette.length] + '33',
-                tension: 0.35,
-                spanGaps: true,
-                fill: false,
-                pointRadius: 3
+                backgroundColor: palette[i % palette.length] + 'cc',
+                hoverBackgroundColor: palette[i % palette.length],
+                borderRadius: { topLeft: 4, topRight: 4 },
+                borderSkipped: false
             }));
 
             const evoCanvas = document.getElementById('chartTurnoverEvolucao');
             if (evoCanvas) {
                 if (chartTurnoverEvolucao) chartTurnoverEvolucao.destroy();
                 chartTurnoverEvolucao = new Chart(evoCanvas.getContext('2d'), {
-                    type: 'line',
+                    type: 'bar',
                     data: { labels: monthLabels, datasets: evoDatasets },
                     options: {
                         responsive: true, maintainAspectRatio: false,
@@ -5030,19 +5082,16 @@
                             tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y ?? '—'}%` } },
                             datalabels: {
                                 display: (ctx) => ctx.dataset.data[ctx.dataIndex] !== null,
-                                color: (ctx) => ctx.dataset.borderColor,
-                                backgroundColor: isDark ? 'rgba(7,13,30,0.75)' : 'rgba(255,255,255,0.85)',
-                                borderRadius: 4,
-                                padding: 2,
-                                font: { size: 8, weight: 'bold' },
+                                color: textColor,
+                                font: { size: 9, weight: 'bold' },
+                                anchor: 'end',
                                 align: 'top',
-                                offset: 4,
                                 formatter: (value) => value !== null ? `${value}%` : ''
                             }
                         },
                         scales: {
-                            x: { ticks: { color: textColor }, grid: { color: gridColor } },
-                            y: { ticks: { color: textColor, callback: v => v + '%' }, grid: { color: gridColor } }
+                            x: { ticks: { color: textColor }, grid: { display: false } },
+                            y: { ticks: { color: textColor, callback: v => v + '%' }, grid: { color: gridColor }, beginAtZero: true }
                         }
                     }
                 });
@@ -6649,6 +6698,12 @@
                 populateHoraExtraFilterOptions();
                 applyHoraExtraFilters();
             }
+            // Absenteísmo agrupa as ocorrências pelo mesmo período de apuração — recalcula e re-renderiza.
+            if (rawData && rawData.length > 0) {
+                recomputeCompetenciaAbsenteismoLista(rawData);
+                populateFilterOptions();
+                applyFilters();
+            }
         }
 
         // Determina a competência (período de apuração real do ponto) de uma data: se o dia
@@ -6671,6 +6726,30 @@
             if (mesIni < 1) { mesIni = 12; anoIni -= 1; }
             const diaFim = diaCorte - 1;
             return `${monthNamesPt3[mes - 1]}/${ano} (${String(diaCorte).padStart(2, '0')}/${String(mesIni).padStart(2, '0')} a ${String(diaFim).padStart(2, '0')}/${String(mes).padStart(2, '0')})`;
+        }
+
+        // Reaproveitado pelo Absenteísmo: recalcula ano/mês/competência de uma ocorrência a
+        // partir da data real (data_iso), usando o mesmo dia de corte parametrizado nas abas
+        // Interjornada e Hora Extra — em vez do mês de calendário. dia_semana/dia continuam
+        // representando o dia real da ausência e não são alterados.
+        function recomputeCompetenciaAbsenteismo(registro) {
+            if (!registro || !registro.data_iso) return registro;
+            const monthNamesPtFull = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const competencia = computeCompetencia(registro.data_iso, interjornadaDiaCorte);
+            const [anoStr, mesStr] = competencia.split('-');
+            const ano = parseInt(anoStr, 10);
+            const mes = parseInt(mesStr, 10);
+            registro.ano = ano;
+            registro.mes = mes;
+            registro.mes_nome = monthNamesPtFull[mes - 1];
+            registro.mes_ano = `${monthNamesPtFull[mes - 1]}/${ano}`;
+            registro.ano_mes_sort = competencia;
+            return registro;
+        }
+
+        function recomputeCompetenciaAbsenteismoLista(registros) {
+            (registros || []).forEach(recomputeCompetenciaAbsenteismo);
+            return registros;
         }
 
         function normalizeNomeColaborador(nome) {
