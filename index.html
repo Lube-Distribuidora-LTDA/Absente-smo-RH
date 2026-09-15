@@ -1725,6 +1725,21 @@
                 <input type="file" id="fileImportInterjornada" accept=".xls, .xlsx, .xlsm" onchange="handleInterjornadaExcelImport(event)" class="hidden">
             </div>
 
+            <!-- Parametrização do Período de Apuração do Ponto -->
+            <div class="mt-4 pt-4 border-t border-slate-800 flex flex-wrap items-center gap-2.5">
+                <span class="text-[11px] font-bold text-slate-400 uppercase flex items-center gap-1.5">
+                    <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-cyan-400"></i> Corte do Ponto
+                </span>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[11px] text-slate-500">Dia</span>
+                    <input type="number" id="ijDiaCorte" min="2" max="28" value="21" onchange="onInterjornadaDiaCorteChange()" title="Dia do mês em que o período de apuração começa (ex.: 21)" class="w-16 bg-[#070d1e] border border-cyan-500/30 rounded-xl px-2 py-1.5 text-xs font-bold text-cyan-300 text-center focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                    <span class="text-[11px] text-slate-500">(mês anterior) até dia</span>
+                    <span id="ijDiaCorteFim" class="text-xs font-bold text-cyan-300">20</span>
+                    <span class="text-[11px] text-slate-500">(mês seguinte)</span>
+                </div>
+                <span class="text-[11px] text-slate-500">Ex.: 21/07 a 20/08 &mdash; usado para agrupar a Evolução Mensal e o filtro de Período pelo fechamento real da folha de ponto, não pelo mês do calendário.</span>
+            </div>
+
             <!-- Filters -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-4 mt-4 border-t border-slate-800">
                 <div class="lg:col-span-2">
@@ -1735,9 +1750,9 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Mês/Ano</label>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Período (Ponto)</label>
                     <select id="ijFilterMes" onchange="applyInterjornadaFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
-                        <option value="ALL">Todos os Meses</option>
+                        <option value="ALL">Todos os Períodos</option>
                     </select>
                 </div>
                 <div>
@@ -1793,6 +1808,22 @@
                 <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wide flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Conformidade</span>
                 <div id="ijKpiConformidade" class="text-2xl font-extrabold text-emerald-300 tracking-tight mt-2">0%</div>
                 <p class="text-[11px] text-slate-400 mt-0.5">Transições de jornada dentro das 11h</p>
+            </div>
+        </div>
+
+        <!-- Chart: Evolução Mensal por Período de Apuração do Ponto -->
+        <div class="executive-card p-5 rounded-2xl flex flex-col justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-800">
+                <div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wide glow-text-cyan flex items-center gap-2">
+                        <i data-lucide="calendar-range" class="w-4 h-4 text-cyan-400"></i>
+                        Evolução Mensal &bull; por Período de Apuração
+                    </h3>
+                    <p class="text-xs text-slate-400" id="ijEvolucaoMensalSubtitulo">Violações de interjornada e horas extras por período de ponto (dia 21 ao 20)</p>
+                </div>
+            </div>
+            <div class="relative h-[320px] w-full pt-4">
+                <canvas id="chartInterjornadaEvolucaoMensal"></canvas>
             </div>
         </div>
 
@@ -6487,6 +6518,8 @@
         // Motoristas e Ajudantes • Relatório de Ponto (PontoMais) por Equipe
         // ================================================================
         const INTERJORNADA_LIMITE_MINUTOS = 11 * 60;
+        const INTERJORNADA_DIA_CORTE_PADRAO = 21;
+        const INTERJORNADA_DIA_CORTE_STORAGE_KEY = 'lube_ij_dia_corte';
 
         let interjornadaDataLoaded = false;
         let interjornadaRawRows = [];
@@ -6494,7 +6527,58 @@
         let interjornadaFilteredRows = [];
         let interjornadaFuncaoMap = {};
         let interjornadaFuncaoMapLoaded = false;
-        let chartInterjornadaEvolucao = null, chartInterjornadaConformidade = null, chartInterjornadaTopViolacoes = null, chartInterjornadaTopHoraExtra = null;
+        let interjornadaDiaCorte = INTERJORNADA_DIA_CORTE_PADRAO;
+        let chartInterjornadaEvolucao = null, chartInterjornadaEvolucaoMensal = null, chartInterjornadaConformidade = null, chartInterjornadaTopViolacoes = null, chartInterjornadaTopHoraExtra = null;
+
+        // Dia de corte do ponto é parametrizável (padrão 21): o período de apuração vai do
+        // dia de corte do mês anterior até o dia (corte - 1) do mês seguinte (ex.: 21/07 a 20/08).
+        function loadInterjornadaDiaCorte() {
+            try {
+                const salvo = parseInt(localStorage.getItem(INTERJORNADA_DIA_CORTE_STORAGE_KEY), 10);
+                if (salvo >= 2 && salvo <= 28) return salvo;
+            } catch (err) { /* localStorage indisponível: usa o padrão */ }
+            return INTERJORNADA_DIA_CORTE_PADRAO;
+        }
+
+        function onInterjornadaDiaCorteChange() {
+            const input = document.getElementById('ijDiaCorte');
+            let valor = parseInt(input.value, 10);
+            if (isNaN(valor) || valor < 2 || valor > 28) valor = INTERJORNADA_DIA_CORTE_PADRAO;
+            input.value = valor;
+            interjornadaDiaCorte = valor;
+            try { localStorage.setItem(INTERJORNADA_DIA_CORTE_STORAGE_KEY, String(valor)); } catch (err) { /* ignora */ }
+
+            const fimSpan = document.getElementById('ijDiaCorteFim');
+            if (fimSpan) fimSpan.textContent = String(valor - 1);
+
+            if (interjornadaRawRows.length > 0) {
+                interjornadaAnalysisRows = computeInterjornadaAnalysis(interjornadaRawRows);
+                populateInterjornadaFilterOptions();
+                applyInterjornadaFilters();
+            }
+        }
+
+        // Determina a competência (período de apuração real do ponto) de uma data: se o dia
+        // for >= dia de corte, ela pertence ao período que fecha no mês seguinte; caso
+        // contrário, pertence ao período que fechou no próprio mês.
+        function computeCompetencia(dataIso, diaCorte) {
+            const [y, m, d] = dataIso.split('-').map(Number);
+            let compMes = d >= diaCorte ? m + 1 : m;
+            let compAno = y;
+            if (compMes > 12) { compMes = 1; compAno += 1; }
+            return `${compAno}-${String(compMes).padStart(2, '0')}`;
+        }
+
+        function formatCompetenciaLabel(competencia, diaCorte) {
+            const [anoStr, mesStr] = competencia.split('-');
+            const ano = parseInt(anoStr, 10);
+            const mes = parseInt(mesStr, 10);
+            const monthNamesPt3 = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            let mesIni = mes - 1, anoIni = ano;
+            if (mesIni < 1) { mesIni = 12; anoIni -= 1; }
+            const diaFim = diaCorte - 1;
+            return `${monthNamesPt3[mes - 1]}/${ano} (${String(diaCorte).padStart(2, '0')}/${String(mesIni).padStart(2, '0')} a ${String(diaFim).padStart(2, '0')}/${String(mes).padStart(2, '0')})`;
+        }
 
         function normalizeNomeColaborador(nome) {
             return String(nome || '').trim().toUpperCase().replace(/\s+/g, ' ');
@@ -6581,6 +6665,7 @@
                 const diasEnriquecidos = dias.map(d => ({
                     ...d,
                     funcao,
+                    competencia: computeCompetencia(d.data_iso, interjornadaDiaCorte),
                     heHoras: +(Number(d.he_50_horas || 0) + Number(d.he_100_horas || 0)).toFixed(2),
                     descansoMinutos: null,
                     violacao: false,
@@ -6616,6 +6701,15 @@
         }
 
         async function loadInterjornadaSection() {
+            interjornadaDiaCorte = loadInterjornadaDiaCorte();
+            const inputCorte = document.getElementById('ijDiaCorte');
+            if (inputCorte && !inputCorte.dataset.inicializado) {
+                inputCorte.value = interjornadaDiaCorte;
+                inputCorte.dataset.inicializado = '1';
+            }
+            const fimSpan = document.getElementById('ijDiaCorteFim');
+            if (fimSpan) fimSpan.textContent = String(interjornadaDiaCorte - 1);
+
             if (interjornadaDataLoaded) { applyInterjornadaFilters(); return; }
             const tbody = document.getElementById('interjornadaTableBody');
             if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Carregando registros de ponto...</td></tr>';
@@ -6644,14 +6738,12 @@
             const funcSel = document.getElementById('ijFilterFuncao');
             if (!mesSel || !funcSel) return;
 
-            const monthNamesPt = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-            const meses = [...new Set(interjornadaAnalysisRows.map(r => r.ano_mes_sort))].sort();
+            const competencias = [...new Set(interjornadaAnalysisRows.map(r => r.competencia))].sort();
             const curMes = mesSel.value;
-            mesSel.innerHTML = '<option value="ALL">Todos os Meses</option>' + meses.map(m => {
-                const [y, mm] = m.split('-');
-                return `<option value="${m}">${monthNamesPt[parseInt(mm, 10) - 1]}/${y}</option>`;
+            mesSel.innerHTML = '<option value="ALL">Todos os Períodos</option>' + competencias.map(c => {
+                return `<option value="${c}">${escapeHtml(formatCompetenciaLabel(c, interjornadaDiaCorte))}</option>`;
             }).join('');
-            if (meses.includes(curMes)) mesSel.value = curMes;
+            if (competencias.includes(curMes)) mesSel.value = curMes;
 
             const funcs = [...new Set(interjornadaAnalysisRows.map(r => r.funcao).filter(Boolean))].sort();
             const curFunc = funcSel.value;
@@ -6666,7 +6758,7 @@
             const search = document.getElementById('ijFilterSearch').value.trim().toUpperCase();
 
             interjornadaFilteredRows = interjornadaAnalysisRows.filter(r => {
-                if (mes !== 'ALL' && r.ano_mes_sort !== mes) return false;
+                if (mes !== 'ALL' && r.competencia !== mes) return false;
                 if (funcao !== 'ALL') {
                     if (funcao === '__SEM_FUNCAO__') { if (r.funcao) return false; }
                     else if (r.funcao !== funcao) return false;
@@ -6714,6 +6806,40 @@
             const isDark = document.documentElement.classList.contains('dark');
             const textColor = isDark ? '#94a3b8' : '#334155';
             const gridColor = isDark ? 'rgba(0, 212, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+
+            // 0. Evolução mensal por período de apuração do ponto (dia de corte parametrizável)
+            const subtituloMensal = document.getElementById('ijEvolucaoMensalSubtitulo');
+            if (subtituloMensal) subtituloMensal.textContent = `Violações de interjornada e horas extras por período de ponto (dia ${interjornadaDiaCorte} ao ${interjornadaDiaCorte - 1})`;
+
+            const competenciasOrdenadas = [...new Set(rows.map(r => r.competencia))].sort();
+            const violacoesPorCompetencia = competenciasOrdenadas.map(c => rows.filter(r => r.competencia === c && r.violacao).length);
+            const hePorCompetencia = competenciasOrdenadas.map(c => +rows.filter(r => r.competencia === c).reduce((s, r) => s + Number(r.heHoras || 0), 0).toFixed(1));
+
+            const evoMensalCanvas = document.getElementById('chartInterjornadaEvolucaoMensal');
+            if (evoMensalCanvas) {
+                if (chartInterjornadaEvolucaoMensal) chartInterjornadaEvolucaoMensal.destroy();
+                chartInterjornadaEvolucaoMensal = new Chart(evoMensalCanvas.getContext('2d'), {
+                    data: {
+                        labels: competenciasOrdenadas.map(c => formatCompetenciaLabel(c, interjornadaDiaCorte).split(' (')[0]),
+                        datasets: [
+                            { type: 'bar', label: 'Violações de Interjornada', data: violacoesPorCompetencia, backgroundColor: 'rgba(239,68,68,0.8)', borderRadius: 4, yAxisID: 'y' },
+                            { type: 'line', label: 'Horas Extras', data: hePorCompetencia, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.15)', tension: 0.3, fill: true, yAxisID: 'y1' }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: textColor, font: { size: 10 } } },
+                            tooltip: { callbacks: { label: (ctx) => ctx.dataset.yAxisID === 'y1' ? `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}h` : `${ctx.dataset.label}: ${ctx.parsed.y}` } }
+                        },
+                        scales: {
+                            x: { ticks: { color: textColor, font: { size: 10 } }, grid: { display: false } },
+                            y: { position: 'left', beginAtZero: true, ticks: { color: textColor, precision: 0 }, grid: { color: gridColor }, title: { display: true, text: 'Violações', color: textColor, font: { size: 9 } } },
+                            y1: { position: 'right', beginAtZero: true, ticks: { color: textColor, callback: v => v + 'h' }, grid: { display: false }, title: { display: true, text: 'Horas Extras', color: textColor, font: { size: 9 } } }
+                        }
+                    }
+                });
+            }
 
             // 1. Evolução das violações por dia (data do registro de saída analisado)
             const comDescanso = rows.filter(r => r.descansoMinutos !== null);
