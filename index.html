@@ -1151,7 +1151,7 @@
                         <p class="text-xs text-slate-400">Percentual de rotatividade por mês</p>
                     </div>
                 </div>
-                <div class="relative h-[320px] w-full pt-4">
+                <div class="relative h-[440px] w-full pt-6">
                     <canvas id="chartTurnoverEvolucao"></canvas>
                 </div>
             </div>
@@ -5069,6 +5069,16 @@
                 borderSkipped: false
             }));
 
+            // Um único setor com % fora da curva (provável erro de base/headcount) não deve
+            // esmagar a escala do gráfico inteiro: o teto do eixo é calculado a partir dos
+            // valores "normais" (<=100%), com folga para os rótulos. Valores muito acima disso
+            // continuam aparecendo — a barra some no rodapé, mas o rótulo com o valor real fica
+            // fixo (clamp) no topo do gráfico, sinalizando a anomalia sem destruir a leitura do resto.
+            const todosValoresTurnover = evoDatasets.flatMap(ds => ds.data).filter(v => v !== null);
+            const valoresNormaisTurnover = todosValoresTurnover.filter(v => v <= 100);
+            const maiorValorNormal = valoresNormaisTurnover.length > 0 ? Math.max(...valoresNormaisTurnover) : 10;
+            const evoSuggestedMax = Math.max(10, Math.ceil((maiorValorNormal * 1.3) / 5) * 5);
+
             const evoCanvas = document.getElementById('chartTurnoverEvolucao');
             if (evoCanvas) {
                 if (chartTurnoverEvolucao) chartTurnoverEvolucao.destroy();
@@ -5077,8 +5087,11 @@
                     data: { labels: monthLabels, datasets: evoDatasets },
                     options: {
                         responsive: true, maintainAspectRatio: false,
+                        layout: { padding: { top: 22 } },
+                        categoryPercentage: 0.72,
+                        barPercentage: 0.88,
                         plugins: {
-                            legend: { labels: { color: textColor, font: { size: 10 } } },
+                            legend: { labels: { color: textColor, font: { size: 10 }, padding: 14 } },
                             tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y ?? '—'}%` } },
                             datalabels: {
                                 display: (ctx) => ctx.dataset.data[ctx.dataIndex] !== null,
@@ -5086,12 +5099,14 @@
                                 font: { size: 9, weight: 'bold' },
                                 anchor: 'end',
                                 align: 'top',
+                                offset: (ctx) => 2 + (ctx.datasetIndex % 2) * 10,
+                                clamp: true,
                                 formatter: (value) => value !== null ? `${value}%` : ''
                             }
                         },
                         scales: {
                             x: { ticks: { color: textColor }, grid: { display: false } },
-                            y: { ticks: { color: textColor, callback: v => v + '%' }, grid: { color: gridColor }, beginAtZero: true }
+                            y: { ticks: { color: textColor, callback: v => v + '%' }, grid: { color: gridColor }, beginAtZero: true, max: evoSuggestedMax }
                         }
                     }
                 });
