@@ -2702,7 +2702,9 @@
                     isViewingHistoricalImport = false;
                     updateHistoricalBanner();
 
-                    // Resolve a importação mais recente e busca apenas os registros dela
+                    // Guarda qual foi a importação mais recente (usado no diagnóstico de IA e no
+                    // histórico), mas o painel "atual" sempre exibe TODAS as ocorrências já
+                    // importadas — cada nova planilha acrescenta ao que já existe, nunca substitui.
                     currentImportId = await window.SupabaseService.fetchLatestImportId();
 
                     // Carrega o diagnóstico de IA já gerado para essa importação, se houver
@@ -2713,7 +2715,7 @@
                         aiDiagnosticoCache = null;
                     }
 
-                    const dbData = await window.SupabaseService.fetchOcorrencias(currentImportId);
+                    const dbData = await window.SupabaseService.fetchOcorrencias(null);
                     if (dbData && dbData.length > 0) {
                         rawData = dbData;
                         recomputeCompetenciaAbsenteismoLista(rawData);
@@ -2734,8 +2736,9 @@
                         // onInsert
                         (newRec) => {
                             if (Date.now() < bulkImportSuppressRealtimeUntil) return;
-                            // Ignora inserts de outras importações ou enquanto visualiza um histórico arquivado
-                            if (isViewingHistoricalImport || newRec.import_id !== currentImportId) return;
+                            // A visão "atual" é cumulativa (todas as importações); só ignora
+                            // enquanto o usuário estiver olhando uma importação arquivada específica.
+                            if (isViewingHistoricalImport) return;
 
                             // Check if already in array
                             const exists = rawData.some(r => r.id === newRec.id);
@@ -4765,7 +4768,7 @@
                         const classification = classifyAbsence(motivoVal);
 
                         parsedItems.push({
-                            id: autoId++,
+                            id: -(autoId++), // negativo: nunca colide com um id real do Postgres até a próxima sincronização
                             funcionario: funcVal || 'COLABORADOR NÃO IDENTIFICADO',
                             empresa: empresaVal,
                             data_iso: dataIso,
@@ -4794,8 +4797,11 @@
                         return;
                     }
 
-                    // Update state & save to localStorage for persistence
-                    rawData = parsedItems;
+                    // Soma os novos registros ao que já está carregado (nunca substitui os meses
+                    // já importados anteriormente) e ignora eventos já existentes (mesmo
+                    // colaborador+data+motivo), para permitir reimportar um período com segurança.
+                    const { merged, addedCount, duplicateCount } = mergeAbsenteismoRecords(rawData, parsedItems);
+                    rawData = merged;
                     recomputeCompetenciaAbsenteismoLista(rawData);
                     try {
                         localStorage.setItem('lube_custom_absenteismo_data', JSON.stringify(rawData));
@@ -4810,8 +4816,8 @@
                     updateHeaderBaseBadge();
 
                     showToast(
-                        'Planilha Atualizada!',
-                        `${parsedItems.length.toLocaleString('pt-BR')} registros importados da aba "${targetSheetName}". Sincronizando com Supabase...`
+                        'Planilha Processada!',
+                        `${addedCount.toLocaleString('pt-BR')} nova(s) ocorrência(s) da aba "${targetSheetName}" somada(s) ao painel${duplicateCount > 0 ? ` (${duplicateCount} já existiam e foram ignoradas)` : ''}. Sincronizando com Supabase...`
                     );
 
                     // Sync to Supabase Cloud in batch if available
@@ -4823,14 +4829,14 @@
                             updateHistoricalBanner();
                             showToast(
                                 'Banco Supabase Sincronizado!',
-                                `${res.count.toLocaleString('pt-BR')} registros persistidos no PostgreSQL Cloud como uma nova importação. Importações anteriores foram preservadas no Histórico.`
+                                `${res.count.toLocaleString('pt-BR')} nova(s) ocorrência(s) gravada(s) no PostgreSQL Cloud${res.skipped > 0 ? ` (${res.skipped} já existiam e foram ignoradas)` : ''}. Os meses já importados anteriormente continuam preservados.`
                             );
                             updateSupabaseStatusUI(true, rawData.length, supabaseLatency);
 
-                            // Gera o Diagnóstico Executivo com IA para esta nova importação (em segundo plano)
+                            // Gera o Diagnóstico Executivo com IA sobre o panorama completo e atualizado (em segundo plano)
                             aiDiagnosticoCache = null;
                             renderDynamicInsights();
-                            generateAIDiagnostico(currentImportId, computeAggregatedStatsForAI(parsedItems));
+                            generateAIDiagnostico(currentImportId, computeAggregatedStatsForAI(rawData));
                         } catch (sErr) {
                             console.warn('Falha ao enviar lote ao Supabase:', sErr);
                             showToast('Aviso de Sincronização', 'Dados ativos localmente, mas falha ao gravar na nuvem: ' + (sErr.message || sErr), true);
@@ -6765,6 +6771,27 @@
         function recomputeCompetenciaAbsenteismoLista(registros) {
             (registros || []).forEach(recomputeCompetenciaAbsenteismo);
             return registros;
+        }
+
+        // Mesma chave natural usada no dedup do lado do servidor (supabase-client.js): uma
+        // ocorrência é o mesmo evento se for o mesmo colaborador, na mesma data, pelo mesmo motivo.
+        function chaveOcorrenciaAbsenteismo(r) {
+            return [String(r.funcionario || '').trim().toUpperCase(), r.data_iso, String(r.motivo || '').trim().toUpperCase()].join('|');
+        }
+
+        // Importação de Absenteísmo é CUMULATIVA: uma nova planilha (ex.: um novo período de
+        // ponto) soma-se ao que já está carregado, nunca substitui. Isso evita que importar
+        // só o período mais recente "esconda" os meses já importados anteriormente. Ocorrências
+        // já presentes (mesmo colaborador+data+motivo) são ignoradas para não duplicar ao
+        // reimportar um período por engano ou para conferência.
+        function mergeAbsenteismoRecords(existentes, novos) {
+            const chavesExistentes = new Set((existentes || []).map(chaveOcorrenciaAbsenteismo));
+            const genuinamenteNovos = (novos || []).filter(r => !chavesExistentes.has(chaveOcorrenciaAbsenteismo(r)));
+            return {
+                merged: [...genuinamenteNovos, ...(existentes || [])],
+                addedCount: genuinamenteNovos.length,
+                duplicateCount: (novos || []).length - genuinamenteNovos.length
+            };
         }
 
         function normalizeNomeColaborador(nome) {

@@ -309,14 +309,60 @@ async function insertOcorrenciaDB(record) {
 }
 
 /**
- * Insere múltiplos registros no Supabase em lote (ex.: importação Excel)
- * e registra no histórico de importações
+ * Chave natural de uma ocorrência de absenteísmo, usada para não duplicar o mesmo evento
+ * (mesma pessoa, mesma data, mesmo motivo) quando um período já importado é reimportado.
+ */
+function chaveOcorrenciaAbsenteismo(r) {
+    return [String(r.funcionario || '').trim().toUpperCase(), r.data_iso, String(r.motivo || '').trim().toUpperCase()].join('|');
+}
+
+/**
+ * Insere múltiplos registros no Supabase em lote (ex.: importação Excel) e registra no
+ * histórico de importações. As importações são CUMULATIVAS: cada nova planilha ACRESCENTA
+ * as ocorrências ao que já existe (nunca substitui ou apaga meses anteriores). Registros cuja
+ * combinação colaborador+data+motivo já existir são ignorados, para permitir reimportar um
+ * período (ex.: para conferência) sem duplicar as mesmas faltas.
  */
 async function bulkInsertOcorrenciasDB(records, fileName = 'Importacao_Planilha.xlsx', sheetName = 'BASE') {
     const client = getSupabaseClient();
     if (!client) throw new Error('Cliente Supabase não inicializado');
 
-    if (!records || records.length === 0) return { count: 0 };
+    if (!records || records.length === 0) return { count: 0, skipped: 0 };
+
+    // Verifica quais ocorrências do período importado já existem no banco, para não duplicá-las.
+    const datas = records.map(r => r.data_iso).filter(Boolean).sort();
+    const dataMin = datas[0];
+    const dataMax = datas[datas.length - 1];
+
+    const chavesExistentes = new Set();
+    if (dataMin && dataMax) {
+        let from = 0;
+        const step = 1000;
+        let keepFetching = true;
+        while (keepFetching) {
+            const { data, error } = await client
+                .from('ocorrencias_absenteismo')
+                .select('funcionario, data_iso, motivo')
+                .gte('data_iso', dataMin)
+                .lte('data_iso', dataMax)
+                .range(from, from + step - 1);
+
+            if (error) {
+                console.error('Erro ao verificar ocorrências já existentes:', error);
+                throw error;
+            }
+            if (data && data.length > 0) {
+                data.forEach(r => chavesExistentes.add(chaveOcorrenciaAbsenteismo(r)));
+                if (data.length < step) keepFetching = false;
+                else from += step;
+            } else {
+                keepFetching = false;
+            }
+        }
+    }
+
+    const registrosNovos = records.filter(r => !chavesExistentes.has(chaveOcorrenciaAbsenteismo(r)));
+    const skippedCount = records.length - registrosNovos.length;
 
     // Registra a importação no histórico ANTES de inserir os registros, para obter o import_id
     // que vai vincular cada ocorrência a esta importação específica.
@@ -324,11 +370,11 @@ async function bulkInsertOcorrenciasDB(records, fileName = 'Importacao_Planilha.
         .from('historico_importacoes')
         .insert([{
             nome_arquivo: fileName,
-            total_registros: records.length,
+            total_registros: registrosNovos.length,
             aba_origem: sheetName,
             status: 'CONCLUIDO',
             usuario: 'RH Lube',
-            detalhes: { data_hora: new Date().toISOString(), total_processado: records.length }
+            detalhes: { data_hora: new Date().toISOString(), total_processado: records.length, novos: registrosNovos.length, ja_existentes: skippedCount }
         }])
         .select();
 
@@ -339,11 +385,15 @@ async function bulkInsertOcorrenciasDB(records, fileName = 'Importacao_Planilha.
 
     const importId = histData && histData.length > 0 ? histData[0].id : null;
 
+    if (registrosNovos.length === 0) {
+        return { count: 0, skipped: skippedCount, importId };
+    }
+
     const batchSize = 250;
     let insertedCount = 0;
 
     // Formata campos para garantir compatibilidade com colunas do banco e vincula à importação
-    const sanitized = records.map(r => {
+    const sanitized = registrosNovos.map(r => {
         const row = { ...r };
         delete row.id; // Deixa o PostgreSQL gerar o ID sequencial oficial
         row.import_id = importId;
@@ -363,7 +413,7 @@ async function bulkInsertOcorrenciasDB(records, fileName = 'Importacao_Planilha.
         insertedCount += chunk.length;
     }
 
-    return { count: insertedCount, importId };
+    return { count: insertedCount, skipped: skippedCount, importId };
 }
 
 /**
