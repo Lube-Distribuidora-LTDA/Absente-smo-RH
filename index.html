@@ -1165,7 +1165,7 @@
                         <p class="text-xs text-slate-400">Movimentações por mês</p>
                     </div>
                 </div>
-                <div class="relative h-[280px] w-full pt-2">
+                <div class="relative flex-1 min-h-[280px] w-full pt-6">
                     <canvas id="chartTurnoverMovimentacoes"></canvas>
                 </div>
             </div>
@@ -1735,11 +1735,11 @@
                 <div class="flex items-center gap-1.5">
                     <span class="text-[11px] text-slate-500">Dia</span>
                     <input type="number" id="ijDiaCorte" min="2" max="28" value="21" onchange="onInterjornadaDiaCorteChange()" title="Dia do mês em que o período de apuração começa (ex.: 21)" class="w-16 bg-[#070d1e] border border-cyan-500/30 rounded-xl px-2 py-1.5 text-xs font-bold text-cyan-300 text-center focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
-                    <span class="text-[11px] text-slate-500">(mês anterior) até dia</span>
+                    <span class="text-[11px] text-slate-500">(do mês de referência) até dia</span>
                     <span id="ijDiaCorteFim" class="text-xs font-bold text-cyan-300">20</span>
-                    <span class="text-[11px] text-slate-500">(mês seguinte)</span>
+                    <span class="text-[11px] text-slate-500">(do mês seguinte)</span>
                 </div>
-                <span class="text-[11px] text-slate-500">Ex.: 21/07 a 20/08 &mdash; usado para agrupar a Evolução Mensal e o filtro de Período pelo fechamento real da folha de ponto, não pelo mês do calendário.</span>
+                <span class="text-[11px] text-slate-500">Ex.: 21/07 a 20/08 = competência <b class="text-cyan-300">Julho</b> &mdash; o período leva o nome do mês em que abre, seguindo o fechamento real da folha de ponto, não o mês do calendário.</span>
             </div>
 
             <!-- Filters -->
@@ -5077,13 +5077,17 @@
 
             // Um único setor com % fora da curva (provável erro de base/headcount) não deve
             // esmagar a escala do gráfico inteiro: o teto do eixo é calculado a partir dos
-            // valores "normais" (<=100%), com folga para os rótulos. Valores muito acima disso
-            // continuam aparecendo — a barra some no rodapé, mas o rótulo com o valor real fica
-            // fixo (clamp) no topo do gráfico, sinalizando a anomalia sem destruir a leitura do resto.
+            // valores "normais" (<=100%), com folga para os rótulos. Valores acima do teto
+            // continuam aparecendo — a barra vai até o topo e o rótulo com o valor real fica
+            // DENTRO da barra (logo abaixo do topo), para não invadir a legenda no alto do card.
             const todosValoresTurnover = evoDatasets.flatMap(ds => ds.data).filter(v => v !== null);
             const valoresNormaisTurnover = todosValoresTurnover.filter(v => v <= 100);
             const maiorValorNormal = valoresNormaisTurnover.length > 0 ? Math.max(...valoresNormaisTurnover) : 10;
             const evoSuggestedMax = Math.max(10, Math.ceil((maiorValorNormal * 1.3) / 5) * 5);
+            const estouraTetoTurnover = (ctx) => {
+                const v = ctx.dataset.data[ctx.dataIndex];
+                return v !== null && v > evoSuggestedMax;
+            };
 
             const evoCanvas = document.getElementById('chartTurnoverEvolucao');
             if (evoCanvas) {
@@ -5101,13 +5105,16 @@
                             tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y ?? '—'}%` } },
                             datalabels: {
                                 display: (ctx) => ctx.dataset.data[ctx.dataIndex] !== null,
-                                color: textColor,
+                                color: (ctx) => estouraTetoTurnover(ctx) ? '#ffffff' : textColor,
+                                backgroundColor: (ctx) => estouraTetoTurnover(ctx) ? 'rgba(15,23,42,0.75)' : null,
+                                borderRadius: 4,
+                                padding: (ctx) => estouraTetoTurnover(ctx) ? { top: 2, bottom: 2, left: 4, right: 4 } : 0,
                                 font: { size: 9, weight: 'bold' },
                                 anchor: 'end',
-                                align: 'top',
-                                offset: (ctx) => 2 + (ctx.datasetIndex % 2) * 10,
+                                align: (ctx) => estouraTetoTurnover(ctx) ? 'bottom' : 'top',
+                                offset: (ctx) => estouraTetoTurnover(ctx) ? 6 : 2 + (ctx.datasetIndex % 2) * 10,
                                 clamp: true,
-                                formatter: (value) => value !== null ? `${value}%` : ''
+                                formatter: (value, ctx) => value === null ? '' : (estouraTetoTurnover(ctx) ? `▲ ${value}%` : `${value}%`)
                             }
                         },
                         scales: {
@@ -6727,14 +6734,15 @@
             }
         }
 
-        // Determina a competência (período de apuração real do ponto) de uma data: se o dia
-        // for >= dia de corte, ela pertence ao período que fecha no mês seguinte; caso
-        // contrário, pertence ao período que fechou no próprio mês.
+        // Determina a competência (período de apuração real do ponto) de uma data. A competência
+        // leva o nome do mês em que o período ABRE: 21/07 a 20/08 é a competência de Julho.
+        // Logo, se o dia for >= dia de corte a data pertence à competência do próprio mês;
+        // se for < dia de corte, ainda pertence à competência do mês anterior.
         function computeCompetencia(dataIso, diaCorte) {
             const [y, m, d] = dataIso.split('-').map(Number);
-            let compMes = d >= diaCorte ? m + 1 : m;
+            let compMes = d >= diaCorte ? m : m - 1;
             let compAno = y;
-            if (compMes > 12) { compMes = 1; compAno += 1; }
+            if (compMes < 1) { compMes = 12; compAno -= 1; }
             return `${compAno}-${String(compMes).padStart(2, '0')}`;
         }
 
@@ -6743,10 +6751,10 @@
             const ano = parseInt(anoStr, 10);
             const mes = parseInt(mesStr, 10);
             const monthNamesPt3 = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-            let mesIni = mes - 1, anoIni = ano;
-            if (mesIni < 1) { mesIni = 12; anoIni -= 1; }
+            let mesFim = mes + 1;
+            if (mesFim > 12) mesFim = 1;
             const diaFim = diaCorte - 1;
-            return `${monthNamesPt3[mes - 1]}/${ano} (${String(diaCorte).padStart(2, '0')}/${String(mesIni).padStart(2, '0')} a ${String(diaFim).padStart(2, '0')}/${String(mes).padStart(2, '0')})`;
+            return `${monthNamesPt3[mes - 1]}/${ano} (${String(diaCorte).padStart(2, '0')}/${String(mes).padStart(2, '0')} a ${String(diaFim).padStart(2, '0')}/${String(mesFim).padStart(2, '0')})`;
         }
 
         // Reaproveitado pelo Absenteísmo: recalcula ano/mês/competência de uma ocorrência a
