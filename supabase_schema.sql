@@ -188,34 +188,60 @@ CREATE TRIGGER trg_interjornada_updated_at
 BEFORE UPDATE ON public.interjornada_registros
 FOR EACH ROW EXECUTE FUNCTION public.fn_set_updated_at();
 
--- 3.2 Trigger para preenchimento inteligente de datas e calendários
+-- 3.2 Competência do ponto: o período de apuração leva o nome do mês em que FECHA.
+-- 21/12 a 20/01 = Janeiro, 21/01 a 20/02 = Fevereiro. Espelha computeCompetencia()
+-- do index.html, que é quem manda no painel (o front recalcula a cada carga).
+CREATE OR REPLACE FUNCTION public.fn_competencia_ponto(p_data DATE, p_dia_corte INT DEFAULT 21)
+RETURNS DATE
+LANGUAGE sql
+IMMUTABLE
+AS $$
+    SELECT date_trunc('month',
+        CASE WHEN EXTRACT(DAY FROM p_data)::INT >= p_dia_corte
+             THEN p_data + INTERVAL '1 month'
+             ELSE p_data::TIMESTAMP
+        END
+    )::DATE;
+$$;
+
+COMMENT ON FUNCTION public.fn_competencia_ponto(DATE, INT) IS
+'Primeiro dia do mês de competência do ponto para uma data. O dia de corte padrão (21) espelha o parâmetro "Corte do Ponto" do painel; se ele mudar na interface, atualize aqui e rode o backfill de ocorrencias_absenteismo.';
+
+-- 3.3 Trigger para preenchimento inteligente de datas e calendários.
+-- ano/mes/mes_nome/mes_ano/ano_mes_sort representam a COMPETÊNCIA do ponto.
+-- dia, dia_semana, dia_semana_num e data_formatada continuam sendo a data REAL
+-- da ausência (o gráfico de padrão semanal depende disso).
 CREATE OR REPLACE FUNCTION public.fn_enrich_ocorrencia()
 RETURNS TRIGGER AS $$
 DECLARE
     v_dia_semana_pt TEXT[] := ARRAY['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
     v_mes_pt TEXT[] := ARRAY['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     v_dow INT;
-    v_m INT;
-    v_y INT;
     v_d INT;
+    v_comp DATE;
+    v_comp_m INT;
+    v_comp_y INT;
 BEGIN
     IF NEW.data_iso IS NOT NULL THEN
-        v_y := EXTRACT(YEAR FROM NEW.data_iso)::INT;
-        v_m := EXTRACT(MONTH FROM NEW.data_iso)::INT;
         v_d := EXTRACT(DAY FROM NEW.data_iso)::INT;
         v_dow := EXTRACT(DOW FROM NEW.data_iso)::INT; -- 0=Domingo, 1=Segunda, etc.
 
-        NEW.ano := v_y;
-        NEW.mes := v_m;
+        v_comp := public.fn_competencia_ponto(NEW.data_iso);
+        v_comp_y := EXTRACT(YEAR FROM v_comp)::INT;
+        v_comp_m := EXTRACT(MONTH FROM v_comp)::INT;
+
+        NEW.ano := v_comp_y;
+        NEW.mes := v_comp_m;
+        NEW.mes_nome := v_mes_pt[v_comp_m];
+        NEW.mes_ano := v_mes_pt[v_comp_m] || '/' || v_comp_y;
+        NEW.ano_mes_sort := v_comp_y || '-' || LPAD(v_comp_m::TEXT, 2, '0');
+
         NEW.dia := v_d;
         NEW.dia_semana_num := v_dow;
         NEW.dia_semana := v_dia_semana_pt[v_dow + 1];
-        NEW.mes_nome := v_mes_pt[v_m];
-        NEW.mes_ano := v_mes_pt[v_m] || '/' || v_y;
-        NEW.ano_mes_sort := v_y || '-' || LPAD(v_m::TEXT, 2, '0');
-        
+
         IF NEW.data_formatada IS NULL OR NEW.data_formatada = '' THEN
-            NEW.data_formatada := LPAD(v_d::TEXT, 2, '0') || '/' || LPAD(v_m::TEXT, 2, '0') || '/' || v_y;
+            NEW.data_formatada := TO_CHAR(NEW.data_iso, 'DD/MM/YYYY');
         END IF;
 
         IF NEW.dt_admissao_iso IS NOT NULL THEN
