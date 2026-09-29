@@ -1872,7 +1872,7 @@
                     </div>
                     <div class="space-y-1">
                         <label class="block font-bold text-cyan-300">Função <span class="text-red-400">*</span></label>
-                        <input type="text" id="colabFuncao" required list="funcoesEmpregadosList" placeholder="Ex: MOTORISTA I" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-cyan-400 focus:outline-none shadow-inner">
+                        <input type="text" id="colabFuncao" required list="funcoesEmpregadosList" placeholder="Ex: MOTORISTA" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-100 focus:border-cyan-400 focus:outline-none shadow-inner">
                         <datalist id="funcoesEmpregadosList"></datalist>
                     </div>
                 </div>
@@ -2275,8 +2275,35 @@
 
     <!-- DASHBOARD LOGIC SCRIPT -->
     <script>
+        // ================================================================
+        // NORMALIZAÇÃO DE FUNÇÕES (RH)
+        // No sistema de RH não existe diferenciação entre MOTORISTA I/II/III/
+        // CARRETEIRO — tudo é "MOTORISTA". O mesmo vale para AJUDANTE DE
+        // MOTORISTA I/II/III — tudo é "AJUDANTE". Esta função normaliza
+        // o campo 'funcao' para consolidar esses valores.
+        // ================================================================
+        function normalizeFuncao(val) {
+            if (!val) return val;
+            let v = String(val).trim().toUpperCase();
+            // AJUDANTE deve ser testado ANTES de MOTORISTA pois contém "MOTORISTA"
+            if (/^AJUDANTE\s*(DE\s*)?MOTORISTA/i.test(v)) return 'AJUDANTE';
+            if (/^MOTORISTA/i.test(v)) return 'MOTORISTA';
+            return val.trim(); // mantém o valor original para outras funções
+        }
+
+        /** Normaliza o campo 'funcao' de todos os registros de um array in-place */
+        function normalizeAllFuncoes(dataArr) {
+            if (!Array.isArray(dataArr)) return dataArr;
+            for (let i = 0; i < dataArr.length; i++) {
+                if (dataArr[i] && dataArr[i].funcao) {
+                    dataArr[i].funcao = normalizeFuncao(dataArr[i].funcao);
+                }
+            }
+            return dataArr;
+        }
+
         // State Management
-        let rawData = window.ABSENTEEISM_DATA || [];
+        let rawData = normalizeAllFuncoes(window.ABSENTEEISM_DATA || []);
         let filteredData = [];
         let currentPage = 1;
         let pageSize = 25;
@@ -2311,7 +2338,7 @@
                 if (stored) {
                     const parsed = JSON.parse(stored);
                     if (Array.isArray(parsed) && parsed.length > 0) {
-                        rawData = parsed;
+                        rawData = normalizeAllFuncoes(parsed);
                     }
                 }
             } catch (e) {
@@ -2337,7 +2364,7 @@
             // Inicializa imediatamente com os dados locais para garantir velocidade e zero travamento
             loadStoredData();
             if (!rawData || rawData.length === 0) {
-                rawData = window.ABSENTEEISM_DATA || [];
+                rawData = normalizeAllFuncoes(window.ABSENTEEISM_DATA || []);
             }
             safeCreateIcons();
             initTheme();
@@ -2382,7 +2409,7 @@
 
                     const dbData = await window.SupabaseService.fetchOcorrencias(currentImportId);
                     if (dbData && dbData.length > 0) {
-                        rawData = dbData;
+                        rawData = normalizeAllFuncoes(dbData);
                         try {
                             localStorage.setItem('lube_custom_absenteismo_data', JSON.stringify(rawData));
                         } catch (err) {}
@@ -2405,6 +2432,7 @@
                             // Check if already in array
                             const exists = rawData.some(r => r.id === newRec.id);
                             if (!exists) {
+                                if (newRec.funcao) newRec.funcao = normalizeFuncao(newRec.funcao);
                                 rawData.unshift(newRec);
                                 populateFilterOptions();
                                 populateRecordFormDatalists();
@@ -2417,6 +2445,7 @@
                         (updatedRec) => {
                             const idx = rawData.findIndex(r => r.id === updatedRec.id);
                             if (idx !== -1) {
+                                if (updatedRec.funcao) updatedRec.funcao = normalizeFuncao(updatedRec.funcao);
                                 rawData[idx] = updatedRec;
                                 populateFilterOptions();
                                 applyFilters();
@@ -2617,7 +2646,7 @@
             }
             try {
                 const dbData = await window.SupabaseService.fetchOcorrencias(importId);
-                rawData = dbData || [];
+                rawData = normalizeAllFuncoes(dbData || []);
                 currentImportId = importId;
                 isViewingHistoricalImport = true;
 
@@ -2720,7 +2749,7 @@
             const tipo = document.getElementById('recTipo').value;
             const categoria = document.getElementById('recCategoria').value.trim() || classifyAbsence(motivo).categoria;
             const setor = document.getElementById('recSetor').value.trim();
-            const funcao = document.getElementById('recFuncao').value.trim();
+            const funcao = normalizeFuncao(document.getElementById('recFuncao').value.trim());
             const dtAdm = document.getElementById('recDtAdmissao').value || null;
             const empresa = document.getElementById('recEmpresa').value.trim() || 'LUBE DISTRIBUIDORA LTDA';
             const obs = document.getElementById('recObservacao').value.trim();
@@ -4343,7 +4372,7 @@
                         const diaSemana = dayNamesPt[dayOfWeekNum] || 'Segunda-feira';
 
                         const setorVal = String(getRowValue(row, [/^setor/i, /^depart/i, /^area/i, /^cc/i, /^centro.*custo/i])).trim() || 'NÃO INFORMADO';
-                        const funcaoVal = String(getRowValue(row, [/^cargo/i, /^posic/i, /^funcao/i, /^função/i])).trim() || 'NÃO INFORMADO';
+                        const funcaoVal = normalizeFuncao(String(getRowValue(row, [/^cargo/i, /^posic/i, /^funcao/i, /^função/i])).trim() || 'NÃO INFORMADO');
                         const empresaVal = String(getRowValue(row, [/^empresa/i, /^filial/i, /^unidade/i])).trim() || 'LUBE DISTRIBUIDORA LTDA';
 
                         const dtAdmRaw = getRowValue(row, [/^admiss/i, /^dt.*adm/i, /^data.*adm/i]);
@@ -4395,7 +4424,7 @@
                     }
 
                     // Update state & save to localStorage for persistence
-                    rawData = parsedItems;
+                    rawData = normalizeAllFuncoes(parsedItems);
                     try {
                         localStorage.setItem('lube_custom_absenteismo_data', JSON.stringify(rawData));
                     } catch (err) {
@@ -4449,7 +4478,7 @@
 
         function restoreDefaultData() {
             localStorage.removeItem('lube_custom_absenteismo_data');
-            rawData = window.ABSENTEEISM_DATA || [];
+            rawData = normalizeAllFuncoes(window.ABSENTEEISM_DATA || []);
             populateFilterOptions();
             resetAllFilters();
             updateHeaderBaseBadge();
@@ -4965,7 +4994,7 @@
 
             try {
                 if (window.SupabaseService && isSupabaseOnline) {
-                    colaboradoresRawData = await window.SupabaseService.fetchColaboradores();
+                    colaboradoresRawData = normalizeAllFuncoes(await window.SupabaseService.fetchColaboradores());
                 } else {
                     colaboradoresRawData = [];
                 }
@@ -5117,7 +5146,7 @@
             event.preventDefault();
             const nome = document.getElementById('colabNome').value.trim().toUpperCase();
             const empresa = document.getElementById('colabEmpresa').value.trim();
-            const funcao = document.getElementById('colabFuncao').value.trim();
+            const funcao = normalizeFuncao(document.getElementById('colabFuncao').value.trim());
             const admissaoRaw = document.getElementById('colabAdmissao').value;
             const exameRaw = document.getElementById('colabUltimoExame').value;
 
