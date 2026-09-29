@@ -2285,9 +2285,9 @@
         function normalizeFuncao(val) {
             if (!val) return val;
             let v = String(val).trim().toUpperCase();
-            // AJUDANTE deve ser testado ANTES de MOTORISTA pois contém "MOTORISTA"
-            if (/^AJUDANTE\s*(DE\s*)?MOTORISTA/i.test(v)) return 'AJUDANTE';
-            if (/^MOTORISTA/i.test(v)) return 'MOTORISTA';
+            // AJUDANTE deve ser testado ANTES de MOTORISTA pois contém "MOTORISTA" (ex: "AJUDANTE DE MOTORISTA")
+            if (/\bAJUDANTE\b/i.test(v)) return 'AJUDANTE';
+            if (/\bMOTORISTA\b/i.test(v)) return 'MOTORISTA';
             return val.trim(); // mantém o valor original para outras funções
         }
 
@@ -5266,6 +5266,35 @@
         let headDataLoaded = false;
         let chartHeadSituacao = null, chartHeadDepartamento = null, chartHeadContratar = null, chartHeadReduzir = null;
 
+        function consolidateHeadRecords(records) {
+            if (!Array.isArray(records)) return [];
+            const grouped = {};
+            records.forEach(r => {
+                if (!r) return;
+                const normFuncao = normalizeFuncao(r.funcao);
+                const empresa = String(r.empresa || '').trim();
+                const depto = String(r.departamento || '').trim();
+                const key = `${empresa}|||${depto}|||${normFuncao}`;
+                if (!grouped[key]) {
+                    grouped[key] = {
+                        ...r,
+                        funcao: normFuncao,
+                        empresa,
+                        departamento: depto,
+                        head_atual: 0,
+                        head_programado: 0
+                    };
+                }
+                grouped[key].head_atual += Number(r.head_atual || 0);
+                grouped[key].head_programado += Number(r.head_programado || 0);
+            });
+
+            return Object.values(grouped).map(g => {
+                const derived = computeHeadDerivedFields(g.head_atual, g.head_programado);
+                return { ...g, ...derived };
+            });
+        }
+
         async function loadHeadSection() {
             if (headDataLoaded) { applyHeadFilters(); return; }
             const tbody = document.getElementById('headTableBody');
@@ -5273,7 +5302,7 @@
 
             try {
                 if (window.SupabaseService && isSupabaseOnline) {
-                    headRawData = await window.SupabaseService.fetchHeadNecessidade();
+                    headRawData = consolidateHeadRecords(await window.SupabaseService.fetchHeadNecessidade());
                 } else {
                     headRawData = [];
                 }
@@ -5407,15 +5436,22 @@
             }
 
             // 3. Ranking de funções a contratar
-            const paraContratar = rows.filter(r => r.vagas_contratar > 0).sort((a, b) => b.vagas_contratar - a.vagas_contratar).slice(0, 10);
+            const porFuncaoContratar = {};
+            rows.filter(r => r.vagas_contratar > 0).forEach(r => {
+                const f = normalizeFuncao(r.funcao);
+                porFuncaoContratar[f] = (porFuncaoContratar[f] || 0) + Number(r.vagas_contratar || 0);
+            });
+            const paraContratar = Object.entries(porFuncaoContratar)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
             const contratarCanvas = document.getElementById('chartHeadContratar');
             if (contratarCanvas) {
                 if (chartHeadContratar) chartHeadContratar.destroy();
                 chartHeadContratar = new Chart(contratarCanvas.getContext('2d'), {
                     type: 'bar',
                     data: {
-                        labels: paraContratar.map(r => r.funcao),
-                        datasets: [{ label: 'Vagas a Contratar', data: paraContratar.map(r => r.vagas_contratar), backgroundColor: 'rgba(16,185,129,0.8)', borderRadius: 4 }]
+                        labels: paraContratar.map(r => r[0]),
+                        datasets: [{ label: 'Vagas a Contratar', data: paraContratar.map(r => r[1]), backgroundColor: 'rgba(16,185,129,0.8)', borderRadius: 4 }]
                     },
                     options: {
                         indexAxis: 'y',
@@ -5430,15 +5466,22 @@
             }
 
             // 4. Ranking de funções a reduzir
-            const paraReduzir = rows.filter(r => r.reducoes > 0).sort((a, b) => b.reducoes - a.reducoes).slice(0, 10);
+            const porFuncaoReduzir = {};
+            rows.filter(r => r.reducoes > 0).forEach(r => {
+                const f = normalizeFuncao(r.funcao);
+                porFuncaoReduzir[f] = (porFuncaoReduzir[f] || 0) + Number(r.reducoes || 0);
+            });
+            const paraReduzir = Object.entries(porFuncaoReduzir)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
             const reduzirCanvas = document.getElementById('chartHeadReduzir');
             if (reduzirCanvas) {
                 if (chartHeadReduzir) chartHeadReduzir.destroy();
                 chartHeadReduzir = new Chart(reduzirCanvas.getContext('2d'), {
                     type: 'bar',
                     data: {
-                        labels: paraReduzir.map(r => r.funcao),
-                        datasets: [{ label: 'Reduções', data: paraReduzir.map(r => r.reducoes), backgroundColor: 'rgba(227,6,19,0.8)', borderRadius: 4 }]
+                        labels: paraReduzir.map(r => r[0]),
+                        datasets: [{ label: 'Reduções', data: paraReduzir.map(r => r[1]), backgroundColor: 'rgba(227,6,19,0.8)', borderRadius: 4 }]
                     },
                     options: {
                         indexAxis: 'y',
@@ -5708,7 +5751,7 @@
 
             try {
                 if (window.SupabaseService && isSupabaseOnline) {
-                    horaExtraRawData = await window.SupabaseService.fetchPagamentoHoraExtra();
+                    horaExtraRawData = normalizeAllFuncoes(await window.SupabaseService.fetchPagamentoHoraExtra());
                 } else {
                     horaExtraRawData = [];
                 }
@@ -5743,7 +5786,7 @@
             depSel.innerHTML = '<option value="ALL">Todos os Departamentos</option>' + deps.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
             if (deps.includes(curDep)) depSel.value = curDep;
 
-            const funcs = [...new Set(horaExtraRawData.map(r => r.funcao).filter(Boolean))].sort();
+            const funcs = [...new Set(horaExtraRawData.map(r => normalizeFuncao(r.funcao)).filter(Boolean))].sort();
             const curFunc = funcSel.value;
             funcSel.innerHTML = '<option value="ALL">Todas as Funções</option>' + funcs.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
             if (funcs.includes(curFunc)) funcSel.value = curFunc;
@@ -5759,7 +5802,7 @@
             horaExtraFilteredData = horaExtraRawData.filter(r => {
                 if (mes !== 'ALL' && r.ano_mes_sort !== mes) return false;
                 if (dep !== 'ALL' && r.departamento !== dep) return false;
-                if (funcao !== 'ALL' && r.funcao !== funcao) return false;
+                if (funcao !== 'ALL' && normalizeFuncao(r.funcao) !== funcao) return false;
                 if (pct !== 'ALL' && String(r.percentual) !== pct) return false;
                 if (search && !String(r.funcionario_nome || '').toLowerCase().includes(search)) return false;
                 return true;
@@ -5901,7 +5944,7 @@
             // 4. Ranking por função
             const porFuncao = {};
             rows.forEach(r => {
-                const key = r.funcao || 'Não informado';
+                const key = normalizeFuncao(r.funcao) || 'Não informado';
                 porFuncao[key] = (porFuncao[key] || 0) + Number(r.valor_pago || 0);
             });
             const funcoesOrdenadas = Object.entries(porFuncao).sort((a, b) => b[1] - a[1]).slice(0, 10);
@@ -5945,7 +5988,7 @@
                 const key = r.funcionario_codigo || r.funcionario_nome;
                 if (!porColaborador[key]) {
                     porColaborador[key] = {
-                        codigo: key, nome: r.funcionario_nome, departamento: r.departamento, funcao: r.funcao,
+                        codigo: key, nome: r.funcionario_nome, departamento: r.departamento, funcao: normalizeFuncao(r.funcao),
                         meses: new Set(), horas: 0, valor: 0
                     };
                 }
@@ -6150,7 +6193,7 @@
                             empresa_codigo: String(empresaCod || '').trim(), empresa_nome: String(empresaNome || '').trim(),
                             funcionario_codigo: String(funcCod || '').trim(), funcionario_nome: String(funcNome || '').trim(),
                             departamento: String(departamento || '').trim(), admissao_iso: admissaoIso,
-                            cpf: String(cpf || '').trim(), sexo: String(sexo || '').trim(), funcao: String(funcao || '').trim(),
+                            cpf: String(cpf || '').trim(), sexo: String(sexo || '').trim(), funcao: normalizeFuncao(String(funcao || '').trim()),
                             salario_base: parseHoraExtraCurrency(salarioBase),
                             valor_repouso_remunerado: repousoIdx >= 0 ? parseHoraExtraCurrency(r[repousoIdx]) : 0,
                             origem: 'IMPORTACAO'
