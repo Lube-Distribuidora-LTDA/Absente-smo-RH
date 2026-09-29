@@ -2655,15 +2655,26 @@
         }
         function fmtIntBR(valor) { return fmtNumBR(valor, 0); }
         function fmtPctBR(valor, casas = 1) { return `${fmtNumBR(valor, casas)}%`; }
-        function fmtHorasBR(valor, casas = 1) { return `${fmtNumBR(valor, casas)}h`; }
+
+        // Igual ao fmtNumBR, mas sem casa decimal sobrando: 12,5 vira "12,5" e 12 vira "12"
+        // (em vez de "12,0"). É o que deixa o eixo limpo sem tirar precisão do rótulo.
+        function fmtNumFlexBR(valor, casasMax = 1) {
+            const n = Number(valor);
+            if (!isFinite(n)) return '';
+            return n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: casasMax });
+        }
+
+        function fmtHorasBR(valor, casas = 1) { return `${fmtNumFlexBR(valor, casas)}h`; }
 
         // Dinheiro abreviado: um rótulo dentro do gráfico não comporta "R$ 1.234.567,89".
+        // O EIXO usa exatamente esta mesma função — rótulo e eixo precisam falar a mesma
+        // língua, senão o gráfico mostra "R$ 4,6 mil" na barra e "R$ 4.000" embaixo.
         function fmtMoedaCurtaBR(valor) {
             const n = Number(valor) || 0;
             const abs = Math.abs(n);
-            if (abs >= 1000000) return `R$ ${fmtNumBR(n / 1000000, 2)} mi`;
-            if (abs >= 1000) return `R$ ${fmtNumBR(n / 1000, 1)} mil`;
-            return `R$ ${fmtNumBR(n, 0)}`;
+            if (abs >= 1000000) return `R$ ${fmtNumFlexBR(n / 1000000, 2)} mi`;
+            if (abs >= 1000) return `R$ ${fmtNumFlexBR(n / 1000, 1)} mil`;
+            return `R$ ${fmtNumFlexBR(n, 0)}`;
         }
 
         function dlTemValor(ctx) {
@@ -6553,11 +6564,11 @@
                                     label: (ctx) => `${ctx.dataset.label}: ${formatCurrencyBRL(ctx.parsed.y)}`
                                 }
                             },
-                            datalabels: dlBarraVertical(textColor, fmtMoedaCurtaBR, 9)
+                            datalabels: dlBarraVertical(textColor, fmtMoedaCurtaBR, 10)
                         },
                         scales: {
                             x: { ticks: { color: textColor }, grid: { display: false } },
-                            y: { grace: '14%', beginAtZero: true, ticks: { color: textColor, callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') }, grid: { color: gridColor } }
+                            y: { grace: '14%', beginAtZero: true, ticks: { color: textColor, maxTicksLimit: 7, callback: v => fmtMoedaCurtaBR(v) }, grid: { color: gridColor } }
                         }
                     }
                 });
@@ -6610,10 +6621,10 @@
                         plugins: {
                             legend: { display: false },
                             tooltip: { callbacks: { label: (ctx) => formatCurrencyBRL(ctx.parsed.x) } },
-                            datalabels: dlBarraHorizontal(textColor, fmtMoedaCurtaBR, 9)
+                            datalabels: dlBarraHorizontal(textColor, fmtMoedaCurtaBR, 10)
                         },
                         scales: {
-                            x: { grace: '16%', beginAtZero: true, ticks: { color: textColor, callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') }, grid: { color: gridColor } },
+                            x: { grace: '16%', beginAtZero: true, ticks: { color: textColor, maxTicksLimit: 6, callback: v => fmtMoedaCurtaBR(v) }, grid: { color: gridColor } },
                             y: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } }
                         }
                     }
@@ -6643,10 +6654,10 @@
                         plugins: {
                             legend: { display: false },
                             tooltip: { callbacks: { label: (ctx) => formatCurrencyBRL(ctx.parsed.x) } },
-                            datalabels: dlBarraHorizontal(textColor, fmtMoedaCurtaBR, 9)
+                            datalabels: dlBarraHorizontal(textColor, fmtMoedaCurtaBR, 10)
                         },
                         scales: {
-                            x: { grace: '16%', beginAtZero: true, ticks: { color: textColor, callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') }, grid: { color: gridColor } },
+                            x: { grace: '16%', beginAtZero: true, ticks: { color: textColor, maxTicksLimit: 6, callback: v => fmtMoedaCurtaBR(v) }, grid: { color: gridColor } },
                             y: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } }
                         }
                     }
@@ -7476,7 +7487,7 @@
                         plugins: {
                             legend: { display: false },
                             tooltip: { callbacks: { label: (ctx) => ` ${fmtHorasBR(ctx.parsed.x, 1)}` } },
-                            datalabels: dlBarraHorizontal(textColor, (v) => fmtHorasBR(v, 1), 9)
+                            datalabels: dlBarraHorizontal(textColor, (v) => fmtHorasBR(v, 1), 10)
                         },
                         scales: { x: { grace: '16%', beginAtZero: true, ticks: { color: textColor, callback: v => fmtHorasBR(v, 0) }, grid: { color: gridColor } }, y: { ticks: { color: textColor, font: { size: 9 } }, grid: { display: false } } }
                     }
