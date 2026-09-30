@@ -211,6 +211,58 @@ async function renameImportacaoDB(id, novoNome) {
  * Se for omitido, resolve automaticamente a importação mais recente (visão "atual" do dashboard).
  * Passe null explicitamente para buscar TODOS os registros sem filtro de importação.
  */
+/**
+ * Busca uma tabela inteira, em páginas de 1000 linhas (limite do PostgREST).
+ *
+ * A primeira página vem com a contagem total; sabendo o total, as páginas restantes
+ * são buscadas EM PARALELO. Buscar uma de cada vez custava caro: o projeto fica em
+ * us-west-2 e cada ida e volta do Brasil leva ~0,7s, então as 15 páginas da
+ * interjornada somavam ~11s de espera em fila só para a aba abrir.
+ *
+ * IMPORTANTE: a ordenação precisa ser TOTAL (terminar numa coluna única). Com
+ * empates, duas faixas paralelas podem repetir ou pular linhas, porque o banco
+ * ordena e recorta cada requisição por conta própria.
+ *
+ * @param {(de:number, ate:number, comContagem:boolean) => PromiseLike<any>} montarQuery
+ * @param {string} rotulo Nome amigável usado nas mensagens de erro
+ */
+async function fetchPaginadoDB(montarQuery, rotulo, step = 1000, maxParalelo = 12) {
+    const primeira = await montarQuery(0, step - 1, true);
+    if (primeira.error) {
+        console.error(`Erro ao buscar ${rotulo}:`, primeira.error);
+        throw primeira.error;
+    }
+
+    const registros = primeira.data || [];
+    const total = primeira.count;
+
+    // Coube tudo na primeira página, ou o banco não devolveu a contagem: nada a paginar.
+    if (registros.length < step || total === null || total === undefined || total <= registros.length) {
+        return registros;
+    }
+
+    const faixas = [];
+    for (let de = step; de < total; de += step) {
+        faixas.push([de, Math.min(de + step, total) - 1]);
+    }
+
+    // Em lotes, para não disparar dezenas de conexões de uma vez.
+    const paginas = new Array(faixas.length);
+    for (let i = 0; i < faixas.length; i += maxParalelo) {
+        const lote = faixas.slice(i, i + maxParalelo);
+        const respostas = await Promise.all(lote.map(([de, ate]) => montarQuery(de, ate, false)));
+        respostas.forEach((resp, j) => {
+            if (resp.error) {
+                console.error(`Erro ao buscar ${rotulo} (faixa ${lote[j][0]}-${lote[j][1]}):`, resp.error);
+                throw resp.error;
+            }
+            paginas[i + j] = resp.data || [];
+        });
+    }
+
+    return registros.concat(...paginas);
+}
+
 async function fetchAbsenteismoFromDB(importId) {
     const client = getSupabaseClient();
     if (!client) throw new Error('Cliente Supabase não inicializado');
@@ -220,44 +272,20 @@ async function fetchAbsenteismoFromDB(importId) {
         targetImportId = await fetchLatestImportIdDB();
     }
 
-    // Supabase REST limita a 1000 por página por padrão; fazemos paginação em blocos se passar de 1000
-    let allRecords = [];
-    let from = 0;
-    const step = 1000;
-    let keepFetching = true;
-
-    while (keepFetching) {
+    // Ordem total (data_iso + id) — requisito da paginação paralela.
+    return fetchPaginadoDB((de, ate, comContagem) => {
         let query = client
             .from('ocorrencias_absenteismo')
-            .select('*')
+            .select('*', comContagem ? { count: 'exact' } : undefined)
             .order('data_iso', { ascending: true })
             .order('id', { ascending: true })
-            .range(from, from + step - 1);
+            .range(de, ate);
 
         if (targetImportId !== null && targetImportId !== undefined) {
             query = query.eq('import_id', targetImportId);
         }
-
-        const { data, error } = await query;
-
-        if (error) {
-            console.error('Erro ao buscar dados de absenteísmo:', error);
-            throw error;
-        }
-
-        if (data && data.length > 0) {
-            allRecords = allRecords.concat(data);
-            if (data.length < step) {
-                keepFetching = false;
-            } else {
-                from += step;
-            }
-        } else {
-            keepFetching = false;
-        }
-    }
-
-    return allRecords;
+        return query;
+    }, 'dados de absenteísmo');
 }
 
 /**
@@ -541,34 +569,16 @@ async function fetchPagamentoHoraExtraDB() {
     const client = getSupabaseClient();
     if (!client) throw new Error('Cliente Supabase não inicializado');
 
-    let allRecords = [];
-    let from = 0;
-    const step = 1000;
-    let keepFetching = true;
-
-    while (keepFetching) {
-        const { data, error } = await client
-            .from('pagamento_hora_extra')
-            .select('*')
-            .order('ano_mes_sort', { ascending: true })
-            .order('funcionario_nome', { ascending: true })
-            .range(from, from + step - 1);
-
-        if (error) {
-            console.error('Erro ao buscar pagamento de hora extra:', error);
-            throw error;
-        }
-
-        if (data && data.length > 0) {
-            allRecords = allRecords.concat(data);
-            if (data.length < step) keepFetching = false;
-            else from += step;
-        } else {
-            keepFetching = false;
-        }
-    }
-
-    return allRecords;
+    // O id entra como critério final porque (ano_mes_sort, funcionario_nome) não é
+    // único — o mesmo colaborador tem linha de 50% e de 100% no mesmo mês. Sem ele a
+    // ordem fica ambígua e as faixas paralelas podem repetir ou pular lançamentos.
+    return fetchPaginadoDB((de, ate, comContagem) => client
+        .from('pagamento_hora_extra')
+        .select('*', comContagem ? { count: 'exact' } : undefined)
+        .order('ano_mes_sort', { ascending: true })
+        .order('funcionario_nome', { ascending: true })
+        .order('id', { ascending: true })
+        .range(de, ate), 'pagamento de hora extra');
 }
 
 /**
@@ -615,34 +625,15 @@ async function fetchInterjornadaRegistrosDB() {
     const client = getSupabaseClient();
     if (!client) throw new Error('Cliente Supabase não inicializado');
 
-    let allRecords = [];
-    let from = 0;
-    const step = 1000;
-    let keepFetching = true;
-
-    while (keepFetching) {
-        const { data, error } = await client
-            .from('interjornada_registros')
-            .select('*')
-            .order('colaborador_nome', { ascending: true })
-            .order('data_iso', { ascending: true })
-            .range(from, from + step - 1);
-
-        if (error) {
-            console.error('Erro ao buscar registros de interjornada:', error);
-            throw error;
-        }
-
-        if (data && data.length > 0) {
-            allRecords = allRecords.concat(data);
-            if (data.length < step) keepFetching = false;
-            else from += step;
-        } else {
-            keepFetching = false;
-        }
-    }
-
-    return allRecords;
+    // (colaborador_nome, data_iso) é a chave única da tabela, então a ordem já é total.
+    // Esta é a maior tabela do painel (~15 mil linhas): era ela que fazia a aba
+    // InterJornadas levar ~11s para abrir, com 15 requisições em fila.
+    return fetchPaginadoDB((de, ate, comContagem) => client
+        .from('interjornada_registros')
+        .select('*', comContagem ? { count: 'exact' } : undefined)
+        .order('colaborador_nome', { ascending: true })
+        .order('data_iso', { ascending: true })
+        .range(de, ate), 'registros de interjornada');
 }
 
 /**
