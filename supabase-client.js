@@ -673,6 +673,60 @@ async function upsertInterjornadaRegistrosDB(records) {
 }
 
 /**
+ * Busca o controle de exames periódicos (ASO) de todos os colaboradores.
+ * Devolve [] quando a tabela ainda não existe no projeto, para o painel poder
+ * cair na base local em vez de quebrar.
+ */
+async function fetchExamesPeriodicosDB() {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+
+    const { data, error } = await client
+        .from('exames_periodicos')
+        .select('*')
+        .order('proximo_aso_iso', { ascending: true, nullsFirst: false })
+        .order('funcionario', { ascending: true });
+
+    if (error) {
+        // 42P01 = tabela inexistente: ainda não rodaram a migração.
+        if (error.code === '42P01' || /does not exist/i.test(error.message || '')) {
+            console.warn('Tabela exames_periodicos ainda não existe no Supabase.');
+            return [];
+        }
+        console.error('Erro ao buscar exames periódicos:', error);
+        throw error;
+    }
+    return data || [];
+}
+
+/**
+ * Substitui o controle de exames periódicos pelo conteúdo de uma nova planilha.
+ * A planilha é sempre a foto completa do controle do RH, então o upsert usa o nome
+ * do colaborador como chave e apaga quem não veio mais na lista (desligados).
+ */
+async function upsertExamesPeriodicosDB(records) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase não inicializado');
+    if (!records || records.length === 0) return { count: 0 };
+
+    const batchSize = 250;
+    let total = 0;
+    for (let i = 0; i < records.length; i += batchSize) {
+        const chunk = records.slice(i, i + batchSize);
+        const { error } = await client
+            .from('exames_periodicos')
+            .upsert(chunk, { onConflict: 'empresa,funcionario' });
+        if (error) {
+            console.error(`Erro ao gravar lote ${i} de exames periódicos:`, error);
+            throw error;
+        }
+        total += chunk.length;
+    }
+
+    return { count: total };
+}
+
+/**
  * Exclui uma ocorrência pelo ID
  */
 async function deleteOcorrenciaDB(id) {
@@ -768,5 +822,7 @@ window.SupabaseService = {
     fetchPagamentoHoraExtra: fetchPagamentoHoraExtraDB,
     importPagamentoHoraExtraMes: importPagamentoHoraExtraMesDB,
     fetchInterjornadaRegistros: fetchInterjornadaRegistrosDB,
-    upsertInterjornadaRegistros: upsertInterjornadaRegistrosDB
+    upsertInterjornadaRegistros: upsertInterjornadaRegistrosDB,
+    fetchExamesPeriodicos: fetchExamesPeriodicosDB,
+    upsertExamesPeriodicos: upsertExamesPeriodicosDB
 };
