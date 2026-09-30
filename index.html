@@ -881,7 +881,7 @@
                         <p class="text-xs text-slate-400">Proporção dos principais motivos de ausência</p>
                     </div>
                 </div>
-                <div class="relative h-[280px] w-full flex items-center justify-center pt-2">
+                <div class="relative h-[340px] w-full flex items-center justify-center pt-2">
                     <canvas id="chartMotivos"></canvas>
                 </div>
                 <div id="motivosSummaryLegend" class="mt-2 pt-2 border-t border-slate-800 text-[11px] grid grid-cols-2 gap-1 text-slate-300">
@@ -2973,31 +2973,54 @@
         // Rótulo de rosca: valor + participação. Fatia larga recebe o rótulo por dentro (branco);
         // fatia estreita recebe por fora, em balão, para o texto não vazar sobre a fatia vizinha.
         // Fatias menores que o mínimo ficam só no tooltip/legenda.
-        function dlRosca(formatter = fmtIntBR, percentualMinimo = 3) {
-            const foraDaFatia = (ctx) => dlPercentualFatia(ctx) < 12;
+        // Rótulo de rosca: valor + participação, SEMPRE por dentro da fatia.
+        //
+        // A versão anterior jogava o rótulo das fatias estreitas para fora, num balão.
+        // Não funciona: num gráfico de rosca a área desenhável é praticamente do tamanho
+        // do anel, então o balão caía na borda do canvas e era cortado no meio — o número
+        // some e sobra um quadradinho pela metade. Aumentar a folga só adiava o problema,
+        // porque o anel cresce junto com a área.
+        //
+        // Agora a fatia que não comporta o rótulo simplesmente não recebe um: o número
+        // dela aparece na LEGENDA, via legendaRoscaComValor(). Assim dá para ler todos os
+        // valores, sem nada cortado e sem balão sobreposto.
+        function dlRosca(formatter = fmtIntBR, percentualMinimo = 7) {
             return {
-                // 'auto' (e não true) é o que resolve várias fatias pequenas vizinhas: o plugin
-                // esconde o rótulo que colidiria com outro, em vez de empilhar balões
-                // sobrepostos no topo da rosca. O valor escondido segue na legenda e no tooltip.
+                // 'auto' esconde o rótulo que ainda assim colidiria com um vizinho.
                 display: (ctx) => (dlTemValor(ctx) && dlPercentualFatia(ctx) >= percentualMinimo) ? 'auto' : false,
-                color: (ctx) => foraDaFatia(ctx) ? (document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#0f172a') : '#ffffff',
-                backgroundColor: (ctx) => foraDaFatia(ctx) ? (document.documentElement.classList.contains('dark') ? 'rgba(7,13,30,0.92)' : 'rgba(255,255,255,0.95)') : null,
-                borderColor: (ctx) => foraDaFatia(ctx) ? (document.documentElement.classList.contains('dark') ? 'rgba(148,163,184,0.35)' : 'rgba(15,23,42,0.15)') : null,
-                borderWidth: (ctx) => foraDaFatia(ctx) ? 1 : 0,
-                borderRadius: 5,
-                padding: (ctx) => foraDaFatia(ctx) ? { top: 2, bottom: 2, left: 5, right: 5 } : 0,
+                color: '#ffffff',
                 font: { size: 10, weight: 'bold', family: DL_FONT_FAMILY },
                 textAlign: 'center',
-                anchor: (ctx) => foraDaFatia(ctx) ? 'end' : 'center',
-                align: (ctx) => foraDaFatia(ctx) ? 'end' : 'center',
-                offset: (ctx) => foraDaFatia(ctx) ? 8 : 0,
-                // clamp puxaria o balão para dentro da área do gráfico, empurrando-o por cima
-                // da rosca. O espaço para ele sair fora vem do layout.padding de cada gráfico.
-                clamp: false,
-                clip: false,
-                textStrokeColor: 'rgba(0,0,0,0.6)',
-                textStrokeWidth: (ctx) => foraDaFatia(ctx) ? 0 : 2.5,
+                anchor: 'center',
+                align: 'center',
+                clamp: true,
+                clip: true,   // garante que nada seja desenhado fora do canvas
+                textStrokeColor: 'rgba(0,0,0,0.75)',
+                textStrokeWidth: 3,
                 formatter: (v, ctx) => `${formatter(v)}\n${fmtPctBR(dlPercentualFatia(ctx), 1)}`
+            };
+        }
+
+        // Legenda de rosca com o número de cada categoria: "Vencido — 26 · 13,1%".
+        // É o que garante que TODA fatia tenha o valor visível, inclusive as pequenas
+        // demais para caber um rótulo dentro do anel.
+        function legendaRoscaComValor(formatter = fmtIntBR) {
+            return (chart) => {
+                const ds = chart.data.datasets[0] || { data: [] };
+                const cores = Array.isArray(ds.backgroundColor) ? ds.backgroundColor : [];
+                const total = (ds.data || []).reduce((s, v) => s + (Number(v) || 0), 0);
+                return (chart.data.labels || []).map((rotulo, i) => {
+                    const valor = Number(ds.data[i]) || 0;
+                    const pct = total ? valor / total * 100 : 0;
+                    return {
+                        text: `${rotulo} — ${formatter(valor)} · ${fmtPctBR(pct, 1)}`,
+                        fillStyle: cores[i] || ds.backgroundColor,
+                        strokeStyle: cores[i] || ds.backgroundColor,
+                        lineWidth: 0,
+                        hidden: !chart.getDataVisibility(i),
+                        index: i
+                    };
+                });
             };
         }
 
@@ -4236,17 +4259,17 @@
                     maintainAspectRatio: false,
                     cutout: '68%',
                     animation: { duration: 700, easing: 'easeOutQuart' },
-                    layout: { padding: { top: 26, bottom: 26, left: 30, right: 30 } },
+                    layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: textColor, font: { size: 10, weight: '500', family: fontFamily }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' }
+                            labels: { color: textColor, font: { size: 10, weight: '500', family: fontFamily }, boxWidth: 8, padding: 8, usePointStyle: true, pointStyle: 'circle', generateLabels: legendaRoscaComValor(fmtIntBR) }
                         },
                         tooltip: {
                             padding: 10, cornerRadius: 8, bodyFont: { family: fontFamily }, titleFont: { family: fontFamily, weight: '700' },
                             callbacks: { label: (ctx) => ` ${fmtIntBR(ctx.parsed)} ocorrências (${fmtPctBR(dlPercentualFatia(ctx), 1)})` }
                         },
-                        datalabels: dlRosca(fmtIntBR, 6)
+                        datalabels: dlRosca(fmtIntBR)
                     }
                 }
             });
@@ -4567,17 +4590,17 @@
                     maintainAspectRatio: false,
                     cutout: '60%',
                     animation: { duration: 700, easing: 'easeOutQuart' },
-                    layout: { padding: { top: 26, bottom: 26, left: 30, right: 30 } },
+                    layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: textColor, font: { size: 11, weight: '500', family: fontFamily }, usePointStyle: true, pointStyle: 'circle' }
+                            labels: { color: textColor, font: { size: 10, weight: '500', family: fontFamily }, boxWidth: 8, padding: 8, usePointStyle: true, pointStyle: 'circle', generateLabels: legendaRoscaComValor(fmtIntBR) }
                         },
                         tooltip: {
                             padding: 10, cornerRadius: 8, bodyFont: { family: fontFamily }, titleFont: { family: fontFamily, weight: '700' },
                             callbacks: { label: (ctx) => ` ${fmtIntBR(ctx.parsed)} ocorrências (${fmtPctBR(dlPercentualFatia(ctx), 1)})` }
                         },
-                        datalabels: dlRosca(fmtIntBR, 6)
+                        datalabels: dlRosca(fmtIntBR)
                     }
                 }
             });
@@ -5702,11 +5725,11 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        layout: { padding: { top: 26, bottom: 26, left: 30, right: 30 } },
+                        layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
                         plugins: {
-                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10 } },
+                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 8, boxWidth: 10, generateLabels: legendaRoscaComValor(fmtIntBR) } },
                             tooltip: { callbacks: { label: (ctx) => ` ${fmtIntBR(ctx.parsed)} colaboradores (${fmtPctBR(dlPercentualFatia(ctx), 1)})` } },
-                            datalabels: dlRosca(fmtIntBR, 5)
+                            datalabels: dlRosca(fmtIntBR)
                         }
                     }
                 });
@@ -6318,11 +6341,11 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        layout: { padding: { top: 26, bottom: 26, left: 30, right: 30 } },
+                        layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
                         plugins: {
-                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10 } },
+                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 8, boxWidth: 10, generateLabels: legendaRoscaComValor(fmtIntBR) } },
                             tooltip: { callbacks: { label: (ctx) => ` ${fmtIntBR(ctx.parsed)} funções (${fmtPctBR(dlPercentualFatia(ctx), 1)})` } },
-                            datalabels: dlRosca(fmtIntBR, 2)
+                            datalabels: dlRosca(fmtIntBR)
                         }
                     }
                 });
@@ -6843,11 +6866,11 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        layout: { padding: { top: 26, bottom: 26, left: 34, right: 34 } },
+                        layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
                         plugins: {
-                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10 } },
+                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 8, boxWidth: 10, generateLabels: legendaRoscaComValor(fmtMoedaCurtaBR) } },
                             tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${formatCurrencyBRL(ctx.parsed)} (${fmtPctBR(dlPercentualFatia(ctx), 1)})` } },
-                            datalabels: dlRosca(fmtMoedaCurtaBR, 2)
+                            datalabels: dlRosca(fmtMoedaCurtaBR)
                         }
                     }
                 });
@@ -7473,11 +7496,11 @@
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         cutout: '62%',
-                        layout: { padding: { top: 26, bottom: 26, left: 30, right: 30 } },
+                        layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
                         plugins: {
-                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10, usePointStyle: true, pointStyle: 'circle' } },
+                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 8, boxWidth: 8, usePointStyle: true, pointStyle: 'circle', generateLabels: legendaRoscaComValor(fmtIntBR) } },
                             tooltip: { callbacks: { label: (ctx) => ` ${fmtIntBR(ctx.parsed)} colaboradores (${fmtPctBR(dlPercentualFatia(ctx), 1)})` } },
-                            datalabels: dlRosca(fmtIntBR, 2)
+                            datalabels: dlRosca(fmtIntBR)
                         }
                     }
                 });
@@ -7602,11 +7625,11 @@
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         cutout: '62%',
-                        layout: { padding: { top: 26, bottom: 26, left: 30, right: 30 } },
+                        layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
                         plugins: {
-                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10, usePointStyle: true, pointStyle: 'circle' } },
+                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 8, boxWidth: 8, usePointStyle: true, pointStyle: 'circle', generateLabels: legendaRoscaComValor(fmtIntBR) } },
                             tooltip: { callbacks: { label: (ctx) => ` ${fmtIntBR(ctx.parsed)} colaboradores (${fmtPctBR(dlPercentualFatia(ctx), 1)})` } },
-                            datalabels: dlRosca(fmtIntBR, 2)
+                            datalabels: dlRosca(fmtIntBR)
                         }
                     }
                 });
@@ -8297,11 +8320,11 @@
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        layout: { padding: { top: 26, bottom: 26, left: 30, right: 30 } },
+                        layout: { padding: { top: 8, bottom: 8, left: 8, right: 8 } },
                         plugins: {
-                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 10 } },
+                            legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 }, padding: 8, boxWidth: 10, generateLabels: legendaRoscaComValor(fmtIntBR) } },
                             tooltip: { callbacks: { label: (ctx) => ` ${fmtIntBR(ctx.parsed)} registros (${fmtPctBR(dlPercentualFatia(ctx), 1)})` } },
-                            datalabels: dlRosca(fmtIntBR, 2)
+                            datalabels: dlRosca(fmtIntBR)
                         }
                     }
                 });
