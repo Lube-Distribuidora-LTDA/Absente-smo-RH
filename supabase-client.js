@@ -664,7 +664,49 @@ async function upsertInterjornadaRegistrosDB(records) {
 }
 
 /**
- * Busca o controle de exames periódicos (ASO) de todos os colaboradores.
+ * Empresa por colaborador definida a mao no painel.
+ * A planilha de absenteismo nao traz empresa; o painel resolve cruzando o nome com o
+ * cadastro de empregados e com o controle de exames. Quem nao esta em nenhum dos dois
+ * e atribuido aqui, e passa a valer para toda importacao futura.
+ */
+async function fetchColaboradorEmpresaDB() {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase nao inicializado');
+
+    const { data, error } = await client
+        .from('colaborador_empresa')
+        .select('*')
+        .order('funcionario_nome', { ascending: true });
+
+    if (error) {
+        if (error.code === '42P01' || /does not exist/i.test(error.message || '')) {
+            console.warn('Tabela colaborador_empresa ainda nao existe no Supabase.');
+            return [];
+        }
+        console.error('Erro ao buscar empresa por colaborador:', error);
+        throw error;
+    }
+    return data || [];
+}
+
+async function upsertColaboradorEmpresaDB(registros) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase nao inicializado');
+    if (!registros || registros.length === 0) return { count: 0 };
+
+    const { error } = await client
+        .from('colaborador_empresa')
+        .upsert(registros, { onConflict: 'funcionario_chave' });
+
+    if (error) {
+        console.error('Erro ao gravar empresa por colaborador:', error);
+        throw error;
+    }
+    return { count: registros.length };
+}
+
+/**
+ * Busca o controle de exames periodicos (ASO) de todos os colaboradores.
  * Devolve [] quando a tabela ainda não existe no projeto, para o painel poder
  * cair na base local em vez de quebrar.
  */
@@ -815,5 +857,7 @@ window.SupabaseService = {
     fetchInterjornadaRegistros: fetchInterjornadaRegistrosDB,
     upsertInterjornadaRegistros: upsertInterjornadaRegistrosDB,
     fetchExamesPeriodicos: fetchExamesPeriodicosDB,
-    upsertExamesPeriodicos: upsertExamesPeriodicosDB
+    upsertExamesPeriodicos: upsertExamesPeriodicosDB,
+    fetchColaboradorEmpresa: fetchColaboradorEmpresaDB,
+    upsertColaboradorEmpresa: upsertColaboradorEmpresaDB
 };

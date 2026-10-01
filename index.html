@@ -667,10 +667,23 @@
                 <button type="button" onclick="applyPreset('justificado')" id="preset-justificado" class="preset-btn px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 whitespace-nowrap bg-slate-900/90 text-slate-300 hover:bg-blue-950/60 hover:text-blue-300 border border-slate-800 hover:border-blue-500/40 cursor-pointer">
                     <i data-lucide="stethoscope" class="w-3.5 h-3.5 text-blue-400"></i> Atestados &amp; Abonos
                 </button>
+                <!-- Aviso de empresa pendente: fica aqui, e não junto do filtro, porque dentro
+                     do rótulo ele empurrava o select para fora do alinhamento das outras colunas. -->
+                <button type="button" id="btnEmpresasPendentes" onclick="abrirModalEmpresas()" title="Definir a empresa dos colaboradores que não foram identificados" class="hidden ml-auto px-3 py-1.5 rounded-xl font-bold transition items-center gap-1.5 whitespace-nowrap bg-amber-950/80 text-amber-300 border border-amber-500/40 hover:bg-amber-900/80 cursor-pointer"></button>
             </div>
 
             <!-- Filter Inputs Grid (Futuristic Dark Inputs) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-4 border-t border-slate-800/80">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 pt-4 border-t border-slate-800/80">
+
+                <!-- 0. Empresa (resolvida pelo nome do colaborador — a planilha não traz) -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-300">
+                        <i data-lucide="building-2" class="w-3.5 h-3.5 inline mr-1 text-cyan-400"></i> Empresa
+                    </label>
+                    <select id="filterEmpresa" onchange="applyFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todas as Empresas</option>
+                    </select>
+                </div>
                 
                 <!-- 1. Período / Mês -->
                 <div class="space-y-1.5">
@@ -2156,6 +2169,58 @@
       </div>
     </section>
 
+
+    <!-- MODAL: ATRIBUIR EMPRESA AOS COLABORADORES NÃO IDENTIFICADOS -->
+    <div id="empresaModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-[#0b152b] rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-[0_0_40px_rgba(0,212,255,0.25)] border border-cyan-500/40 flex flex-col animate-fade-in">
+            <div class="p-6 bg-[#070d1e] border-b border-cyan-500/30 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-300">
+                        <i data-lucide="building-2" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider font-orbitron glow-text-cyan">Definir Empresa</h3>
+                        <p class="text-xs text-slate-400">Colaboradores que não foram encontrados no cadastro nem no controle de exames</p>
+                    </div>
+                </div>
+                <button onclick="fecharModalEmpresas()" class="p-2 rounded-xl hover:bg-slate-800/80 text-slate-400 hover:text-white transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1">
+                <p class="text-[11px] text-slate-500 flex items-start gap-1.5 mb-4">
+                    <i data-lucide="info" class="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5"></i>
+                    A planilha de absenteísmo não traz a empresa. O painel descobre pelo nome, cruzando com o cadastro de empregados e com o controle de exames. O que você definir aqui é <b class="text-cyan-300">gravado no banco</b> e passa a valer nas próximas importações, sem precisar refazer.
+                </p>
+                <div id="empresaModalVazio" class="hidden text-center py-8 text-slate-400 text-xs">
+                    <i data-lucide="check-circle-2" class="w-8 h-8 mx-auto mb-2 text-emerald-400"></i>
+                    Todos os colaboradores já têm empresa identificada.
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-slate-800">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-[#070d1e] text-slate-400 uppercase border-b border-slate-800">
+                            <tr>
+                                <th class="py-2.5 px-3">Colaborador</th>
+                                <th class="py-2.5 px-3 text-center">Ocorrências</th>
+                                <th class="py-2.5 px-3 w-1/2">Empresa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="empresaModalBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="p-5 bg-[#070d1e] border-t border-cyan-500/30 flex items-center justify-end gap-2.5">
+                <button onclick="fecharModalEmpresas()" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 border border-slate-700 transition cursor-pointer">Cancelar</button>
+                <button onclick="salvarEmpresasAtribuidas()" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.35)] border border-emerald-400/40 transition cursor-pointer">
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                    <span>Salvar no Banco</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: FICHA DO COLABORADOR (Pagamento Hora Extra por Mês) -->
     <div id="horaExtraFichaModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="bg-[#0b152b] rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-[0_0_40px_rgba(59,130,246,0.25)] border border-blue-500/40 flex flex-col animate-fade-in">
@@ -3160,6 +3225,10 @@
                 rawData = normalizeAllFuncoes(window.ABSENTEEISM_DATA || []);
             }
             recomputeCompetenciaAbsenteismoLista(rawData);
+            // O mapa precisa estar carregado ANTES de resolver, senão todo mundo cai
+            // como não identificado na primeira pintura da tela.
+            await carregarMapaEmpresas();
+            resolverEmpresaAbsenteismo(rawData);
             safeCreateIcons();
             initTheme();
             updateHeaderBaseBadge();
@@ -3203,10 +3272,16 @@
                         aiDiagnosticoCache = null;
                     }
 
+                    // O mapa de empresas depende do cadastro de empregados e das atribuições
+                    // manuais, que só podem ser lidos depois que o Supabase está online —
+                    // na carga inicial ainda não estava, então ali só entrou a base de exames.
+                    await carregarMapaEmpresas();
+
                     const dbData = await window.SupabaseService.fetchOcorrencias(null);
                     if (dbData && dbData.length > 0) {
                         rawData = normalizeAllFuncoes(dbData);
                         recomputeCompetenciaAbsenteismoLista(rawData);
+                        resolverEmpresaAbsenteismo(rawData);
                         try {
                             localStorage.setItem('lube_custom_absenteismo_data', JSON.stringify(rawData));
                         } catch (err) {}
@@ -3232,7 +3307,7 @@
                             const exists = rawData.some(r => r.id === newRec.id);
                             if (!exists) {
                                 if (newRec.funcao) newRec.funcao = normalizeFuncao(newRec.funcao);
-                                recomputeCompetenciaAbsenteismo(newRec);
+                                recomputeCompetenciaAbsenteismo(newRec); resolverEmpresaAbsenteismo([newRec]);
                                 rawData.unshift(newRec);
                                 populateFilterOptions();
                                 populateRecordFormDatalists();
@@ -3247,7 +3322,7 @@
                             const idx = rawData.findIndex(r => r.id === updatedRec.id);
                             if (idx !== -1) {
                                 if (updatedRec.funcao) updatedRec.funcao = normalizeFuncao(updatedRec.funcao);
-                                recomputeCompetenciaAbsenteismo(updatedRec);
+                                recomputeCompetenciaAbsenteismo(updatedRec); resolverEmpresaAbsenteismo([updatedRec]);
                                 rawData[idx] = updatedRec;
                                 populateFilterOptions();
                                 applyFilters();
@@ -3451,6 +3526,7 @@
                 const dbData = await window.SupabaseService.fetchOcorrencias(importId);
                 rawData = normalizeAllFuncoes(dbData || []);
                 recomputeCompetenciaAbsenteismoLista(rawData);
+                resolverEmpresaAbsenteismo(rawData);
                 currentImportId = importId;
                 isViewingHistoricalImport = true;
 
@@ -3602,7 +3678,7 @@
 
                 // Add to local state if not added by realtime yet
                 if (!rawData.some(r => r.id === record.id)) {
-                    recomputeCompetenciaAbsenteismo(record);
+                    recomputeCompetenciaAbsenteismo(record); resolverEmpresaAbsenteismo([record]);
                     rawData.unshift(record);
                 }
 
@@ -3706,6 +3782,20 @@
                 });
             }
 
+            // Empresas (resolvidas pelo nome do colaborador)
+            const empresaSelect = document.getElementById('filterEmpresa');
+            if (empresaSelect) {
+                const atual = empresaSelect.value;
+                const usadas = [...new Set(rawData.map(d => d.empresa_resolvida).filter(Boolean))];
+                // A "não identificada" vai sempre por último, por ser uma pendência e não uma empresa.
+                const ordenadas = usadas.filter(e => e !== EMPRESA_NAO_IDENTIFICADA).sort()
+                    .concat(usadas.includes(EMPRESA_NAO_IDENTIFICADA) ? [EMPRESA_NAO_IDENTIFICADA] : []);
+                empresaSelect.innerHTML = '<option value="ALL">Todas as Empresas</option>' +
+                    ordenadas.map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join('');
+                if (ordenadas.includes(atual)) empresaSelect.value = atual;
+            }
+            atualizarAvisoEmpresasPendentes();
+
             // Motivos
             const motivoSelect = document.getElementById('filterMotivo');
             if (motivoSelect) {
@@ -3752,6 +3842,7 @@
             const tipoVal = document.getElementById('filterTipo').value;
             const motivoVal = document.getElementById('filterMotivo').value;
             const setorVal = document.getElementById('filterSetor').value;
+            const empresaVal = document.getElementById('filterEmpresa') ? document.getElementById('filterEmpresa').value : 'ALL';
             const funcaoVal = document.getElementById('filterFuncao').value;
             const diaSemanaVal = document.getElementById('filterDiaSemana').value;
             const searchVal = (document.getElementById('filterSearch').value || '').trim().toLowerCase();
@@ -3761,6 +3852,7 @@
                 if (tipoVal !== 'ALL' && item.tipo_absenteismo !== tipoVal) return false;
                 if (motivoVal !== 'ALL' && item.motivo !== motivoVal) return false;
                 if (setorVal !== 'ALL' && item.setor !== setorVal) return false;
+                if (empresaVal !== 'ALL' && item.empresa_resolvida !== empresaVal) return false;
                 if (funcaoVal !== 'ALL' && item.funcao !== funcaoVal) return false;
                 if (diaSemanaVal !== 'ALL' && normalizeDiaSemana(item.dia_semana) !== normalizeDiaSemana(diaSemanaVal)) return false;
                 if (searchVal) {
@@ -3811,6 +3903,7 @@
 
             // Reset dropdowns
             document.getElementById('filterMonth').value = 'ALL';
+            if (document.getElementById('filterEmpresa')) document.getElementById('filterEmpresa').value = 'ALL';
             document.getElementById('filterTipo').value = 'ALL';
             document.getElementById('filterMotivo').value = 'ALL';
             document.getElementById('filterSetor').value = 'ALL';
@@ -3848,6 +3941,7 @@
             }
 
             document.getElementById('filterMonth').value = 'ALL';
+            if (document.getElementById('filterEmpresa')) document.getElementById('filterEmpresa').value = 'ALL';
             document.getElementById('filterTipo').value = 'ALL';
             document.getElementById('filterMotivo').value = 'ALL';
             document.getElementById('filterSetor').value = 'ALL';
@@ -5394,6 +5488,7 @@
                     const { merged, addedCount, duplicateCount } = mergeAbsenteismoRecords(rawData, parsedItems);
                     rawData = merged;
                     recomputeCompetenciaAbsenteismoLista(rawData);
+                    resolverEmpresaAbsenteismo(rawData);
                     try {
                         localStorage.setItem('lube_custom_absenteismo_data', JSON.stringify(rawData));
                     } catch (err) {
@@ -5452,6 +5547,7 @@
             localStorage.removeItem('lube_custom_absenteismo_data');
             rawData = normalizeAllFuncoes(window.ABSENTEEISM_DATA || []);
             recomputeCompetenciaAbsenteismoLista(rawData);
+            resolverEmpresaAbsenteismo(rawData);
             populateFilterOptions();
             resetAllFilters();
             updateHeaderBaseBadge();
@@ -7332,6 +7428,187 @@
         }
 
 
+
+        // ================================================================
+        // EMPRESA POR COLABORADOR (Absenteísmo)
+        // ================================================================
+        // A planilha de absenteísmo NÃO traz a empresa — o importador grava um valor
+        // padrão em todas as linhas. Para o filtro por empresa existir, resolvemos pelo
+        // nome do colaborador, cruzando com as bases que têm empresa de verdade:
+        //
+        //   1. colaborador_empresa  — atribuição manual feita nesta tela (tem prioridade)
+        //   2. colaboradores        — cadastro de empregados
+        //   3. exames periódicos    — controle de ASO
+        //
+        // Quem não aparece em nenhuma fica como NÃO IDENTIFICADA, e pode ser atribuído
+        // pelo botão ao lado do filtro. A atribuição vai para o banco e vale para as
+        // importações seguintes, sem precisar refazer.
+        const EMPRESA_NAO_IDENTIFICADA = 'NÃO IDENTIFICADA';
+
+        let mapaEmpresaPorColaborador = {};
+        let empresasConhecidas = [];
+        let empresaOverridesCarregados = false;
+
+        function chaveColaboradorEmpresa(nome) {
+            return normalizeNomeColaborador(nome)
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/[^A-Z0-9 ]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        async function carregarMapaEmpresas() {
+            const mapa = {};
+            const empresas = new Set();
+
+            const registrar = (nome, empresa, prioritario) => {
+                const chave = chaveColaboradorEmpresa(nome);
+                const emp = String(empresa || '').trim();
+                if (!chave || !emp) return;
+                empresas.add(emp);
+                // O manual sobrescreve; as demais fontes só preenchem o que está vazio.
+                if (prioritario || !mapa[chave]) mapa[chave] = emp;
+            };
+
+            // Base de exames já vem embutida no arquivo, serve mesmo offline.
+            (window.EXAMES_PERIODICOS_DATA || []).forEach(r => registrar(r.funcionario, r.empresa, false));
+
+            if (window.SupabaseService && isSupabaseOnline) {
+                try {
+                    const colaboradores = await window.SupabaseService.fetchColaboradores();
+                    (colaboradores || []).forEach(c => registrar(c.nome, c.empresa, false));
+                } catch (err) {
+                    console.warn('[Empresa] cadastro de empregados indisponível:', err.message || err);
+                }
+                try {
+                    const overrides = await window.SupabaseService.fetchColaboradorEmpresa();
+                    (overrides || []).forEach(o => registrar(o.funcionario_nome, o.empresa, true));
+                    empresaOverridesCarregados = true;
+                } catch (err) {
+                    console.warn('[Empresa] atribuições manuais indisponíveis:', err.message || err);
+                }
+            }
+
+            mapaEmpresaPorColaborador = mapa;
+            empresasConhecidas = [...empresas].sort();
+            return mapa;
+        }
+
+        function resolverEmpresaAbsenteismo(registros) {
+            (registros || []).forEach(r => {
+                const emp = mapaEmpresaPorColaborador[chaveColaboradorEmpresa(r.funcionario)];
+                r.empresa_resolvida = emp || EMPRESA_NAO_IDENTIFICADA;
+            });
+            return registros;
+        }
+
+        function colaboradoresSemEmpresa() {
+            const porNome = {};
+            (rawData || []).forEach(r => {
+                if (r.empresa_resolvida !== EMPRESA_NAO_IDENTIFICADA) return;
+                const nome = r.funcionario;
+                if (!porNome[nome]) porNome[nome] = { nome, ocorrencias: 0 };
+                porNome[nome].ocorrencias++;
+            });
+            return Object.values(porNome).sort((a, b) => b.ocorrencias - a.ocorrencias || a.nome.localeCompare(b.nome));
+        }
+
+        function atualizarAvisoEmpresasPendentes() {
+            const btn = document.getElementById('btnEmpresasPendentes');
+            if (!btn) return;
+            const pendentes = colaboradoresSemEmpresa();
+            if (pendentes.length === 0) {
+                btn.classList.add('hidden');
+                return;
+            }
+            btn.classList.remove('hidden');
+            btn.classList.add('inline-flex');
+            btn.innerHTML = `<i data-lucide="building-2" class="w-3.5 h-3.5"></i> <span>${pendentes.length} sem empresa</span>`;
+        }
+
+        // --- Modal de atribuição ---
+        function abrirModalEmpresas() {
+            const pendentes = colaboradoresSemEmpresa();
+            const corpo = document.getElementById('empresaModalBody');
+            const vazio = document.getElementById('empresaModalVazio');
+            if (!corpo) return;
+
+            if (pendentes.length === 0) {
+                corpo.innerHTML = '';
+                if (vazio) vazio.classList.remove('hidden');
+            } else {
+                if (vazio) vazio.classList.add('hidden');
+                const opcoes = empresasConhecidas
+                    .filter(e => e !== EMPRESA_NAO_IDENTIFICADA)
+                    .map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join('');
+                corpo.innerHTML = pendentes.map(p => `
+                    <tr class="border-b border-slate-800/70">
+                        <td class="py-2.5 px-3 font-bold text-slate-100">${escapeHtml(p.nome)}</td>
+                        <td class="py-2.5 px-3 text-center text-slate-400 font-jetbrains">${fmtIntBR(p.ocorrencias)}</td>
+                        <td class="py-2.5 px-3">
+                            <select data-empresa-para="${escapeHtml(p.nome)}" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:outline-none transition shadow-inner">
+                                <option value="">Selecione a empresa...</option>
+                                ${opcoes}
+                            </select>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            document.getElementById('empresaModal').classList.remove('hidden');
+            safeCreateIcons();
+        }
+
+        function fecharModalEmpresas() {
+            document.getElementById('empresaModal').classList.add('hidden');
+        }
+
+        async function salvarEmpresasAtribuidas() {
+            const selects = [...document.querySelectorAll('#empresaModalBody select[data-empresa-para]')];
+            const escolhas = selects
+                .map(s => ({ nome: s.dataset.empresaPara, empresa: s.value }))
+                .filter(e => e.empresa);
+
+            if (escolhas.length === 0) {
+                showToast('Nada a Salvar', 'Escolha a empresa de pelo menos um colaborador.', true);
+                return;
+            }
+
+            const registros = escolhas.map(e => ({
+                funcionario_chave: chaveColaboradorEmpresa(e.nome),
+                funcionario_nome: e.nome,
+                empresa: e.empresa,
+                origem: 'MANUAL'
+            }));
+
+            let salvouNaNuvem = false;
+            try {
+                if (window.SupabaseService && isSupabaseOnline && window.SupabaseService.upsertColaboradorEmpresa) {
+                    await window.SupabaseService.upsertColaboradorEmpresa(registros);
+                    salvouNaNuvem = true;
+                }
+            } catch (err) {
+                console.error('Erro ao salvar empresa por colaborador:', err);
+                showToast('Erro ao Salvar', err.message || String(err), true);
+                return;
+            }
+
+            // Aplica na hora, sem esperar recarregar a página.
+            escolhas.forEach(e => { mapaEmpresaPorColaborador[chaveColaboradorEmpresa(e.nome)] = e.empresa; });
+            resolverEmpresaAbsenteismo(rawData);
+            populateFilterOptions();
+            applyFilters();
+            fecharModalEmpresas();
+
+            showToast(
+                'Empresas Atribuídas',
+                salvouNaNuvem
+                    ? `${escolhas.length} ${escolhas.length === 1 ? 'colaborador vinculado' : 'colaboradores vinculados'}. Vale para as próximas importações.`
+                    : `${escolhas.length} aplicados só nesta sessão — sem conexão com o Supabase, não ficou gravado.`,
+                !salvouNaNuvem
+            );
+        }
+
         // ================================================================
         // EXAMES PERIÓDICOS (Controle de ASO — Saúde Ocupacional)
         // ================================================================
@@ -7988,6 +8265,7 @@
             // Absenteísmo agrupa as ocorrências pelo mesmo período de apuração — recalcula e re-renderiza.
             if (rawData && rawData.length > 0) {
                 recomputeCompetenciaAbsenteismoLista(rawData);
+                resolverEmpresaAbsenteismo(rawData);
                 populateFilterOptions();
                 applyFilters();
             }
