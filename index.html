@@ -1284,10 +1284,15 @@
                         <p class="text-xs text-slate-400">Busque, filtre e gerencie o quadro de colaboradores</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex flex-wrap items-center gap-2.5">
                     <span id="empregadosStatsBadge" class="px-3.5 py-1 text-xs font-bold rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,212,255,0.2)]">
                         Carregando...
                     </span>
+                    <button onclick="triggerEmpregadosImport()" title="Importar a planilha de empregados (aba &quot;Listagem empregados&quot;)" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-700 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white shadow-neon-blue border border-cyan-400/40 transition cursor-pointer">
+                        <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
+                        <span>Importar Planilha</span>
+                    </button>
+                    <input type="file" id="fileImportEmpregados" accept=".xls, .xlsx, .xlsm, .csv" onchange="handleEmpregadosExcelImport(event)" class="hidden">
                 </div>
             </div>
 
@@ -1344,6 +1349,7 @@
                             <th class="py-2 pr-4">Tempo de Casa</th>
                             <th class="py-2 pr-4">Último Exame</th>
                             <th class="py-2 pr-4">Status</th>
+                            <th class="py-2 pr-4 text-right">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="empregadosTableBody"></tbody>
@@ -6167,6 +6173,8 @@
         }
 
         function applyEmpregadosFilters() {
+            // Demitido sai da listagem (continua no banco, para o histórico não ficar órfão).
+            colaboradoresRawData = (colaboradoresRawData || []).filter(c => String(c.status || '').toUpperCase() !== STATUS_DEMITIDO);
             const search = (document.getElementById('empFilterSearch').value || '').trim().toLowerCase();
             const empresa = document.getElementById('empFilterEmpresa').value;
             const funcao = document.getElementById('empFilterFuncao').value;
@@ -6220,7 +6228,7 @@
             if (!tbody) return;
 
             if (colaboradoresFilteredData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Nenhum colaborador encontrado com os filtros aplicados.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400">Nenhum colaborador encontrado com os filtros aplicados.</td></tr>';
                 document.getElementById('empregadosPaginationInfo').textContent = 'Mostrando 0 a 0 de 0 colaboradores';
                 document.getElementById('empregadosPaginationButtons').innerHTML = '';
                 return;
@@ -6240,7 +6248,12 @@
                     <td class="py-2 pr-4">${calcTempoDeCasa(c.dt_admissao)}</td>
                     <td class="py-2 pr-4">${c.ultimo_exame_formatada ? escapeHtml(c.ultimo_exame_formatada) : '<span class="text-slate-500">Não registrado</span>'}</td>
                     <td class="py-2 pr-4">
-                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full ${c.status === 'ATIVO' ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-400 border border-slate-700'}">${escapeHtml(c.status || 'ATIVO')}</span>
+                        <span class="whitespace-nowrap px-2 py-0.5 text-[10px] font-bold rounded-full ${badgeStatusColaborador(c.status)}">${escapeHtml(c.status || STATUS_ATIVO)}</span>
+                    </td>
+                    <td class="py-2 pr-4 text-right">
+                        <button onclick="demitirColaborador(${JSON.stringify(c.nome).replace(/"/g, '&quot;')})" title="Demitir ${escapeHtml(c.nome)}" class="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold rounded-lg bg-red-950/80 text-red-300 border border-red-500/40 hover:bg-red-900/80 transition cursor-pointer">
+                            <i data-lucide="user-minus" class="w-3 h-3"></i> Demitir
+                        </button>
                     </td>
                 </tr>
             `).join('');
@@ -6309,11 +6322,12 @@
                 if (!window.SupabaseService || !isSupabaseOnline) throw new Error('Conecte-se ao Supabase para adicionar colaboradores.');
                 const saved = await window.SupabaseService.insertColaborador(record);
                 colaboradoresRawData.unshift(saved || record);
-                populateEmpregadosFilterOptions();
                 populateColaboradorFormDatalists();
-                applyEmpregadosFilters();
+                // Recarrega cadastro, mapa de empresas e HEAD: quem entra ocupa vaga,
+                // então o head atual sobe na hora, sem precisar reimportar nada.
+                await recarregarEmpregadosEHead();
                 closeAddColaboradorModal();
-                showToast('Colaborador Adicionado!', `${nome} foi cadastrado com sucesso.`);
+                showToast('Colaborador Adicionado!', `${nome} foi cadastrado. Painel HEAD atualizado.`);
             } catch (err) {
                 console.error('Erro ao adicionar colaborador:', err);
                 showToast('Erro ao Salvar', err.message || String(err), true);
@@ -6434,7 +6448,9 @@
 
             try {
                 if (window.SupabaseService && isSupabaseOnline) {
-                    headRawData = consolidateHeadRecords(await window.SupabaseService.fetchHeadNecessidade());
+                    const metas = consolidateHeadRecords(await window.SupabaseService.fetchHeadNecessidade());
+                    const cadastro = await window.SupabaseService.fetchColaboradores();
+                    headRawData = montarHeadPeloCadastro(metas, cadastro);
                 } else {
                     headRawData = [];
                 }
@@ -6447,6 +6463,50 @@
             headDataLoaded = true;
             populateHeadFilterOptions();
             applyHeadFilters();
+        }
+
+        // O head atual deixa de ser um número importado e passa a ser a CONTAGEM de
+        // colaboradores ATIVOS por empresa + função. Afastado INSS e demitido ficam de
+        // fora: nenhum dos dois ocupa vaga, então não podem inflar o quadro atual.
+        // O head programado continua vindo da tabela de metas (head_necessidade_funcao).
+        function montarHeadPeloCadastro(metas, cadastro) {
+            const chave = (empresa, funcao) => `${String(empresa || '').trim()}|||${normalizeFuncao(funcao)}`;
+
+            const contagem = {};
+            (cadastro || []).forEach(c => {
+                if (String(c.status || STATUS_ATIVO).toUpperCase() !== STATUS_ATIVO) return;
+                const k = chave(c.empresa, c.funcao);
+                if (!contagem[k]) contagem[k] = { empresa: String(c.empresa || '').trim(), funcao: normalizeFuncao(c.funcao), departamento: c.setor || '', total: 0 };
+                contagem[k].total++;
+            });
+
+            const porChave = {};
+            // Comeca pelas metas, para funcoes com meta mas sem ninguem aparecerem como vaga aberta.
+            (metas || []).forEach(m => {
+                const k = chave(m.empresa, m.funcao);
+                if (!porChave[k]) {
+                    porChave[k] = {
+                        ...m,
+                        empresa: String(m.empresa || '').trim(),
+                        funcao: normalizeFuncao(m.funcao),
+                        head_programado: 0,
+                        head_atual: 0
+                    };
+                }
+                // SOMA, nao sobrescreve: a mesma empresa+funcao pode ter meta em mais de um
+                // departamento, e sobrescrever perdia a meta dos demais.
+                porChave[k].head_programado += Number(m.head_programado || 0);
+            });
+            // Depois o cadastro, que e quem manda no head atual.
+            Object.entries(contagem).forEach(([k, c]) => {
+                if (!porChave[k]) {
+                    porChave[k] = { empresa: c.empresa, departamento: c.departamento, funcao: c.funcao, head_programado: 0, head_atual: 0 };
+                }
+                porChave[k].head_atual = c.total;
+                if (!porChave[k].departamento) porChave[k].departamento = c.departamento;
+            });
+
+            return Object.values(porChave).map(h => ({ ...h, ...computeHeadDerivedFields(h.head_atual, h.head_programado) }));
         }
 
         function populateHeadFilterOptions() {
@@ -7443,6 +7503,164 @@
         }
 
 
+
+
+        // ================================================================
+        // CADASTRO DE EMPREGADOS — importação, status e demissão
+        // ================================================================
+        // O status sai do DEPARTAMENTO da planilha: quem está em "AFASTADOS INSS"
+        // entra como AFASTADO INSS, o resto como ATIVO. O Painel HEAD conta só os
+        // ATIVOS — afastado não ocupa vaga, então não pode inflar o head atual.
+        const STATUS_ATIVO = 'ATIVO';
+        const STATUS_AFASTADO = 'AFASTADO INSS';
+        const STATUS_DEMITIDO = 'DEMITIDO';
+
+        function statusPeloDepartamento(departamento, funcao) {
+            const d = String(departamento || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+            const f = String(funcao || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+            if (d.includes('AFASTAD') || d.includes('INSS') || f.includes('AFASTAD')) return STATUS_AFASTADO;
+            return STATUS_ATIVO;
+        }
+
+        function badgeStatusColaborador(status) {
+            const st = String(status || STATUS_ATIVO).toUpperCase();
+            if (st === STATUS_AFASTADO) return 'bg-purple-950/80 text-purple-300 border border-purple-500/40';
+            if (st === STATUS_DEMITIDO) return 'bg-red-950/80 text-red-300 border border-red-500/40';
+            if (st === STATUS_ATIVO) return 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/40';
+            return 'bg-slate-800 text-slate-400 border border-slate-700';
+        }
+
+        function triggerEmpregadosImport() {
+            document.getElementById('fileImportEmpregados').click();
+        }
+
+        function handleEmpregadosExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: false });
+
+                    // A aba certa é "Listagem empregados"; se vier com outro nome, procura
+                    // a primeira que tenha uma coluna de nome do funcionário.
+                    let aba = workbook.SheetNames.find(n => /listagem/i.test(n) && /empregad/i.test(n));
+                    if (!aba) {
+                        aba = workbook.SheetNames.find(n => {
+                            const l = XLSX.utils.sheet_to_json(workbook.Sheets[n], { defval: '' });
+                            return l.length > 0 && Object.keys(l[0]).some(k =>
+                                /nome do funcionario|^funcionario|^colaborador/i.test(k.normalize('NFD').replace(/[̀-ͯ]/g, '')));
+                        });
+                    }
+                    if (!aba) throw new Error('Não encontrei a aba "Listagem empregados" nem nenhuma com a coluna de nome do funcionário.');
+
+                    const linhas = XLSX.utils.sheet_to_json(workbook.Sheets[aba], { defval: '' });
+                    const registros = [];
+                    const vistos = new Set();
+
+                    for (const linha of linhas) {
+                        const nome = String(getRowValue(linha, [/^nome do funcionario/i, /^colaborador/i, /^nome$/i])).trim().toUpperCase();
+                        if (!nome || /^\d+$/.test(nome) || nome.includes('TOTAL')) continue;
+                        if (vistos.has(nome)) continue;   // a planilha repete nome em algumas linhas
+                        vistos.add(nome);
+
+                        const empresa = String(getRowValue(linha, [/^nome da empresa/i, /^empresa/i])).trim();
+                        const funcao = normalizeFuncao(String(getRowValue(linha, [/^funcao/i, /^cargo/i])).trim());
+                        const departamento = String(getRowValue(linha, [/^departamento/i, /^setor/i])).trim();
+                        const adm = parseExcelDate(getRowValue(linha, [/^admissao/i, /^dt.*adm/i]));
+                        const admIso = adm && adm.getFullYear() > 1950
+                            ? `${adm.getFullYear()}-${String(adm.getMonth() + 1).padStart(2, '0')}-${String(adm.getDate()).padStart(2, '0')}`
+                            : null;
+
+                        registros.push({
+                            nome,
+                            empresa,
+                            setor: departamento,
+                            funcao,
+                            dt_admissao: admIso,
+                            dt_admissao_formatada: admIso ? formatDateBR(admIso) : null,
+                            status: statusPeloDepartamento(departamento, funcao)
+                        });
+                    }
+
+                    if (registros.length === 0) throw new Error('Nenhum colaborador válido encontrado na planilha.');
+
+                    let salvou = false;
+                    try {
+                        if (window.SupabaseService && isSupabaseOnline && window.SupabaseService.upsertColaboradores) {
+                            await window.SupabaseService.upsertColaboradores(registros);
+                            salvou = true;
+                        }
+                    } catch (err) {
+                        console.error('Erro ao gravar colaboradores:', err);
+                        showToast('Erro na Importação', err.message || String(err), true);
+                        return;
+                    }
+
+                    // Recarrega cadastro, mapa de empresas e Painel HEAD, nesta ordem:
+                    // o HEAD conta a partir do cadastro, então precisa vir depois.
+                    await recarregarEmpregadosEHead();
+
+                    const afastados = registros.filter(r => r.status === STATUS_AFASTADO).length;
+                    showToast(
+                        'Empregados Importados!',
+                        `${registros.length} colaboradores · ${afastados} afastado(s) INSS fora do head.` +
+                        (salvou ? ' Painel HEAD atualizado.' : ' Sem conexão com o Supabase — nada foi gravado.'),
+                        !salvou
+                    );
+                } catch (err) {
+                    console.error('Erro ao importar empregados:', err);
+                    showToast('Erro na Importação', err.message || String(err), true);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Demissão é marcada no status, não apagada: o histórico de absenteísmo, hora
+        // extra e exames referencia a pessoa pelo nome, e apagar deixaria esses
+        // registros órfãos. O demitido sai da listagem e para de contar no head.
+        async function demitirColaborador(nome) {
+            if (!confirm(`Demitir ${nome}?\n\nEle sai da listagem de empregados e deixa de contar no Painel HEAD. O histórico de absenteísmo, hora extra e exames é preservado.`)) return;
+
+            try {
+                if (!window.SupabaseService || !isSupabaseOnline) {
+                    showToast('Sem Conexão', 'Não é possível demitir sem conexão com o Supabase.', true);
+                    return;
+                }
+                await window.SupabaseService.updateColaboradorStatus(nome, STATUS_DEMITIDO);
+                await recarregarEmpregadosEHead();
+                showToast('Colaborador Demitido', `${nome} saiu da listagem. Painel HEAD atualizado.`);
+            } catch (err) {
+                console.error('Erro ao demitir colaborador:', err);
+                showToast('Erro ao Demitir', err.message || String(err), true);
+            }
+        }
+
+        // Ponto único de atualização: usado pela importação, pela demissão e pelo
+        // cadastro de um colaborador novo, para o HEAD nunca ficar defasado da listagem.
+        async function recarregarEmpregadosEHead() {
+            try {
+                colaboradoresRawData = await window.SupabaseService.fetchColaboradores();
+            } catch (err) {
+                console.warn('[Empregados] não foi possível recarregar o cadastro:', err.message || err);
+            }
+            await carregarMapaEmpresas();
+            if (rawData && rawData.length > 0) {
+                resolverEmpresaAbsenteismo(rawData);
+                populateFilterOptions();
+                applyFilters();
+            }
+            populateEmpregadosFilterOptions();
+            applyEmpregadosFilters();
+
+            // O HEAD é derivado do cadastro, então precisa ser remontado do zero.
+            headDataLoaded = false;
+            if (currentActiveSection === 'head') await loadHeadSection();
+        }
 
         // ================================================================
         // EMPRESA POR COLABORADOR (Absenteísmo)

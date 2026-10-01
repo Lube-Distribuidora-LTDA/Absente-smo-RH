@@ -664,6 +664,52 @@ async function upsertInterjornadaRegistrosDB(records) {
 }
 
 /**
+ * Importacao em lote do cadastro de empregados. A chave e o nome (unique na tabela),
+ * entao reimportar a mesma planilha atualiza em vez de duplicar.
+ */
+async function upsertColaboradoresDB(registros) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase nao inicializado');
+    if (!registros || registros.length === 0) return { count: 0 };
+
+    const lote = 250;
+    let total = 0;
+    for (let i = 0; i < registros.length; i += lote) {
+        const chunk = registros.slice(i, i + lote);
+        const { error } = await client
+            .from('colaboradores')
+            .upsert(chunk, { onConflict: 'nome' });
+        if (error) {
+            console.error(`Erro ao gravar lote ${i} de colaboradores:`, error);
+            throw error;
+        }
+        total += chunk.length;
+    }
+    return { count: total };
+}
+
+/**
+ * Troca o status de um colaborador (ATIVO / AFASTADO INSS / DEMITIDO).
+ * Demissao e marcada no status, nao apagada: o historico de absenteismo, hora extra
+ * e exames referencia a pessoa pelo nome, e apagar deixaria esses registros orfaos.
+ */
+async function updateColaboradorStatusDB(nome, status) {
+    const client = getSupabaseClient();
+    if (!client) throw new Error('Cliente Supabase nao inicializado');
+
+    const { error } = await client
+        .from('colaboradores')
+        .update({ status })
+        .eq('nome', nome);
+
+    if (error) {
+        console.error('Erro ao atualizar status do colaborador:', error);
+        throw error;
+    }
+    return true;
+}
+
+/**
  * Empresa por colaborador definida a mao no painel.
  * A planilha de absenteismo nao traz empresa; o painel resolve cruzando o nome com o
  * cadastro de empregados e com o controle de exames. Quem nao esta em nenhum dos dois
@@ -859,5 +905,7 @@ window.SupabaseService = {
     fetchExamesPeriodicos: fetchExamesPeriodicosDB,
     upsertExamesPeriodicos: upsertExamesPeriodicosDB,
     fetchColaboradorEmpresa: fetchColaboradorEmpresaDB,
-    upsertColaboradorEmpresa: upsertColaboradorEmpresaDB
+    upsertColaboradorEmpresa: upsertColaboradorEmpresaDB,
+    upsertColaboradores: upsertColaboradoresDB,
+    updateColaboradorStatus: updateColaboradorStatusDB
 };
