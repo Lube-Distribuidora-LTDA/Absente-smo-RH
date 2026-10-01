@@ -8001,11 +8001,29 @@
                 });
                 const nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
                 const ordenados = Object.keys(meses).sort();
+                const agora = hojeSemHora();
+                const chaveMesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
                 const atualMes = mesSel.value;
-                mesSel.innerHTML = '<option value="ALL">Todos os Meses</option>' + ordenados.map(k => {
+
+                // A lista tem meses passados e futuros no mesmo lugar: os passados são os ASO
+                // que JÁ venceram. Sem marcar, um "Novembro/2025" no meio da lista parece erro
+                // — por isso vão separados e com a palavra vencido.
+                const vencidos = ordenados.filter(k => k < chaveMesAtual);
+                const futuros = ordenados.filter(k => k >= chaveMesAtual);
+                const opcao = (k) => {
                     const [ano, mes] = k.split('-');
                     return `<option value="${k}">${nomesMes[parseInt(mes, 10) - 1]}/${ano} (${meses[k]})</option>`;
-                }).join('');
+                };
+
+                let html = '<option value="ALL">Todos os Meses</option>';
+                if (vencidos.length > 0) {
+                    const totalVencidos = vencidos.reduce((t, k) => t + meses[k], 0);
+                    html += `<optgroup label="Já vencidos (${totalVencidos})">` + vencidos.map(opcao).join('') + '</optgroup>';
+                }
+                if (futuros.length > 0) {
+                    html += '<optgroup label="A vencer">' + futuros.map(opcao).join('') + '</optgroup>';
+                }
+                mesSel.innerHTML = html;
                 if (ordenados.includes(atualMes)) mesSel.value = atualMes;
             }
 
