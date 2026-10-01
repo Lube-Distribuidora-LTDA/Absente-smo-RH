@@ -474,6 +474,7 @@
 
         <div class="px-5 py-4 border-t border-cyan-500/20 text-[10px] text-slate-500">
             Lube Distribuidora &bull; Gestão Estratégica de Pessoas
+            <span id="buildVersion" class="block mt-1 text-[9px] text-slate-600" title="Versão publicada deste painel"></span>
         </div>
     </aside>
 
@@ -2973,31 +2974,90 @@
         // Rótulo de rosca: valor + participação. Fatia larga recebe o rótulo por dentro (branco);
         // fatia estreita recebe por fora, em balão, para o texto não vazar sobre a fatia vizinha.
         // Fatias menores que o mínimo ficam só no tooltip/legenda.
-        // Rótulo de rosca: valor + participação, SEMPRE por dentro da fatia.
+        // ---------------------------------------------------------------- Rótulo de rosca
+        // Regra inegociável: o rótulo é desenhado DENTRO da fatia ou não é desenhado.
+        // Nunca para fora, nunca cortado na borda, nunca por cima da legenda.
         //
-        // A versão anterior jogava o rótulo das fatias estreitas para fora, num balão.
-        // Não funciona: num gráfico de rosca a área desenhável é praticamente do tamanho
-        // do anel, então o balão caía na borda do canvas e era cortado no meio — o número
-        // some e sobra um quadradinho pela metade. Aumentar a folga só adiava o problema,
-        // porque o anel cresce junto com a área.
-        //
-        // Agora a fatia que não comporta o rótulo simplesmente não recebe um: o número
-        // dela aparece na LEGENDA, via legendaRoscaComValor(). Assim dá para ler todos os
-        // valores, sem nada cortado e sem balão sobreposto.
-        function dlRosca(formatter = fmtIntBR, percentualMinimo = 7) {
+        // Em vez de chutar um percentual mínimo, medimos se o texto cabe mesmo no pedaço
+        // de anel daquela fatia. O espaço disponível tem duas direções:
+        //   - radial      -> a espessura do anel (outerRadius - innerRadius)
+        //   - tangencial  -> o comprimento do arco da fatia
+        // O texto é escrito na horizontal, então o quanto ele ocupa em cada uma dessas
+        // direções depende do ângulo em que a fatia está. Projetamos a caixa do texto
+        // nas duas direções e só mostramos se couber nas duas.
+        // Os raios vêm do elemento (confiáveis), mas o ÂNGULO vem dos DADOS, nunca do
+        // elemento: enquanto a animação de entrada não termina, startAngle e endAngle do
+        // arco ainda estão colapsados em zero. Quem decidisse pelo elemento concluiria que
+        // nenhuma fatia tem espaço e esconderia todos os rótulos.
+        function dlRoscaEspacoDaFatia(ctx) {
+            const meta = ctx.chart.getDatasetMeta(ctx.datasetIndex);
+            const el = meta && meta.data ? meta.data[ctx.dataIndex] : null;
+            if (!el || !isFinite(el.outerRadius) || !isFinite(el.innerRadius) || el.outerRadius <= 0) return null;
+
+            const dados = (ctx.dataset.data || []).map(v => Math.abs(Number(v) || 0));
+            const total = dados.reduce((a, b) => a + b, 0);
+            if (!total) return null;
+
+            const fracao = dados[ctx.dataIndex] / total;
+            const antes = dados.slice(0, ctx.dataIndex).reduce((a, b) => a + b, 0) / total;
+
+            const opt = ctx.chart.options || {};
+            const voltaRad = ((opt.circumference === undefined ? 360 : opt.circumference)) * Math.PI / 180;
+            const inicioRad = -Math.PI / 2 + ((opt.rotation || 0) * Math.PI / 180);
+            const anguloMedio = inicioRad + voltaRad * (antes + fracao / 2);
+
+            const espessura = Math.abs(el.outerRadius - el.innerRadius);
+            const raioMedio = (el.outerRadius + el.innerRadius) / 2;
+            const arco = fracao * voltaRad * raioMedio;
+
+            return { espessura, arco, sen: Math.abs(Math.sin(anguloMedio)), cos: Math.abs(Math.cos(anguloMedio)) };
+        }
+
+        function dlRoscaCabe(ctx, linhas, tamanhoFonte) {
+            const e = dlRoscaEspacoDaFatia(ctx);
+            if (!e) return false;
+            const c = ctx.chart.ctx;
+            c.save();
+            c.font = `bold ${tamanhoFonte}px ${DL_FONT_FAMILY}`;
+            const largura = Math.max(...linhas.map(t => c.measureText(String(t)).width));
+            c.restore();
+            const altura = linhas.length * (tamanhoFonte + 2);
+            const precisaTangencial = largura * e.sen + altura * e.cos;
+            const precisaRadial = largura * e.cos + altura * e.sen;
+            const folga = 5;
+            return (precisaTangencial + folga) <= e.arco && (precisaRadial + folga) <= e.espessura;
+        }
+
+        // Três níveis, do mais informativo para o mais discreto: valor + percentual,
+        // só o valor numa fonte menor, ou nada. O que não couber aparece na LEGENDA,
+        // que mostra número e percentual de todas as categorias — ver legendaRoscaComValor().
+        function dlRosca(formatter = fmtIntBR) {
+            const duasLinhas = (ctx) => [formatter(ctx.dataset.data[ctx.dataIndex]), fmtPctBR(dlPercentualFatia(ctx), 1)];
+            const umaLinha = (ctx) => [formatter(ctx.dataset.data[ctx.dataIndex])];
+            const modo = (ctx) => {
+                if (!dlTemValor(ctx)) return null;
+                if (dlRoscaCabe(ctx, duasLinhas(ctx), 10)) return 'completo';
+                if (dlRoscaCabe(ctx, umaLinha(ctx), 9)) return 'curto';
+                return null;
+            };
             return {
-                // 'auto' esconde o rótulo que ainda assim colidiria com um vizinho.
-                display: (ctx) => (dlTemValor(ctx) && dlPercentualFatia(ctx) >= percentualMinimo) ? 'auto' : false,
+                // 'auto' ainda esconde o que colidiria com um vizinho.
+                display: (ctx) => modo(ctx) ? 'auto' : false,
                 color: '#ffffff',
-                font: { size: 10, weight: 'bold', family: DL_FONT_FAMILY },
+                font: (ctx) => ({ size: modo(ctx) === 'curto' ? 9 : 10, weight: 'bold', family: DL_FONT_FAMILY }),
                 textAlign: 'center',
                 anchor: 'center',
                 align: 'center',
                 clamp: true,
-                clip: true,   // garante que nada seja desenhado fora do canvas
+                clip: true,   // nada pode ser desenhado fora do canvas
                 textStrokeColor: 'rgba(0,0,0,0.75)',
                 textStrokeWidth: 3,
-                formatter: (v, ctx) => `${formatter(v)}\n${fmtPctBR(dlPercentualFatia(ctx), 1)}`
+                formatter: (v, ctx) => {
+                    const m = modo(ctx);
+                    if (m === 'completo') return duasLinhas(ctx).join('\n');
+                    if (m === 'curto') return umaLinha(ctx).join('\n');
+                    return '';
+                }
             };
         }
 
@@ -3075,6 +3135,8 @@
         // Initialize App on DOM Load
         document.addEventListener('DOMContentLoaded', async () => {
             // Inicializa imediatamente com os dados locais para garantir velocidade e zero travamento
+            const vSpan = document.getElementById('buildVersion');
+            if (vSpan) vSpan.textContent = 'versão ' + (window.__BUILD_VERSION__ || 'desconhecida');
             loadStoredData();
             if (!rawData || rawData.length === 0) {
                 rawData = normalizeAllFuncoes(window.ABSENTEEISM_DATA || []);
