@@ -1574,9 +1574,9 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Departamento</label>
-                    <select id="heFilterDepartamento" onchange="applyHoraExtraFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
-                        <option value="ALL">Todos os Departamentos</option>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Empresa</label>
+                    <select id="heFilterEmpresa" onchange="applyHoraExtraFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todas as Empresas</option>
                     </select>
                 </div>
                 <div>
@@ -1794,6 +1794,12 @@
                     </select>
                 </div>
                 <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Empresa</label>
+                    <select id="ijFilterEmpresa" onchange="applyInterjornadaFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todas as Empresas</option>
+                    </select>
+                </div>
+                <div>
                     <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Função</label>
                     <select id="ijFilterFuncao" onchange="applyInterjornadaFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
                         <option value="ALL">Todas as Funções</option>
@@ -1996,7 +2002,7 @@
             </p>
 
             <!-- Filtros -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-4 border-t border-slate-800">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 pt-4 border-t border-slate-800">
                 <div class="lg:col-span-2">
                     <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Buscar Colaborador</label>
                     <div class="relative">
@@ -2014,6 +2020,12 @@
                         <option value="SEM_REGISTRO">Sem exame registrado</option>
                         <option value="AFASTADO">Afastado INSS</option>
                         <option value="DESLIGADO">Desligado</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Mês de Vencimento</label>
+                    <select id="exFilterMesVencimento" onchange="applyExamesFilters()" class="w-full bg-[#070d1e] border border-cyan-500/30 rounded-xl px-3 py-2 text-xs font-medium text-slate-100 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition shadow-inner">
+                        <option value="ALL">Todos os Meses</option>
                     </select>
                 </div>
                 <div>
@@ -6906,7 +6918,7 @@
 
         function populateHoraExtraFilterOptions() {
             const mesSel = document.getElementById('heFilterMes');
-            const depSel = document.getElementById('heFilterDepartamento');
+            const depSel = document.getElementById('heFilterEmpresa');
             const funcSel = document.getElementById('heFilterFuncao');
             if (!mesSel || !depSel || !funcSel) return;
 
@@ -6915,10 +6927,13 @@
             mesSel.innerHTML = '<option value="ALL">Todos os Meses</option>' + meses.map(m => `<option value="${m}">${escapeHtml(formatCompetenciaLabelLongo(m, interjornadaDiaCorte))}</option>`).join('');
             if (meses.includes(curMes)) mesSel.value = curMes;
 
-            const deps = [...new Set(horaExtraRawData.map(r => r.departamento).filter(Boolean))].sort();
+            // Empresa vem do cruzamento por nome (a planilha de hora extra também não traz).
+            const empresas = [...new Set(horaExtraRawData.map(r => empresaDoColaborador(r.funcionario_nome)))];
+            const ordenadas = empresas.filter(e => e !== EMPRESA_NAO_IDENTIFICADA).sort()
+                .concat(empresas.includes(EMPRESA_NAO_IDENTIFICADA) ? [EMPRESA_NAO_IDENTIFICADA] : []);
             const curDep = depSel.value;
-            depSel.innerHTML = '<option value="ALL">Todos os Departamentos</option>' + deps.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
-            if (deps.includes(curDep)) depSel.value = curDep;
+            depSel.innerHTML = '<option value="ALL">Todas as Empresas</option>' + ordenadas.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+            if (ordenadas.includes(curDep)) depSel.value = curDep;
 
             const funcs = [...new Set(horaExtraRawData.map(r => normalizeFuncao(r.funcao)).filter(Boolean))].sort();
             const curFunc = funcSel.value;
@@ -6928,14 +6943,14 @@
 
         function applyHoraExtraFilters() {
             const mes = document.getElementById('heFilterMes').value;
-            const dep = document.getElementById('heFilterDepartamento').value;
+            const dep = document.getElementById('heFilterEmpresa').value;
             const funcao = document.getElementById('heFilterFuncao').value;
             const pct = document.getElementById('heFilterPercentual').value;
             const search = document.getElementById('heFilterSearch').value.trim().toLowerCase();
 
             horaExtraFilteredData = horaExtraRawData.filter(r => {
                 if (mes !== 'ALL' && r.ano_mes_sort !== mes) return false;
-                if (dep !== 'ALL' && r.departamento !== dep) return false;
+                if (dep !== 'ALL' && empresaDoColaborador(r.funcionario_nome) !== dep) return false;
                 if (funcao !== 'ALL' && normalizeFuncao(r.funcao) !== funcao) return false;
                 if (pct !== 'ALL' && String(r.percentual) !== pct) return false;
                 if (search && !String(r.funcionario_nome || '').toLowerCase().includes(search)) return false;
@@ -6950,7 +6965,7 @@
 
         function resetHoraExtraFilters() {
             document.getElementById('heFilterMes').value = 'ALL';
-            document.getElementById('heFilterDepartamento').value = 'ALL';
+            document.getElementById('heFilterEmpresa').value = 'ALL';
             document.getElementById('heFilterFuncao').value = 'ALL';
             document.getElementById('heFilterPercentual').value = 'ALL';
             document.getElementById('heFilterSearch').value = '';
@@ -7494,6 +7509,12 @@
             return mapa;
         }
 
+        // Empresa de um colaborador pelo nome. Usado tambem por Hora Extra e Interjornada,
+        // cujas planilhas tambem nao trazem empresa.
+        function empresaDoColaborador(nome) {
+            return mapaEmpresaPorColaborador[chaveColaboradorEmpresa(nome)] || EMPRESA_NAO_IDENTIFICADA;
+        }
+
         function resolverEmpresaAbsenteismo(registros) {
             (registros || []).forEach(r => {
                 const emp = mapaEmpresaPorColaborador[chaveColaboradorEmpresa(r.funcionario)];
@@ -7749,6 +7770,27 @@
                 empresas.map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join('');
             if (empresas.includes(curEmp)) empresaSel.value = curEmp;
 
+            // Meses de vencimento presentes na base, do mais antigo para o mais novo.
+            const mesSel = document.getElementById('exFilterMesVencimento');
+            if (mesSel) {
+                const meses = {};
+                examesRawData.forEach(r => {
+                    const d = parseIsoDate(r.proximo_aso_iso);
+                    if (!d) return;
+                    if (r.situacao_chave === 'DESLIGADO' || r.situacao_chave === 'AFASTADO') return;
+                    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    meses[chave] = (meses[chave] || 0) + 1;
+                });
+                const nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                const ordenados = Object.keys(meses).sort();
+                const atualMes = mesSel.value;
+                mesSel.innerHTML = '<option value="ALL">Todos os Meses</option>' + ordenados.map(k => {
+                    const [ano, mes] = k.split('-');
+                    return `<option value="${k}">${nomesMes[parseInt(mes, 10) - 1]}/${ano} (${meses[k]})</option>`;
+                }).join('');
+                if (ordenados.includes(atualMes)) mesSel.value = atualMes;
+            }
+
             const deptos = [...new Set(examesRawData.map(r => r.departamento).filter(Boolean))].sort();
             const curDep = deptoSel.value;
             deptoSel.innerHTML = '<option value="ALL">Todos os Departamentos</option>' +
@@ -7761,10 +7803,17 @@
             const situacao = document.getElementById('exFilterSituacao')?.value || 'ALL';
             const empresa = document.getElementById('exFilterEmpresa')?.value || 'ALL';
             const depto = document.getElementById('exFilterDepartamento')?.value || 'ALL';
+            const mesVenc = document.getElementById('exFilterMesVencimento')?.value || 'ALL';
 
             examesFilteredData = examesRawData.filter(r => {
                 if (empresa !== 'ALL' && r.empresa !== empresa) return false;
                 if (depto !== 'ALL' && r.departamento !== depto) return false;
+                if (mesVenc !== 'ALL') {
+                    const d = parseIsoDate(r.proximo_aso_iso);
+                    if (!d) return false;
+                    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    if (chave !== mesVenc) return false;
+                }
                 if (situacao === 'A_VENCER') {
                     if (r.situacao_chave !== 'VENCE_30' && r.situacao_chave !== 'VENCE_90') return false;
                 } else if (situacao !== 'ALL' && r.situacao_chave !== situacao) {
@@ -7785,6 +7834,7 @@
 
         function atalhoExames(chave) {
             document.getElementById('exFilterSearch').value = '';
+            if (document.getElementById('exFilterMesVencimento')) document.getElementById('exFilterMesVencimento').value = 'ALL';
             document.getElementById('exFilterEmpresa').value = 'ALL';
             document.getElementById('exFilterDepartamento').value = 'ALL';
             document.getElementById('exFilterSituacao').value = chave;
@@ -7794,6 +7844,7 @@
         function resetExamesFilters() {
             document.getElementById('exFilterSearch').value = '';
             document.getElementById('exFilterSituacao').value = 'ALL';
+            if (document.getElementById('exFilterMesVencimento')) document.getElementById('exFilterMesVencimento').value = 'ALL';
             document.getElementById('exFilterEmpresa').value = 'ALL';
             document.getElementById('exFilterDepartamento').value = 'ALL';
             applyExamesFilters();
@@ -8516,7 +8567,18 @@
         function populateInterjornadaFilterOptions() {
             const mesSel = document.getElementById('ijFilterMes');
             const funcSel = document.getElementById('ijFilterFuncao');
+            const empSel = document.getElementById('ijFilterEmpresa');
             if (!mesSel || !funcSel) return;
+
+            if (empSel) {
+                const empresas = [...new Set(interjornadaAnalysisRows.map(r => empresaDoColaborador(r.colaborador_nome)))];
+                const ordenadas = empresas.filter(e => e !== EMPRESA_NAO_IDENTIFICADA).sort()
+                    .concat(empresas.includes(EMPRESA_NAO_IDENTIFICADA) ? [EMPRESA_NAO_IDENTIFICADA] : []);
+                const atual = empSel.value;
+                empSel.innerHTML = '<option value="ALL">Todas as Empresas</option>' +
+                    ordenadas.map(e => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join('');
+                if (ordenadas.includes(atual)) empSel.value = atual;
+            }
 
             const competencias = [...new Set(interjornadaAnalysisRows.map(r => r.competencia))].sort();
             const curMes = mesSel.value;
@@ -8534,6 +8596,7 @@
         function applyInterjornadaFilters() {
             const mes = document.getElementById('ijFilterMes').value;
             const funcao = document.getElementById('ijFilterFuncao').value;
+            const empresaIj = document.getElementById('ijFilterEmpresa') ? document.getElementById('ijFilterEmpresa').value : 'ALL';
             const situacao = document.getElementById('ijFilterSituacao').value;
             const search = document.getElementById('ijFilterSearch').value.trim().toUpperCase();
 
@@ -8543,6 +8606,7 @@
                     if (funcao === '__SEM_FUNCAO__') { if (r.funcao) return false; }
                     else if (normalizeFuncao(r.funcao) !== funcao) return false;
                 }
+                if (empresaIj !== 'ALL' && empresaDoColaborador(r.colaborador_nome) !== empresaIj) return false;
                 if (situacao === 'VIOLACAO' && !r.violacao) return false;
                 if (search && !String(r.colaborador_nome || '').toUpperCase().includes(search)) return false;
                 return true;
@@ -8557,6 +8621,7 @@
         function resetInterjornadaFilters() {
             document.getElementById('ijFilterMes').value = 'ALL';
             document.getElementById('ijFilterFuncao').value = 'ALL';
+            if (document.getElementById('ijFilterEmpresa')) document.getElementById('ijFilterEmpresa').value = 'ALL';
             document.getElementById('ijFilterSituacao').value = 'ALL';
             document.getElementById('ijFilterSearch').value = '';
             applyInterjornadaFilters();
